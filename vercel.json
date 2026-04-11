@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/sms/agendar",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/email/agendar",
+      "schedule": "0 10 * * *"
+    }
+  ]
+}
