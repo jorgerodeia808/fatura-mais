@@ -1,21 +1,24 @@
-import Link from 'next/link'
+'use client'
 
-function Logo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
-  const sizes = { sm: 'w-10 h-10 text-xl', md: 'w-16 h-16 text-3xl', lg: 'w-24 h-24 text-5xl' }
-  return (
-    <div className={`${sizes[size]} rounded-2xl bg-verde flex items-center justify-center font-bold text-dourado shadow-lg`}>
-      F
-    </div>
-  )
-}
+import Link from 'next/link'
+import Image from 'next/image'
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-fundo">
+      <style>{`
+        @keyframes fadeScaleIn {
+          from { opacity: 0; transform: scale(0.85); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+        .logo-hero {
+          animation: fadeScaleIn 0.7s ease-out both;
+        }
+      `}</style>
       {/* Navbar */}
       <nav className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto">
         <div className="flex items-center gap-3">
-          <Logo size="sm" />
+          <Image src="/images/Logo_F_.png" alt="Fatura+" width={40} height={40} />
           <span className="text-xl font-bold text-verde">Fatura<span className="text-dourado">+</span></span>
         </div>
         <div className="flex items-center gap-3">
@@ -32,7 +35,13 @@ export default function LandingPage() {
       <main className="max-w-6xl mx-auto px-6 pt-20 pb-32">
         <div className="text-center max-w-3xl mx-auto">
           <div className="flex justify-center mb-8">
-            <Logo size="lg" />
+            <Image
+              src="/images/Logo_F_.png"
+              alt="Fatura+"
+              width={300}
+              height={300}
+              className="logo-hero"
+            />
           </div>
 
           <div className="inline-flex items-center gap-2 bg-verde/10 text-verde text-sm font-medium px-4 py-2 rounded-full mb-6">
@@ -96,7 +105,7 @@ export default function LandingPage() {
       <footer className="border-t border-gray-200 py-8">
         <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <Logo size="sm" />
+            <Image src="/images/Logo_F_.png" alt="Fatura+" width={40} height={40} />
             <span className="text-verde font-semibold">Fatura<span className="text-dourado">+</span></span>
           </div>
           <p className="text-gray-400 text-sm">© 2026 Fatura+. Todos os direitos reservados.</p>

@@ -4,12 +4,11 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import Image from 'next/image'
 
 function Logo() {
   return (
-    <div className="w-20 h-20 rounded-2xl bg-verde flex items-center justify-center font-bold text-5xl text-dourado shadow-lg mx-auto">
-      F
-    </div>
+    <Image src="/images/Logo_F_.png" alt="Fatura+" width={80} height={80} className="mx-auto" />
   )
 }
 

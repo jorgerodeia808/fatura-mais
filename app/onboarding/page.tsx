@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import Image from 'next/image'
 
 // ── Types ────────────────────────────────────────────────────────
 interface Servico {
@@ -22,9 +23,7 @@ interface CustoFixo {
 // ── Logo ─────────────────────────────────────────────────────────
 function Logo() {
   return (
-    <div className="w-12 h-12 rounded-xl bg-verde flex items-center justify-center font-bold text-2xl text-dourado shadow-md">
-      F
-    </div>
+    <Image src="/images/Logo_F_.png" alt="Fatura+" width={48} height={48} />
   )
 }
 
@@ -389,6 +388,8 @@ export default function OnboardingPage() {
           hora_abertura: barbearia.hora_abertura,
           hora_fecho: barbearia.hora_fecho,
           dias_trabalho_mes: parseInt(barbearia.dias_trabalho_mes) || 22,
+          plano: 'trial',
+          trial_termina_em: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
         })
         .select()
         .single()

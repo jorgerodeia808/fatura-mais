@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import Image from 'next/image'
 
 interface SidebarProps {
   userName: string
@@ -100,9 +101,7 @@ export default function Sidebar({ userName, barbeariaName }: SidebarProps) {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 py-6 border-b border-white/10">
-        <div className="w-9 h-9 rounded-xl bg-[#977c30]/20 flex items-center justify-center font-bold text-xl text-[#977c30] flex-shrink-0">
-          F
-        </div>
+        <Image src="/images/Logo_F_.png" alt="Fatura+" width={36} height={36} className="rounded-lg flex-shrink-0" />
         <span className="text-white font-bold text-lg">
           Fatura<span className="text-[#977c30]">+</span>
         </span>
