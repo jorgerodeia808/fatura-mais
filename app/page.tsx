@@ -1,116 +1,398 @@
 'use client'
 
-import Link from 'next/link'
+import { useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 
-export default function LandingPage() {
+const WA_LINK = 'https://wa.me/351XXXXXXXXX'
+
+// ── WhatsApp Modal ────────────────────────────────────────────────────────────
+function WhatsAppModal({ onClose }: { onClose: () => void }) {
   return (
-    <div className="min-h-screen bg-fundo">
-      <style>{`
-        @keyframes fadeScaleIn {
-          from { opacity: 0; transform: scale(0.85); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-        .logo-hero {
-          animation: fadeScaleIn 0.7s ease-out both;
-        }
-      `}</style>
-      {/* Navbar */}
-      <nav className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto">
-        <div className="flex items-center gap-3">
-          <Image src="/images/Logo_F_.png" alt="Fatura+" width={40} height={40} />
-          <span className="text-xl font-bold text-verde">Fatura<span className="text-dourado">+</span></span>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/login" className="text-verde font-medium hover:text-dourado transition-colors px-4 py-2">
-            Entrar
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center px-4"
+      style={{ background: 'rgba(0,0,0,0.55)' }}
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl p-8 max-w-sm w-full text-center relative"
+        style={{ boxShadow: '0 24px 64px rgba(0,0,0,0.18)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-ink-tertiary hover:text-ink transition-colors"
+          style={{ minHeight: 'unset' }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>close</span>
+        </button>
+
+        {/* Logo */}
+        <Image src="/images/Logo_F_.png" alt="Fatura+" width={56} height={56} className="mx-auto mb-4" />
+
+        <h2 className="font-serif font-bold text-xl text-ink mb-2">Pedir acesso ao Fatura+</h2>
+        <p className="text-sm text-ink-secondary leading-relaxed mb-8">
+          Para acederes ao Fatura+ fala connosco. Tratamos de tudo juntos — configuração inicial incluída.
+        </p>
+
+        <a
+          href={WA_LINK}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-lg font-medium text-white mb-3 transition-all hover:opacity-90 active:scale-[0.99]"
+          style={{ background: '#25D366', minHeight: 'unset' }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          Falar no WhatsApp
+        </a>
+
+        <button
+          onClick={onClose}
+          className="text-sm text-ink-secondary hover:text-ink transition-colors"
+          style={{ minHeight: 'unset' }}
+        >
+          Fechar
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
+export default function LandingPage() {
+  const [modalOpen, setModalOpen] = useState(false)
+
+  return (
+    <div className="min-h-screen bg-fundo font-sans">
+      {modalOpen && <WhatsAppModal onClose={() => setModalOpen(false)} />}
+
+      {/* ── NAVBAR ─────────────────────────────────────────────────────── */}
+      <nav className="bg-[#fcf9f3]/80 backdrop-blur-xl border-b border-black/5 sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5 nav-link">
+            <Image src="/images/Logo_F_.png" alt="Fatura+" width={36} height={36} />
+            <span className="font-serif italic font-bold text-verde text-xl leading-none">
+              Fatura<span className="text-dourado">+</span>
+            </span>
           </Link>
-          <Link href="/registo" className="btn-primary text-sm px-5 py-2.5">
-            Começar grátis
-          </Link>
+
+          <div className="hidden md:flex items-center gap-8">
+            <a href="#como-funciona" className="text-sm text-ink-secondary hover:text-verde transition-colors nav-link">
+              Como funciona
+            </a>
+            <a href="#funcionalidades" className="text-sm text-ink-secondary hover:text-verde transition-colors nav-link">
+              Funcionalidades
+            </a>
+            <a href="#precos" className="text-sm text-ink-secondary hover:text-verde transition-colors nav-link">
+              Preços
+            </a>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link href="/login" className="btn-secondary text-sm px-4 py-2">
+              Entrar
+            </Link>
+            <button onClick={() => setModalOpen(true)} className="btn-primary text-sm px-4 py-2">
+              Pedir acesso
+            </button>
+          </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <main className="max-w-6xl mx-auto px-6 pt-20 pb-32">
-        <div className="text-center max-w-3xl mx-auto">
-          <div className="flex justify-center mb-8">
-            <Image
-              src="/images/Logo_F_.png"
-              alt="Fatura+"
-              width={300}
-              height={300}
-              className="logo-hero"
-            />
-          </div>
+      {/* ── HERO ───────────────────────────────────────────────────────── */}
+      <section className="max-w-6xl mx-auto px-6 pt-20 pb-28">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
-          <div className="inline-flex items-center gap-2 bg-verde/10 text-verde text-sm font-medium px-4 py-2 rounded-full mb-6">
-            <span className="w-2 h-2 bg-dourado rounded-full"></span>
-            Gestão financeira simples e eficiente
-          </div>
+          {/* Left column */}
+          <div>
+            <span className="inline-flex items-center gap-1.5 bg-[#977c30]/10 text-[#7a6325] text-xs font-medium px-3 py-1 rounded-full mb-6">
+              <span className="material-symbols-outlined icon-filled" style={{ fontSize: '14px' }}>verified</span>
+              Lançamento — vagas limitadas
+            </span>
 
-          <h1 className="text-5xl font-bold text-verde leading-tight mb-6">
-            A plataforma que a tua{' '}
-            <span className="text-dourado">barbearia</span>{' '}
-            precisa
-          </h1>
+            <h1 className="font-serif font-bold text-5xl lg:text-6xl text-verde leading-tight mb-6">
+              A plataforma que a tua barbearia precisa
+            </h1>
 
-          <p className="text-xl text-gray-600 mb-10 leading-relaxed">
-            Controla a faturação, despesas, barbeiros e marcações num único lugar.
-            Toma decisões com base em dados reais e faz crescer o teu negócio.
-          </p>
+            <p className="text-ink-secondary text-lg leading-relaxed mb-8 max-w-lg">
+              Controla faturação, despesas e marcações num único lugar. Toma decisões com base em dados reais e faz crescer o teu negócio.
+            </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/registo" className="btn-primary text-base px-8 py-4">
-              Começar grátis
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </Link>
-            <Link href="/login" className="btn-secondary text-base px-8 py-4">
-              Já tenho conta
-            </Link>
-          </div>
-        </div>
-
-        {/* Features */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-24">
-          {[
-            {
-              icon: '💰',
-              title: 'Faturação em tempo real',
-              desc: 'Regista serviços, gorjetas e acompanha a receita diária, semanal e mensal.',
-            },
-            {
-              icon: '📊',
-              title: 'Relatórios detalhados',
-              desc: 'Visualiza despesas, custos fixos e lucro líquido com dashboards intuitivos.',
-            },
-            {
-              icon: '📅',
-              title: 'Gestão de marcações',
-              desc: 'Organiza marcações e envia lembretes automáticos aos clientes.',
-            },
-          ].map((f) => (
-            <div key={f.title} className="card hover:shadow-md transition-shadow">
-              <div className="text-4xl mb-4">{f.icon}</div>
-              <h3 className="text-lg font-semibold text-verde mb-2">{f.title}</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">{f.desc}</p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button onClick={() => setModalOpen(true)} className="btn-primary px-8 py-3.5 text-base">
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>wechat</span>
+                Pedir acesso
+              </button>
+              <a href="#como-funciona" className="btn-secondary px-8 py-3.5 text-base">
+                Ver como funciona
+              </a>
             </div>
-          ))}
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-gray-200 py-8">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Image src="/images/Logo_F_.png" alt="Fatura+" width={40} height={40} />
-            <span className="text-verde font-semibold">Fatura<span className="text-dourado">+</span></span>
           </div>
-          <p className="text-gray-400 text-sm">© 2026 Fatura+. Todos os direitos reservados.</p>
+
+          {/* Right column */}
+          <div className="relative flex justify-center lg:justify-end">
+            <div className="bg-white rounded-2xl overflow-hidden shadow-2xl border border-black/5 transform rotate-1 hover:rotate-0 transition-transform duration-500 w-full max-w-sm">
+              <div className="bg-gradient-to-br from-[#0e4324] to-[#155c33] aspect-[4/5] w-full flex flex-col items-center justify-center gap-4">
+                <span className="material-symbols-outlined text-white/30" style={{ fontSize: '80px' }}>content_cut</span>
+                <p className="font-serif font-bold text-white text-xl tracking-wide">Premium Barbershop</p>
+              </div>
+              <div className="absolute bottom-6 right-[-16px] bg-white p-4 rounded-xl shadow-xl border border-black/5 min-w-[160px]">
+                <p className="text-2xs font-medium uppercase tracking-widest text-ink-tertiary mb-1">Health Score médio</p>
+                <p className="font-serif font-bold text-2xl text-verde leading-none mb-2">94/100</p>
+                <span className="badge-green text-2xs inline-flex items-center gap-0.5">
+                  <span className="material-symbols-outlined icon-filled" style={{ fontSize: '12px' }}>check_circle</span>
+                  Excelente
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── BENTO FEATURES GRID ────────────────────────────────────────── */}
+      <section id="funcionalidades" className="bg-surface-secondary py-24">
+        <div className="max-w-6xl mx-auto px-6">
+
+          <div className="text-center mb-14">
+            <h2 className="font-serif font-bold text-4xl text-verde mb-4">
+              Tudo o que precisas, num só lugar
+            </h2>
+            <div className="h-0.5 w-16 bg-dourado mx-auto" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            {/* Card 1 — wide */}
+            <div className="card md:col-span-2 p-8 card-hover">
+              <div className="w-12 h-12 bg-verde/10 rounded-xl flex items-center justify-center mb-5">
+                <span className="material-symbols-outlined text-verde" style={{ fontSize: '24px' }}>payments</span>
+              </div>
+              <h3 className="font-serif font-bold text-2xl text-verde mb-3">Faturação em tempo real</h3>
+              <p className="text-ink-secondary text-sm leading-relaxed max-w-md">
+                Regista serviços e gorjetas ao segundo. Acompanha a receita diária, semanal e mensal com dashboards que atualizam em tempo real.
+              </p>
+            </div>
+
+            {/* Card 2 — dark */}
+            <div className="bg-verde rounded-xl p-8 md:col-span-1 relative overflow-hidden">
+              <div className="absolute -top-6 -right-6 w-24 h-24 bg-white/5 rounded-full" />
+              <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-5">
+                <span className="material-symbols-outlined text-white" style={{ fontSize: '24px' }}>calendar_month</span>
+              </div>
+              <h3 className="font-serif font-bold text-2xl text-white mb-3">Marcações inteligentes</h3>
+              <p className="text-white/70 text-sm leading-relaxed">
+                Organiza marcações, envia lembretes SMS automáticos e elimina faltas que custam dinheiro.
+              </p>
+            </div>
+
+            {/* Card 3 */}
+            <div className="card md:col-span-1 p-8 card-hover">
+              <div className="w-12 h-12 bg-verde/10 rounded-xl flex items-center justify-center mb-5">
+                <span className="material-symbols-outlined text-verde" style={{ fontSize: '24px' }}>analytics</span>
+              </div>
+              <h3 className="font-serif font-bold text-2xl text-verde mb-3">Relatórios detalhados</h3>
+              <p className="text-ink-secondary text-sm leading-relaxed">
+                Visualiza despesas, custos fixos e lucro líquido com gráficos intuitivos e exportação em PDF.
+              </p>
+            </div>
+
+            {/* Card 4 — wide editorial */}
+            <div className="bg-verde/5 rounded-xl p-8 md:col-span-2 relative overflow-hidden border border-black/5">
+              <div className="absolute -right-8 -bottom-8 w-48 h-48 bg-verde/5 rounded-full" />
+              <div className="absolute right-16 -bottom-4 w-24 h-24 bg-dourado/10 rounded-full" />
+              <div className="relative z-10">
+                <p className="font-serif font-bold text-2xl text-verde mb-3 leading-snug">
+                  "A tradição encontra<br />a tecnologia."
+                </p>
+                <p className="text-ink-secondary text-sm leading-relaxed max-w-sm">
+                  Criado especificamente para barbearias que querem profissionalizar a gestão sem perder a essência do ofício.
+                </p>
+                <div className="mt-6 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-verde/10 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-verde" style={{ fontSize: '20px' }}>psychology</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-ink">Conselheiro IA incluído</p>
+                    <p className="text-xs text-ink-secondary">Análise financeira automática todos os meses</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ── COMO FUNCIONA ──────────────────────────────────────────────── */}
+      <section id="como-funciona" className="py-24 bg-fundo">
+        <div className="max-w-6xl mx-auto px-6">
+
+          <div className="text-center mb-16">
+            <h2 className="font-serif font-bold text-4xl text-verde mb-4">Como funciona</h2>
+            <div className="h-0.5 w-16 bg-dourado mx-auto" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            {[
+              {
+                step: '01',
+                icon: 'handshake',
+                title: 'Configuramos juntos',
+                desc: 'Entras em contacto, tratamos de toda a configuração inicial. A tua barbearia fica pronta em menos de 30 minutos.',
+              },
+              {
+                step: '02',
+                icon: 'edit_note',
+                title: 'Registas o dia-a-dia',
+                desc: 'Registas faturação, despesas e marcações facilmente. O dashboard atualiza em tempo real para teres visão total.',
+              },
+              {
+                step: '03',
+                icon: 'insights',
+                title: 'A IA analisa e sugere',
+                desc: 'O conselheiro IA analisa a tua performance mensal e sugere melhorias concretas para maximizar o lucro.',
+              },
+            ].map((item) => (
+              <div key={item.step} className="relative pt-8">
+                <span className="font-serif font-bold text-7xl text-verde/10 absolute top-0 left-0 leading-none select-none">
+                  {item.step}
+                </span>
+                <div className="relative z-10 pt-10">
+                  <div className="w-11 h-11 bg-verde/10 rounded-xl flex items-center justify-center mb-4">
+                    <span className="material-symbols-outlined text-verde" style={{ fontSize: '22px' }}>{item.icon}</span>
+                  </div>
+                  <h3 className="font-serif font-bold text-xl text-verde mb-2">{item.title}</h3>
+                  <p className="text-ink-secondary text-sm leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PREÇOS ─────────────────────────────────────────────────────── */}
+      <section id="precos" className="bg-surface-secondary py-24">
+        <div className="max-w-6xl mx-auto px-6">
+
+          <div className="text-center mb-14">
+            <h2 className="font-serif font-bold text-4xl text-verde mb-4">Preço simples e transparente</h2>
+            <div className="h-0.5 w-16 bg-dourado mx-auto mb-6" />
+            <p className="text-ink-secondary text-sm max-w-md mx-auto">
+              Um plano. Tudo incluído. Sem surpresas.
+            </p>
+          </div>
+
+          {/* Single plan card — centred */}
+          <div className="max-w-md mx-auto">
+            <div className="bg-white rounded-2xl p-8 border-2 border-dourado relative"
+                 style={{ boxShadow: '0 8px 40px rgba(151,124,48,0.12)' }}>
+
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                <span className="badge-gold text-xs font-semibold px-4 py-1 inline-flex items-center gap-1">
+                  <span className="material-symbols-outlined icon-filled" style={{ fontSize: '13px' }}>star_rate</span>
+                  Acesso completo
+                </span>
+              </div>
+
+              <p className="text-sm font-medium text-ink-secondary mb-1 mt-2">Plano Mensal</p>
+              <div className="flex items-baseline gap-1.5 mb-1">
+                <span className="font-serif font-bold text-5xl text-ink">€14</span>
+                <span className="font-serif font-bold text-2xl text-ink">,99</span>
+                <span className="text-ink-secondary text-sm">/mês</span>
+              </div>
+              <p className="text-xs text-ink-tertiary mb-6">cancela quando quiseres · formação inicial incluída</p>
+
+              <button onClick={() => setModalOpen(true)} className="btn-dourado w-full justify-center mb-8 py-3">
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>wechat</span>
+                Pedir acesso
+              </button>
+
+              <ul className="space-y-3">
+                {[
+                  'Faturação ilimitada',
+                  'Marcações e lembretes SMS',
+                  'Relatórios mensais completos',
+                  'Conselheiro IA incluído',
+                  'Configuração inicial gratuita',
+                  'Suporte direto por WhatsApp',
+                ].map((feat) => (
+                  <li key={feat} className="flex items-center gap-2.5 text-sm text-ink">
+                    <span className="material-symbols-outlined icon-filled text-verde" style={{ fontSize: '18px' }}>check_circle</span>
+                    {feat}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA FINAL ──────────────────────────────────────────────────── */}
+      <section className="py-24 bg-fundo">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="bg-verde rounded-3xl p-12 text-center relative overflow-hidden">
+            <div className="absolute -top-12 -left-12 w-48 h-48 bg-white/5 rounded-full" />
+            <div className="absolute -bottom-8 -right-8 w-64 h-64 bg-white/5 rounded-full" />
+            <div className="absolute top-8 right-24 w-16 h-16 bg-white/5 rounded-full" />
+
+            <div className="relative z-10">
+              <h2 className="font-serif font-bold text-4xl text-white mb-4 leading-tight">
+                Queres ter a tua barbearia<br />sob controlo?
+              </h2>
+              <p className="text-white/80 text-base mb-10 max-w-lg mx-auto leading-relaxed">
+                Fala connosco hoje. Configuramos tudo juntos e a tua barbearia fica operacional em menos de uma hora.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <a
+                  href={WA_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-lg font-medium text-white transition-all hover:opacity-90 active:scale-[0.99]"
+                  style={{ background: '#25D366', minHeight: 'unset' }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                  </svg>
+                  Falar connosco
+                </a>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-md font-medium text-sm text-white border border-white/30 hover:bg-white/10 transition-all duration-200"
+                  style={{ minHeight: 'unset' }}
+                >
+                  Já tenho conta
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ─────────────────────────────────────────────────────── */}
+      <footer className="bg-surface-secondary border-t border-black/5 py-10">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-2.5">
+              <Image src="/images/Logo_F_.png" alt="Fatura+" width={32} height={32} />
+              <span className="font-serif italic font-bold text-verde text-lg leading-none">
+                Fatura<span className="text-dourado">+</span>
+              </span>
+            </div>
+            <p className="text-xs text-ink-tertiary text-center">
+              © 2026 Fatura+ · NIF: XXXXXXXXX · suporte@fatura-mais.pt
+            </p>
+            <div className="flex items-center gap-5">
+              <Link href="/privacidade" className="text-xs text-ink-secondary hover:text-verde transition-colors nav-link">Privacidade</Link>
+              <Link href="/termos" className="text-xs text-ink-secondary hover:text-verde transition-colors nav-link">Termos</Link>
+              <Link href="/cookies" className="text-xs text-ink-secondary hover:text-verde transition-colors nav-link">Cookies</Link>
+            </div>
+          </div>
         </div>
       </footer>
+
     </div>
   )
 }

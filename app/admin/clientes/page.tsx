@@ -15,18 +15,14 @@ interface Barbearia {
 
 function PlanoBadge({ plano }: { plano: string | null }) {
   const map: Record<string, { label: string; cls: string }> = {
-    trial: { label: 'Trial', cls: 'bg-yellow-100 text-yellow-800 border border-yellow-200' },
-    mensal: { label: 'Mensal', cls: 'bg-blue-100 text-blue-800 border border-blue-200' },
-    vitalicio: { label: 'Vitalício', cls: 'bg-green-100 text-green-800 border border-green-200' },
-    suspenso: { label: 'Suspenso', cls: 'bg-red-100 text-red-800 border border-red-200' },
+    trial: { label: 'Trial', cls: 'badge badge-amber' },
+    mensal: { label: 'Mensal', cls: 'badge badge-green' },
+    vitalicio: { label: 'Vitalício', cls: 'badge badge-gold' },
+    suspenso: { label: 'Suspenso', cls: 'badge badge-red' },
   }
   const key = plano ?? ''
-  const style = map[key] ?? { label: plano ?? 'Desconhecido', cls: 'bg-gray-100 text-gray-600 border border-gray-200' }
-  return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${style.cls}`}>
-      {style.label}
-    </span>
-  )
+  const style = map[key] ?? { label: plano ?? 'Desconhecido', cls: 'badge badge-gray' }
+  return <span className={style.cls}>{style.label}</span>
 }
 
 function formatDate(iso: string | null) {
@@ -39,16 +35,31 @@ function formatDate(iso: string | null) {
 }
 
 function formatTrialDate(iso: string | null, plano: string | null) {
-  if (plano !== 'trial') return <span className="text-gray-300">—</span>
-  if (!iso) return <span className="text-gray-400">Sem data</span>
+  if (plano !== 'trial') return <span className="text-ink-secondary/30">—</span>
+  if (!iso) return <span className="text-ink-secondary">Sem data</span>
   const now = new Date()
   const d = new Date(iso)
   const diff = Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
   const dateStr = new Date(iso).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })
   if (diff > 0) {
-    return <span className="text-yellow-600">{dateStr} <span className="text-xs">({diff}d)</span></span>
+    return (
+      <span className="text-[#977c30]">
+        {dateStr} <span className="text-xs">({diff}d)</span>
+      </span>
+    )
   }
-  return <span className="text-red-500">{dateStr} <span className="text-xs">(exp.)</span></span>
+  return (
+    <span className="text-red-600">
+      {dateStr} <span className="text-xs">(exp.)</span>
+    </span>
+  )
+}
+
+const planoPillColors: Record<string, string> = {
+  trial: 'bg-[#977c30]/10 text-[#977c30] border border-[#977c30]/20',
+  mensal: 'bg-[#0e4324]/10 text-[#0e4324] border border-[#0e4324]/20',
+  vitalicio: 'bg-[#977c30]/15 text-[#7a6228] border border-[#977c30]/30',
+  suspenso: 'bg-red-50 text-red-700 border border-red-200',
 }
 
 export default async function ClientesPage() {
@@ -66,18 +77,18 @@ export default async function ClientesPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <h1 className="page-title">Clientes</h1>
+          <p className="text-sm text-ink-secondary mt-1">
             {barbearias.length} barbearia{barbearias.length !== 1 ? 's' : ''} registada{barbearias.length !== 1 ? 's' : ''}
-            {' '}
-            <span className="text-gray-400 text-xs">· filtro no cliente (client-side)</span>
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-gray-400 bg-white border border-gray-200 rounded-lg px-3 py-2">
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+        <div className="flex items-center gap-1.5 text-xs text-ink-secondary bg-white border border-[#e8e4dc] rounded-lg px-3 py-2">
+          <span
+            className="material-symbols-outlined text-[14px] leading-none"
+            style={{ fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20" }}
+          >
+            info
+          </span>
           Pesquisa ainda não implementada
         </div>
       </div>
@@ -86,16 +97,10 @@ export default async function ClientesPage() {
       <div className="flex flex-wrap gap-2">
         {['trial', 'mensal', 'vitalicio', 'suspenso'].map((plano) => {
           const count = barbearias.filter((b) => b.plano === plano).length
-          const colors: Record<string, string> = {
-            trial: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-            mensal: 'bg-blue-50 text-blue-700 border-blue-200',
-            vitalicio: 'bg-green-50 text-green-700 border-green-200',
-            suspenso: 'bg-red-50 text-red-700 border-red-200',
-          }
           return (
             <span
               key={plano}
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${colors[plano]}`}
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${planoPillColors[plano] ?? 'bg-gray-100 text-gray-600'}`}
             >
               <span className="font-bold">{count}</span>
               {plano.charAt(0).toUpperCase() + plano.slice(1)}
@@ -105,7 +110,7 @@ export default async function ClientesPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="card overflow-hidden p-0">
         {error && (
           <div className="px-6 py-4 bg-red-50 border-b border-red-100 text-red-700 text-sm">
             Erro ao carregar dados: {error.message}
@@ -114,45 +119,50 @@ export default async function ClientesPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <tr className="bg-[#f7f4ee] border-b border-[#e8e4dc]">
+                <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
                   Nome
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
                   Plano
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
                   Trial termina
                 </th>
-                <th className="text-right px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <th className="text-right px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
                   Total pago (€)
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
                   Registado em
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
                   Ações
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-[#f0ece4]">
               {barbearias.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-16 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <span className="text-3xl">🏪</span>
-                      <p className="text-gray-400 text-sm">Nenhuma barbearia registada.</p>
+                    <div className="flex flex-col items-center gap-3">
+                      <span
+                        className="material-symbols-outlined text-[40px] text-ink-secondary/40 leading-none"
+                        style={{ fontVariationSettings: "'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 40" }}
+                      >
+                        store
+                      </span>
+                      <p className="text-ink-secondary text-sm">Nenhuma barbearia registada.</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 barbearias.map((b) => (
-                  <tr key={b.id} className="hover:bg-gray-50/50 transition-colors group">
+                  <tr key={b.id} className="table-row-hover transition-colors">
                     <td className="px-6 py-3.5">
                       <div>
-                        <p className="font-medium text-gray-900">{b.nome}</p>
+                        <p className="font-medium text-ink">{b.nome}</p>
                         {b.indicado_por && (
-                          <p className="text-xs text-gray-400 mt-0.5">Ref: {b.indicado_por}</p>
+                          <p className="text-xs text-ink-secondary mt-0.5">Ref: {b.indicado_por}</p>
                         )}
                       </div>
                     </td>
@@ -164,24 +174,26 @@ export default async function ClientesPage() {
                     </td>
                     <td className="px-6 py-3.5 text-right">
                       {b.valor_pago_total != null ? (
-                        <span className="font-semibold text-[#0e4324]">
+                        <span className="font-semibold text-verde">
                           {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(b.valor_pago_total)}
                         </span>
                       ) : (
-                        <span className="text-gray-300">—</span>
+                        <span className="text-ink-secondary/30">—</span>
                       )}
                     </td>
-                    <td className="px-6 py-3.5 text-gray-500">{formatDate(b.created_at)}</td>
+                    <td className="px-6 py-3.5 text-ink-secondary">{formatDate(b.created_at)}</td>
                     <td className="px-6 py-3.5">
                       <Link
                         href={`/admin/clientes/${b.id}`}
-                        className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0e4324] hover:text-[#0a3019] bg-[#0e4324]/5 hover:bg-[#0e4324]/10 px-3 py-1.5 rounded-lg transition-colors"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-verde hover:text-verde/80 bg-verde/5 hover:bg-verde/10 px-3 py-1.5 rounded-lg transition-colors"
                       >
                         Ver detalhes
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                            d="M9 5l7 7-7 7" />
-                        </svg>
+                        <span
+                          className="material-symbols-outlined text-[13px] leading-none"
+                          style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                        >
+                          chevron_right
+                        </span>
                       </Link>
                     </td>
                   </tr>
@@ -191,9 +203,8 @@ export default async function ClientesPage() {
           </table>
         </div>
 
-        {/* Table footer */}
         {barbearias.length > 0 && (
-          <div className="px-6 py-3 bg-gray-50/50 border-t border-gray-100 text-xs text-gray-400">
+          <div className="px-6 py-3 bg-[#f7f4ee] border-t border-[#e8e4dc] text-xs text-ink-secondary">
             {barbearias.length} resultado{barbearias.length !== 1 ? 's' : ''}
           </div>
         )}

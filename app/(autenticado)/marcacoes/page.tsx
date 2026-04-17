@@ -46,9 +46,9 @@ const DIAS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const MESES_PT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 
 const STATUS = {
-  confirmado: { bg: 'bg-green-100', border: 'border-green-300', text: 'text-green-800', pill: 'bg-green-100 text-green-700', label: 'Confirmado' },
-  pendente: { bg: 'bg-yellow-100', border: 'border-yellow-300', text: 'text-yellow-800', pill: 'bg-yellow-100 text-yellow-700', label: 'Pendente' },
-  desistencia: { bg: 'bg-red-100', border: 'border-red-300', text: 'text-red-700', pill: 'bg-red-100 text-red-700', label: 'Desistência' },
+  confirmado: { bg: 'bg-green-100', border: 'border-green-300', text: 'text-green-800', badge: 'badge-green', label: 'Confirmado' },
+  pendente:   { bg: 'bg-yellow-100', border: 'border-yellow-300', text: 'text-yellow-800', badge: 'badge-amber', label: 'Pendente' },
+  desistencia:{ bg: 'bg-red-100',    border: 'border-red-300',    text: 'text-red-700',   badge: 'badge-red',   label: 'Desistência' },
 }
 
 // ── Helpers ────────────────────────────────────────────────────────
@@ -80,12 +80,31 @@ function isSameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 }
 
-function Sk({ className = '' }: { className?: string }) {
-  return <div className={`animate-pulse bg-gray-200 rounded-lg ${className}`} />
-}
-
 function generateSlug(nome: string): string {
   return nome.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-').slice(0, 30)
+}
+
+// ── Skeleton ───────────────────────────────────────────────────────
+function Sk({ className = '' }: { className?: string }) {
+  return <div className={`animate-pulse bg-[#f0eee8] rounded-xl ${className}`} />
+}
+
+// ── Toggle Switch ──────────────────────────────────────────────────
+function ToggleSwitch({ checked, onChange, disabled = false }: { checked: boolean; onChange: () => void; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onChange}
+      disabled={disabled}
+      className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-50 ${
+        checked ? 'bg-[#0e4324]' : 'bg-[#d4d4cc]'
+      }`}
+    >
+      <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+        checked ? 'translate-x-5' : 'translate-x-0'
+      }`} />
+    </button>
+  )
 }
 
 // ── Calendar Block ─────────────────────────────────────────────────
@@ -271,7 +290,7 @@ export default function MarcacoesPage() {
           })
           const data = await res.json()
           smsMensagem = data.sucesso
-            ? 'Marcação agendada! SMS enviado com sucesso ✓'
+            ? 'Marcação agendada! SMS enviado com sucesso.'
             : `Marcação agendada (SMS falhou: ${data.erro})`
         } catch {
           smsMensagem = 'Marcação agendada (SMS não enviado)'
@@ -302,7 +321,6 @@ export default function MarcacoesPage() {
   const handleReenviarSms = async (m: Marcacao) => {
     if (!m.cliente_telemovel) return
     try {
-      // Temporariamente reset sms_enviado para permitir reenvio
       await supabase.from('marcacoes').update({ sms_enviado: false }).eq('id', m.id)
       const res = await fetch('/api/sms/enviar', {
         method: 'POST',
@@ -310,7 +328,7 @@ export default function MarcacoesPage() {
         body: JSON.stringify({ marcacao_id: m.id }),
       })
       const data = await res.json()
-      setSuccessMsg(data.sucesso ? `SMS reenviado para ${m.cliente_nome} ✓` : `Erro: ${data.erro}`)
+      setSuccessMsg(data.sucesso ? `SMS reenviado para ${m.cliente_nome}.` : `Erro: ${data.erro}`)
       setTimeout(() => setSuccessMsg(''), 4000)
       if (barbearia) fetchMarcacoes(barbearia.id, weekStart)
     } catch {
@@ -323,7 +341,6 @@ export default function MarcacoesPage() {
   const handleConfirmar = async (m: Marcacao) => {
     if (!barbearia) return
     await supabase.from('marcacoes').update({ estado: 'confirmado' }).eq('id', m.id)
-    // Create faturacao record as 'pendente'
     if (m.servicos && m.servico_id) {
       await supabase.from('faturacao').insert({
         barbearia_id: barbearia.id,
@@ -372,76 +389,89 @@ export default function MarcacoesPage() {
     setTimeout(() => setLinkCopiado(false), 2000)
   }
 
+  // ── Loading ───────────────────────────────────────────────────
   if (loadingInit) {
     return (
       <div className="space-y-6">
-        <Sk className="h-8 w-48" />
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">{[1,2,3,4].map(i => <Sk key={i} className="h-20"/>)}</div>
-        <div className="flex flex-col lg:flex-row gap-4"><Sk className="flex-1 h-96"/><Sk className="w-full lg:w-[300px] h-96 lg:flex-shrink-0"/></div>
+        <Sk className="h-9 w-52" />
+        <div className="flex gap-3">
+          {[1,2,3].map(i => <Sk key={i} className="h-8 w-32" />)}
+        </div>
+        <div className="flex flex-col lg:flex-row gap-6">
+          <Sk className="flex-1 h-[500px]" />
+          <Sk className="w-full lg:w-[380px] h-[500px] lg:flex-shrink-0" />
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
+
       {/* Page header */}
-      <div>
-        <h1 className="text-2xl font-bold text-[#0e4324]">Marcações</h1>
-        <p className="text-gray-500 text-sm mt-0.5">Agenda e gere os teus clientes</p>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Marcações</h1>
+          <p className="text-sm text-ink-secondary mt-0.5">Agenda e gestão de clientes</p>
+        </div>
       </div>
 
-      {/* Metric cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: 'Marcações hoje', value: marcacoesHoje.length, icon: '📅', color: 'text-[#0e4324]' },
-          { label: 'Confirmadas', value: confirmadas, icon: '✅', color: 'text-green-600' },
-          { label: 'Pendentes', value: pendentes, icon: '⏳', color: 'text-yellow-600' },
-          { label: 'SMS enviados este mês', value: smsMes, icon: '📱', color: 'text-[#977c30]' },
-        ].map(m => (
-          <div key={m.label} className="bg-white rounded-2xl border border-gray-100 p-4">
-            <span className="text-xl">{m.icon}</span>
-            <p className={`text-3xl font-bold mt-2 ${m.color}`}>{m.value}</p>
-            <p className="text-xs text-gray-500 mt-1">{m.label}</p>
-          </div>
-        ))}
+      {/* Stats bar */}
+      <div className="flex flex-wrap gap-2">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-black/5 text-sm">
+          <span className="material-symbols-outlined text-ink-secondary" style={{fontSize:'15px'}}>calendar_today</span>
+          <span className="text-ink font-medium">{marcacoesHoje.length}</span>
+          <span className="text-ink-secondary">hoje</span>
+        </div>
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-black/5 text-sm">
+          <span className="material-symbols-outlined text-amber-500" style={{fontSize:'15px'}}>schedule</span>
+          <span className="text-ink font-medium">{pendentes}</span>
+          <span className="text-ink-secondary">pendentes</span>
+        </div>
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-black/5 text-sm">
+          <span className="material-symbols-outlined text-[#0e4324]" style={{fontSize:'15px'}}>check_circle</span>
+          <span className="text-ink font-medium">{confirmadas}</span>
+          <span className="text-ink-secondary">confirmadas</span>
+        </div>
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-black/5 text-sm">
+          <span className="material-symbols-outlined text-[#977c30]" style={{fontSize:'15px'}}>sms</span>
+          <span className="text-ink font-medium">{smsMes}</span>
+          <span className="text-ink-secondary">SMS este mês</span>
+        </div>
       </div>
 
       {/* Two-column layout */}
-      <div className="flex flex-col lg:flex-row gap-4 items-start">
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
 
         {/* LEFT: Calendar + Agenda */}
-        <div className="flex-1 min-w-0 space-y-4">
+        <div className="flex-1 min-w-0 space-y-5">
 
           {/* Weekly Calendar */}
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="card overflow-hidden !p-0">
             {/* Calendar header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-              <h2 className="text-sm font-semibold text-[#0e4324]">Calendário semanal</h2>
-              <div className="flex items-center gap-1.5 bg-gray-50 rounded-xl px-2 py-1">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-black/5">
+              <h2 className="section-title !mb-0">Calendário semanal</h2>
+              <div className="flex items-center gap-1 bg-[#f0eee8] rounded-xl px-2 py-1.5">
                 <button
                   onClick={() => changeWeek(-1)}
-                  className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white transition-colors text-gray-500"
+                  className="btn-ghost !p-1 !rounded-lg"
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/>
-                  </svg>
+                  <span className="material-symbols-outlined" style={{fontSize:'16px'}}>chevron_left</span>
                 </button>
-                <span className="text-xs font-medium text-[#0e4324] min-w-[130px] text-center">
+                <span className="text-xs font-medium text-ink min-w-[140px] text-center">
                   {weekDays[0].getDate()} {MESES_PT[weekDays[0].getMonth()]} – {weekDays[6].getDate()} {MESES_PT[weekDays[6].getMonth()]} {weekDays[6].getFullYear()}
                 </span>
                 <button
                   onClick={() => changeWeek(1)}
-                  className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white transition-colors text-gray-500"
+                  className="btn-ghost !p-1 !rounded-lg"
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/>
-                  </svg>
+                  <span className="material-symbols-outlined" style={{fontSize:'16px'}}>chevron_right</span>
                 </button>
               </div>
             </div>
 
             {/* Day headers */}
-            <div className="flex border-b border-gray-100">
+            <div className="flex border-b border-black/5">
               <div className="w-12 flex-shrink-0" />
               {weekDays.map(d => {
                 const isToday = isSameDay(d, today)
@@ -450,13 +480,13 @@ export default function MarcacoesPage() {
                   <button
                     key={toDateStr(d)}
                     onClick={() => setSelectedDay(new Date(d.getFullYear(), d.getMonth(), d.getDate()))}
-                    className={`flex-1 py-2 text-center transition-colors hover:bg-gray-50 ${
-                      isSelected ? 'bg-[#f0f7f3]' : ''
+                    className={`flex-1 py-2.5 text-center transition-colors hover:bg-[#f0eee8] ${
+                      isSelected ? 'bg-[#f0eee8]' : ''
                     }`}
                   >
-                    <p className="text-[10px] text-gray-400 font-medium">{DIAS_PT[d.getDay()]}</p>
+                    <p className="text-[10px] text-ink-secondary font-medium tracking-wide uppercase">{DIAS_PT[d.getDay()]}</p>
                     <div className={`w-6 h-6 rounded-full mx-auto mt-0.5 flex items-center justify-center text-xs font-bold ${
-                      isToday ? 'bg-[#0e4324] text-white' : 'text-gray-700'
+                      isToday ? 'bg-[#0e4324] text-white' : 'text-ink'
                     }`}>
                       {d.getDate()}
                     </div>
@@ -473,7 +503,7 @@ export default function MarcacoesPage() {
                   {HOURS.map(h => (
                     <div
                       key={h}
-                      className="flex items-start justify-end pr-2 text-[9px] text-gray-400 font-medium"
+                      className="flex items-start justify-end pr-2 text-[9px] text-ink-secondary font-medium"
                       style={{ height: PX_PER_HOUR }}
                     >
                       <span className="-mt-1.5">{String(h).padStart(2, '0')}:00</span>
@@ -489,19 +519,17 @@ export default function MarcacoesPage() {
                   return (
                     <div
                       key={dayStr}
-                      className={`flex-1 relative border-l border-gray-100 cursor-pointer ${isSelected ? 'bg-[#f0f7f3]/60' : ''}`}
+                      className={`flex-1 relative border-l border-black/5 cursor-pointer ${isSelected ? 'bg-[#f0eee8]/50' : ''}`}
                       style={{ height: HOURS.length * PX_PER_HOUR }}
                       onClick={() => setSelectedDay(new Date(d.getFullYear(), d.getMonth(), d.getDate()))}
                     >
-                      {/* Hour lines */}
                       {HOURS.map((h, idx) => (
                         <div
                           key={h}
-                          className="absolute left-0 right-0 border-t border-gray-100"
+                          className="absolute left-0 right-0 border-t border-black/[0.04]"
                           style={{ top: idx * PX_PER_HOUR }}
                         />
                       ))}
-                      {/* Appointments */}
                       {dayMarcacoes.map(m => (
                         <CalendarBlock
                           key={m.id}
@@ -520,86 +548,95 @@ export default function MarcacoesPage() {
           </div>
 
           {/* Agenda do dia */}
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-[#0e4324]">
+          <div className="card overflow-hidden !p-0">
+            <div className="px-5 py-4 border-b border-black/5 flex items-center justify-between">
+              <h2 className="section-title !mb-0">
                 Agenda — {isSameDay(selectedDay, today) ? 'Hoje' : selectedDay.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}
               </h2>
-              <span className="text-xs text-gray-400">{agendaDia.length} marcações</span>
+              <span className="text-xs text-ink-secondary">{agendaDia.length} marcações</span>
             </div>
 
             {agendaDia.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 text-center">
-                <span className="text-3xl mb-2">📅</span>
-                <p className="text-sm font-medium text-gray-500">Sem marcações neste dia</p>
-                <p className="text-xs text-gray-400 mt-0.5">Usa o formulário para agendar</p>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-12 h-12 rounded-2xl bg-[#f0eee8] flex items-center justify-center mb-3">
+                  <span className="material-symbols-outlined text-ink-secondary" style={{fontSize:'24px'}}>event_available</span>
+                </div>
+                <p className="text-sm font-medium text-ink">Sem marcações neste dia</p>
+                <p className="text-xs text-ink-secondary mt-0.5">Usa o formulário para agendar</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-50">
+              <div className="divide-y divide-black/[0.04]">
                 {agendaDia.map(m => {
                   const s = STATUS[m.estado]
                   return (
-                    <div key={m.id} className="px-5 py-4">
-                      <div className="flex items-start gap-4">
-                        {/* Time */}
-                        <div className="flex-shrink-0 text-center w-12">
-                          <p className="text-sm font-bold text-[#0e4324]">{formatHora(m.data_hora)}</p>
+                    <div key={m.id} className="px-5 py-4 hover:bg-[#f0eee8]/40 transition-colors">
+                      <div className="flex items-center gap-4">
+                        {/* Time column */}
+                        <div className="flex-shrink-0 text-center w-14">
+                          <p className="text-sm font-medium text-ink">{formatHora(m.data_hora)}</p>
                           {m.servicos && (
-                            <p className="text-[10px] text-gray-400 mt-0.5">{m.servicos.tempo_minutos}min</p>
+                            <p className="text-xs text-ink-secondary mt-0.5">{m.servicos.tempo_minutos}min</p>
                           )}
                         </div>
+
+                        {/* Divider */}
+                        <div className="w-px h-10 bg-black/10 flex-shrink-0" />
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-semibold text-gray-800">{m.cliente_nome}</p>
-                            {/* SMS badge */}
-                            {m.sms_enviado ? (
-                              <span className="text-[10px] bg-green-50 text-green-700 border border-green-200 px-1.5 py-0.5 rounded-full font-medium">📱 SMS enviado</span>
-                            ) : m.cliente_telemovel && m.estado !== 'desistencia' ? (
-                              <span className="text-[10px] bg-yellow-50 text-yellow-700 border border-yellow-200 px-1.5 py-0.5 rounded-full font-medium">📱 SMS agendado</span>
-                            ) : null}
-                            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${s.pill}`}>{s.label}</span>
+                            <p className="text-sm font-medium text-ink">{m.cliente_nome}</p>
+                            <span className={`badge ${s.badge}`}>{s.label}</span>
+                            {m.sms_enviado && (
+                              <span className="material-symbols-outlined text-[#0e4324]" style={{fontSize:'15px'}} title="SMS enviado">check_circle</span>
+                            )}
                           </div>
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            {m.servicos?.nome ?? 'Serviço removido'}
-                            {m.servicos?.preco ? ` · ${fmt(m.servicos.preco)}` : ''}
-                          </p>
-                          {m.cliente_telemovel && (
-                            <p className="text-xs text-gray-400 mt-0.5">{m.cliente_telemovel}</p>
-                          )}
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                            {m.servicos && (
+                              <span className="text-xs text-ink-secondary bg-[#f0eee8] px-2 py-0.5 rounded-full">
+                                {m.servicos.nome}
+                              </span>
+                            )}
+                            {m.servicos?.preco ? (
+                              <span className="text-xs text-[#977c30] font-medium">{fmt(m.servicos.preco)}</span>
+                            ) : null}
+                            {m.cliente_telemovel && (
+                              <span className="text-xs text-ink-secondary">{m.cliente_telemovel}</span>
+                            )}
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Actions */}
-                      {(m.estado === 'pendente' || (m.estado === 'confirmado' && m.cliente_telemovel)) && (
-                        <div className="flex gap-2 mt-3 pl-16 flex-wrap">
+                        {/* Actions */}
+                        <div className="flex items-center gap-1 flex-shrink-0">
                           {m.estado === 'pendente' && (
                             <>
                               <button
                                 onClick={() => handleConfirmar(m)}
-                                className="text-xs bg-green-50 text-green-700 border border-green-200 px-3 py-1.5 rounded-lg font-medium hover:bg-green-100 transition-colors"
+                                className="btn-ghost !p-2 text-[#0e4324]"
+                                title="Confirmar"
                               >
-                                ✓ Confirmar
+                                <span className="material-symbols-outlined" style={{fontSize:'18px'}}>check</span>
                               </button>
                               <button
                                 onClick={() => handleDesistencia(m.id)}
-                                className="text-xs bg-red-50 text-red-700 border border-red-200 px-3 py-1.5 rounded-lg font-medium hover:bg-red-100 transition-colors"
+                                className="btn-ghost !p-2 text-red-600"
+                                title="Desistência"
                               >
-                                ✕ Desistência
+                                <span className="material-symbols-outlined" style={{fontSize:'18px'}}>close</span>
                               </button>
                             </>
                           )}
                           {m.cliente_telemovel && (
                             <button
                               onClick={() => handleReenviarSms(m)}
-                              className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-lg font-medium hover:bg-blue-100 transition-colors"
+                              className="btn-ghost !p-2 text-ink-secondary"
+                              title={m.sms_enviado ? 'Reenviar SMS' : 'Enviar SMS'}
                             >
-                              📱 {m.sms_enviado ? 'Reenviar SMS' : 'Enviar SMS'}
+                              <span className="material-symbols-outlined" style={{fontSize:'18px'}}>sms</span>
                             </button>
                           )}
                         </div>
-                      )}
+                      </div>
                     </div>
                   )
                 })}
@@ -609,75 +646,73 @@ export default function MarcacoesPage() {
         </div>
 
         {/* RIGHT: Config + Form */}
-        <div className="w-full lg:w-[300px] lg:flex-shrink-0 space-y-4">
+        <div className="w-full lg:w-[380px] lg:flex-shrink-0 space-y-4">
 
           {/* Online bookings card */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <p className="text-sm font-semibold text-[#0e4324]">Marcações online</p>
-                <p className="text-xs text-gray-400 mt-0.5">Clientes agendam pelo link</p>
+          <div className="card">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#f0eee8] flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[#0e4324]" style={{fontSize:'20px'}}>public</span>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-ink">Marcações online</p>
+                  <p className="text-xs text-ink-secondary">Permite que clientes marquem pelo link</p>
+                </div>
               </div>
-              <button
-                onClick={toggleOnline}
-                disabled={savingOnline}
-                className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-60 ${
-                  marcacoesOnline ? 'bg-[#0e4324]' : 'bg-gray-200'
-                }`}
-              >
-                {savingOnline ? (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <svg className="animate-spin w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                    </svg>
-                  </div>
-                ) : (
-                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
-                    marcacoesOnline ? 'translate-x-5' : 'translate-x-0'
-                  }`} />
-                )}
-              </button>
+              {savingOnline ? (
+                <svg className="animate-spin w-5 h-5 text-ink-secondary" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+              ) : (
+                <ToggleSwitch checked={marcacoesOnline} onChange={toggleOnline} />
+              )}
             </div>
 
             {!marcacoesOnline && !savingOnline && (
-              <p className="text-[10px] text-gray-400 mb-2">
-                Ativa para gerar o teu link de agendamento
+              <p className="text-xs text-ink-secondary mt-3">
+                Ativa para gerar o teu link de agendamento público.
               </p>
             )}
 
             {marcacoesOnline && barbearia?.slug && (
-              <div className="bg-[#f0f7f3] rounded-xl p-3">
-                <p className="text-[10px] text-gray-500 mb-1.5 font-medium">Link público</p>
-                <p className="text-xs text-[#0e4324] font-mono truncate mb-2">
+              <div className="mt-4 bg-[#f0eee8] rounded-xl p-3">
+                <p className="text-[10px] text-ink-secondary uppercase tracking-widest font-medium mb-1.5">Link público</p>
+                <p className="text-xs text-[#0e4324] font-mono truncate mb-3">
                   fatura.pt/agendar/{barbearia.slug}
                 </p>
                 <button
                   onClick={copyLink}
-                  className="w-full text-xs bg-[#0e4324] text-white py-1.5 rounded-lg font-medium hover:bg-[#0a3019] transition-colors"
+                  className="btn-secondary w-full text-xs py-2 flex items-center justify-center gap-1.5"
                 >
-                  {linkCopiado ? '✓ Copiado!' : '📋 Copiar link'}
+                  <span className="material-symbols-outlined" style={{fontSize:'15px'}}>
+                    {linkCopiado ? 'check' : 'content_copy'}
+                  </span>
+                  {linkCopiado ? 'Copiado!' : 'Copiar link'}
                 </button>
               </div>
             )}
           </div>
 
           {/* New appointment form */}
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div className="bg-[#0e4324] px-5 py-4">
-              <h2 className="text-white font-semibold">Nova marcação</h2>
-              <p className="text-white/60 text-xs mt-0.5">Agenda um novo cliente</p>
+          <div className="card !p-0 overflow-hidden">
+            <div className="px-5 py-4 border-b border-black/5 flex items-center gap-2.5">
+              <span className="material-symbols-outlined text-[#0e4324]" style={{fontSize:'20px'}}>calendar_today</span>
+              <h2 className="section-title !mb-0">Nova Marcação</h2>
             </div>
 
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               {/* Cliente */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1.5">Nome do cliente *</label>
+                <label className="block text-xs font-medium text-ink-secondary mb-1.5">
+                  Nome do cliente <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   value={clienteNome}
                   onChange={e => setClienteNome(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0e4324] focus:border-transparent placeholder-gray-400"
+                  className="input-field w-full"
                   placeholder="Ex: João Silva"
                   required
                 />
@@ -685,26 +720,28 @@ export default function MarcacoesPage() {
 
               {/* Telemóvel */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1.5">Telemóvel</label>
+                <label className="block text-xs font-medium text-ink-secondary mb-1.5">Telemóvel</label>
                 <input
                   type="tel"
                   value={clienteTel}
                   onChange={e => setClienteTel(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0e4324] focus:border-transparent placeholder-gray-400"
+                  className="input-field w-full"
                   placeholder="+351 9XX XXX XXX"
                 />
               </div>
 
               {/* Serviço */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1.5">Serviço *</label>
+                <label className="block text-xs font-medium text-ink-secondary mb-1.5">
+                  Serviço <span className="text-red-500">*</span>
+                </label>
                 <select
                   value={selectedServico?.id ?? ''}
                   onChange={e => {
                     const s = servicos.find(s => s.id === e.target.value) ?? null
                     setSelectedServico(s)
                   }}
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0e4324] bg-white text-gray-800"
+                  className="input-field w-full"
                   required
                 >
                   <option value="">Seleciona um serviço</option>
@@ -713,9 +750,9 @@ export default function MarcacoesPage() {
                   ))}
                 </select>
                 {selectedServico && (
-                  <div className="flex items-center gap-3 mt-1.5 px-1">
+                  <div className="flex items-center gap-3 mt-2 px-1">
                     <span className="text-xs text-[#977c30] font-semibold">{fmt(selectedServico.preco)}</span>
-                    <span className="text-xs text-gray-400">{selectedServico.tempo_minutos} min</span>
+                    <span className="text-xs text-ink-secondary">{selectedServico.tempo_minutos} min</span>
                   </div>
                 )}
               </div>
@@ -723,21 +760,25 @@ export default function MarcacoesPage() {
               {/* Data + Hora */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Data *</label>
+                  <label className="block text-xs font-medium text-ink-secondary mb-1.5">
+                    Data <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="date"
                     value={dataForm}
                     onChange={e => setDataForm(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0e4324] text-gray-800"
+                    className="input-field w-full"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Hora *</label>
+                  <label className="block text-xs font-medium text-ink-secondary mb-1.5">
+                    Hora <span className="text-red-500">*</span>
+                  </label>
                   <select
                     value={horaForm}
                     onChange={e => setHoraForm(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0e4324] bg-white text-gray-800"
+                    className="input-field w-full"
                   >
                     {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
@@ -745,33 +786,34 @@ export default function MarcacoesPage() {
               </div>
 
               {/* SMS toggle */}
-              <div className="flex items-center justify-between bg-blue-50 rounded-xl px-3 py-3">
-                <div>
-                  <p className="text-xs font-medium text-blue-800">Lembrete por SMS</p>
-                  <p className="text-[10px] text-blue-600 mt-0.5">Enviado automaticamente 24h antes</p>
+              <label className="flex items-center justify-between p-3 rounded-xl bg-[#f0eee8] cursor-pointer">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#0e4324]" style={{fontSize:'18px'}}>sms</span>
+                  <div>
+                    <p className="text-sm font-medium text-ink">Enviar SMS de confirmação</p>
+                    <p className="text-[10px] text-ink-secondary mt-0.5">Enviado automaticamente 24h antes</p>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setSmsToggle(v => !v)}
-                  className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${smsToggle ? 'bg-blue-600' : 'bg-gray-200'}`}
-                >
-                  <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${smsToggle ? 'translate-x-5' : 'translate-x-0'}`} />
-                </button>
-              </div>
+                <ToggleSwitch checked={smsToggle} onChange={() => setSmsToggle(v => !v)} />
+              </label>
 
               {formError && (
-                <p className="text-red-600 text-xs bg-red-50 px-3 py-2 rounded-lg border border-red-100">{formError}</p>
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-100">
+                  <span className="material-symbols-outlined text-red-600" style={{fontSize:'16px'}}>error</span>
+                  <p className="text-red-700 text-xs">{formError}</p>
+                </div>
               )}
               {successMsg && (
-                <p className="text-green-700 text-xs bg-green-50 px-3 py-2 rounded-lg border border-green-100">
-                  ✓ {successMsg}
-                </p>
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-[#f0eee8] border border-[#0e4324]/10">
+                  <span className="material-symbols-outlined text-[#0e4324]" style={{fontSize:'16px'}}>check_circle</span>
+                  <p className="text-[#0e4324] text-xs font-medium">{successMsg}</p>
+                </div>
               )}
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-[#0e4324] text-white py-3 rounded-xl font-semibold text-sm hover:bg-[#0a3019] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="btn-primary w-full flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   <>
@@ -783,9 +825,7 @@ export default function MarcacoesPage() {
                   </>
                 ) : (
                   <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
+                    <span className="material-symbols-outlined" style={{fontSize:'18px'}}>add</span>
                     Agendar marcação
                   </>
                 )}

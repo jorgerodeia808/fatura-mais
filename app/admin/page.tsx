@@ -11,43 +11,42 @@ interface Barbearia {
 
 function PlanoBadge({ plano }: { plano: string | null }) {
   const map: Record<string, { label: string; cls: string }> = {
-    trial: { label: 'Trial', cls: 'bg-yellow-100 text-yellow-800' },
-    mensal: { label: 'Mensal', cls: 'bg-blue-100 text-blue-800' },
-    vitalicio: { label: 'Vitalício', cls: 'bg-green-100 text-green-800' },
-    suspenso: { label: 'Suspenso', cls: 'bg-red-100 text-red-800' },
+    trial: { label: 'Trial', cls: 'badge badge-amber' },
+    mensal: { label: 'Mensal', cls: 'badge badge-green' },
+    vitalicio: { label: 'Vitalício', cls: 'badge badge-gold' },
+    suspenso: { label: 'Suspenso', cls: 'badge badge-red' },
   }
   const p = plano ?? 'desconhecido'
-  const style = map[p] ?? { label: p, cls: 'bg-gray-100 text-gray-700' }
-  return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${style.cls}`}>
-      {style.label}
-    </span>
-  )
+  const style = map[p] ?? { label: p, cls: 'badge badge-gray' }
+  return <span className={style.cls}>{style.label}</span>
 }
 
-function StatCard({
+function MetricCard({
   label,
   value,
   icon,
-  color,
   sub,
 }: {
   label: string
   value: number
   icon: string
-  color: string
   sub?: string
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+    <div className="metric-card">
       <div className="flex items-start justify-between mb-3">
-        <span className="text-2xl">{icon}</span>
+        <span
+          className="material-symbols-outlined text-[22px] text-ink-secondary leading-none"
+          style={{ fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24" }}
+        >
+          {icon}
+        </span>
         {sub && (
-          <span className={`text-xs font-medium px-2 py-1 rounded-full ${color}`}>{sub}</span>
+          <span className="badge badge-gray text-[10px]">{sub}</span>
         )}
       </div>
-      <p className="text-3xl font-bold text-[#0e4324]">{value}</p>
-      <p className="text-sm text-gray-500 mt-1">{label}</p>
+      <p className="metric-value">{value}</p>
+      <p className="metric-label mt-1">{label}</p>
     </div>
   )
 }
@@ -100,9 +99,10 @@ export default async function AdminPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Visão Geral</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Painel de administração Fatura+ ·{' '}
+        <h1 className="page-title">Visão Geral</h1>
+        <p className="text-sm text-ink-secondary mt-1">
+          Painel de administração Fatura+{' '}
+          <span className="text-ink-secondary/60">·</span>{' '}
           {new Date().toLocaleDateString('pt-PT', {
             weekday: 'long',
             day: 'numeric',
@@ -112,89 +112,85 @@ export default async function AdminPage() {
         </p>
       </div>
 
-      {/* Stat Cards */}
+      {/* Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
+        <MetricCard
           label="Total Barbearias"
           value={total}
-          icon="🏪"
-          color="bg-gray-100 text-gray-600"
+          icon="store"
           sub="total"
         />
-        <StatCard
+        <MetricCard
           label="Em Trial"
           value={emTrial}
-          icon="⏳"
-          color="bg-yellow-100 text-yellow-700"
-          sub="activo"
+          icon="hourglass_empty"
+          sub="ativo"
         />
-        <StatCard
+        <MetricCard
           label="Assinantes Ativos"
           value={assinantes}
-          icon="✅"
-          color="bg-green-100 text-green-700"
+          icon="check_circle"
           sub="mensal + vitalício"
         />
-        <StatCard
+        <MetricCard
           label="Suspensos"
           value={suspensos}
-          icon="🚫"
-          color="bg-red-100 text-red-700"
+          icon="cancel"
         />
       </div>
 
       {/* Recent Signups Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-900">Registos Recentes</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Últimas 10 barbearias registadas</p>
+      <div className="card overflow-hidden p-0">
+        <div className="px-6 py-4 border-b border-[#e8e4dc]">
+          <h2 className="section-title">Registos Recentes</h2>
+          <p className="text-xs text-ink-secondary mt-0.5">Últimas 10 barbearias registadas</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-50 bg-gray-50/50">
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <tr className="border-b border-[#e8e4dc] bg-[#f7f4ee]">
+                <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
                   Nome
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
                   Plano
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
                   Registo
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
                   Trial termina
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-[#f0ece4]">
               {recentSignups.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-gray-400 text-sm">
+                  <td colSpan={4} className="px-6 py-12 text-center text-ink-secondary text-sm">
                     Nenhuma barbearia registada ainda.
                   </td>
                 </tr>
               ) : (
                 recentSignups.map((b) => (
-                  <tr key={b.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-3.5 font-medium text-gray-900">{b.nome}</td>
+                  <tr key={b.id} className="table-row-hover transition-colors">
+                    <td className="px-6 py-3.5 font-medium text-ink">{b.nome}</td>
                     <td className="px-6 py-3.5">
                       <PlanoBadge plano={b.plano} />
                     </td>
-                    <td className="px-6 py-3.5 text-gray-500">{formatDate(b.created_at)}</td>
-                    <td className="px-6 py-3.5 text-gray-500">
+                    <td className="px-6 py-3.5 text-ink-secondary">{formatDate(b.created_at)}</td>
+                    <td className="px-6 py-3.5">
                       {b.plano === 'trial' ? (
                         <span
                           className={
                             b.trial_termina_em && new Date(b.trial_termina_em) > now
-                              ? 'text-yellow-600'
-                              : 'text-red-500'
+                              ? 'text-[#977c30] text-sm'
+                              : 'text-red-600 text-sm'
                           }
                         >
                           {trialLabel(b.trial_termina_em, b.plano)}
                         </span>
                       ) : (
-                        <span className="text-gray-300">—</span>
+                        <span className="text-ink-secondary/30">—</span>
                       )}
                     </td>
                   </tr>

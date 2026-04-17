@@ -20,39 +20,6 @@ interface CustoFixo {
   categoria: string
 }
 
-// ── Logo ─────────────────────────────────────────────────────────
-function Logo() {
-  return (
-    <Image src="/images/Logo_F_.png" alt="Fatura+" width={48} height={48} />
-  )
-}
-
-// ── Step Indicator ────────────────────────────────────────────────
-function StepIndicator({ current, total }: { current: number; total: number }) {
-  return (
-    <div className="flex items-center gap-2">
-      {Array.from({ length: total }, (_, i) => i + 1).map((step) => (
-        <div key={step} className="flex items-center gap-2">
-          <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
-              step < current
-                ? 'bg-verde text-white'
-                : step === current
-                ? 'bg-dourado text-white'
-                : 'bg-gray-200 text-gray-500'
-            }`}
-          >
-            {step < current ? '✓' : step}
-          </div>
-          {step < total && (
-            <div className={`w-12 h-0.5 ${step < current ? 'bg-verde' : 'bg-gray-200'}`} />
-          )}
-        </div>
-      ))}
-    </div>
-  )
-}
-
 // ── Step 1: Barbearia ─────────────────────────────────────────────
 function Step1({
   data,
@@ -62,70 +29,72 @@ function Step1({
   onChange: (field: string, value: string) => void
 }) {
   return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-2xl font-bold text-verde">A tua barbearia</h2>
-        <p className="text-gray-500 mt-1">Conta-nos um pouco sobre o teu negócio</p>
+    <div className="card">
+      <div className="flex items-center gap-2 mb-6">
+        <div className="w-8 h-8 rounded-lg bg-verde/10 flex items-center justify-center">
+          <span className="material-symbols-outlined text-verde" style={{ fontSize: '18px' }}>storefront</span>
+        </div>
+        <h2 className="section-title">A tua barbearia</h2>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Nome da barbearia *</label>
-        <input
-          type="text"
-          value={data.nome}
-          onChange={(e) => onChange('nome', e.target.value)}
-          className="input-field"
-          placeholder="Ex: Barbearia do João"
-          required
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Número de barbeiros</label>
-        <input
-          type="number"
-          value={data.num_barbeiros}
-          onChange={(e) => onChange('num_barbeiros', e.target.value)}
-          className="input-field"
-          placeholder="Ex: 3"
-          min="1"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Hora de abertura</label>
+          <label className="block text-sm font-medium text-ink mb-1.5">Nome da barbearia *</label>
           <input
-            type="time"
-            value={data.hora_abertura}
-            onChange={(e) => onChange('hora_abertura', e.target.value)}
+            type="text"
+            value={data.nome}
+            onChange={(e) => onChange('nome', e.target.value)}
             className="input-field"
+            placeholder="Ex: Barbearia do João"
+            required
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Hora de fecho</label>
+          <label className="block text-sm font-medium text-ink mb-1.5">Número de barbeiros</label>
           <input
-            type="time"
-            value={data.hora_fecho}
-            onChange={(e) => onChange('hora_fecho', e.target.value)}
+            type="number"
+            value={data.num_barbeiros}
+            onChange={(e) => onChange('num_barbeiros', e.target.value)}
             className="input-field"
+            placeholder="Ex: 3"
+            min="1"
           />
         </div>
-      </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">
-          Dias de trabalho por mês
-        </label>
-        <input
-          type="number"
-          value={data.dias_trabalho_mes}
-          onChange={(e) => onChange('dias_trabalho_mes', e.target.value)}
-          className="input-field"
-          placeholder="Ex: 22"
-          min="1"
-          max="31"
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-ink mb-1.5">Hora de abertura</label>
+            <input
+              type="time"
+              value={data.hora_abertura}
+              onChange={(e) => onChange('hora_abertura', e.target.value)}
+              className="input-field"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-ink mb-1.5">Hora de fecho</label>
+            <input
+              type="time"
+              value={data.hora_fecho}
+              onChange={(e) => onChange('hora_fecho', e.target.value)}
+              className="input-field"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-ink mb-1.5">Dias de trabalho por mês</label>
+          <input
+            type="number"
+            value={data.dias_trabalho_mes}
+            onChange={(e) => onChange('dias_trabalho_mes', e.target.value)}
+            className="input-field"
+            placeholder="Ex: 22"
+            min="1"
+            max="31"
+          />
+        </div>
       </div>
     </div>
   )
@@ -144,27 +113,30 @@ function Step2({
   onRemove: (index: number) => void
 }) {
   return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-2xl font-bold text-verde">Os teus serviços</h2>
-        <p className="text-gray-500 mt-1">Adiciona os serviços que ofereces na tua barbearia</p>
+    <div className="card">
+      <div className="flex items-center gap-2 mb-6">
+        <div className="w-8 h-8 rounded-lg bg-verde/10 flex items-center justify-center">
+          <span className="material-symbols-outlined text-verde" style={{ fontSize: '18px' }}>content_cut</span>
+        </div>
+        <h2 className="section-title">Os teus serviços</h2>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 mb-4">
         {servicos.map((s, i) => (
-          <div key={i} className="bg-gray-50 rounded-xl p-4 border border-gray-100 relative">
+          <div key={i} className="rounded-xl bg-surface-secondary p-4 relative">
             {servicos.length > 1 && (
               <button
                 type="button"
                 onClick={() => onRemove(i)}
-                className="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors text-lg leading-none"
+                className="btn-ghost absolute top-2 right-2 !p-1 !h-auto"
+                aria-label="Remover serviço"
               >
-                ×
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
               </button>
             )}
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Nome do serviço</label>
+                <label className="block text-xs font-medium text-ink mb-1">Nome do serviço</label>
                 <input
                   type="text"
                   value={s.nome}
@@ -174,7 +146,7 @@ function Step2({
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Preço (€)</label>
+                <label className="block text-xs font-medium text-ink mb-1">Preço (€)</label>
                 <input
                   type="number"
                   value={s.preco}
@@ -186,7 +158,7 @@ function Step2({
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Tempo (min)</label>
+                <label className="block text-xs font-medium text-ink mb-1">Tempo (min)</label>
                 <input
                   type="number"
                   value={s.tempo_minutos}
@@ -197,7 +169,7 @@ function Step2({
                 />
               </div>
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Custo de material (€)</label>
+                <label className="block text-xs font-medium text-ink mb-1">Custo de material (€)</label>
                 <input
                   type="number"
                   value={s.custo_material}
@@ -216,9 +188,10 @@ function Step2({
       <button
         type="button"
         onClick={onAdd}
-        className="w-full border-2 border-dashed border-dourado text-dourado py-3 rounded-xl font-medium hover:bg-dourado/5 transition-colors flex items-center justify-center gap-2"
+        className="btn-secondary w-full flex items-center justify-center gap-1.5"
       >
-        <span className="text-xl">+</span> Adicionar serviço
+        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
+        Adicionar serviço
       </button>
     </div>
   )
@@ -239,27 +212,30 @@ function Step3({
   const categorias = ['Rendas', 'Água/Luz/Gás', 'Internet/Telefone', 'Seguros', 'Contabilidade', 'Marketing', 'Software', 'Equipamento', 'Outro']
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-2xl font-bold text-verde">Custos mensais</h2>
-        <p className="text-gray-500 mt-1">Regista os teus custos fixos e variáveis mensais</p>
+    <div className="card">
+      <div className="flex items-center gap-2 mb-6">
+        <div className="w-8 h-8 rounded-lg bg-verde/10 flex items-center justify-center">
+          <span className="material-symbols-outlined text-verde" style={{ fontSize: '18px' }}>receipt_long</span>
+        </div>
+        <h2 className="section-title">Custos mensais</h2>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 mb-4">
         {custos.map((c, i) => (
-          <div key={i} className="bg-gray-50 rounded-xl p-4 border border-gray-100 relative">
+          <div key={i} className="rounded-xl bg-surface-secondary p-4 relative">
             {custos.length > 1 && (
               <button
                 type="button"
                 onClick={() => onRemove(i)}
-                className="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors text-lg leading-none"
+                className="btn-ghost absolute top-2 right-2 !p-1 !h-auto"
+                aria-label="Remover custo"
               >
-                ×
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
               </button>
             )}
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Descrição</label>
+                <label className="block text-xs font-medium text-ink mb-1">Descrição</label>
                 <input
                   type="text"
                   value={c.descricao}
@@ -269,7 +245,7 @@ function Step3({
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Valor (€/mês)</label>
+                <label className="block text-xs font-medium text-ink mb-1">Valor (€/mês)</label>
                 <input
                   type="number"
                   value={c.valor}
@@ -281,7 +257,7 @@ function Step3({
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
+                <label className="block text-xs font-medium text-ink mb-1">Tipo</label>
                 <select
                   value={c.tipo}
                   onChange={(e) => onChange(i, 'tipo', e.target.value as 'fixo' | 'variavel')}
@@ -292,7 +268,7 @@ function Step3({
                 </select>
               </div>
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Categoria</label>
+                <label className="block text-xs font-medium text-ink mb-1">Categoria</label>
                 <select
                   value={c.categoria}
                   onChange={(e) => onChange(i, 'categoria', e.target.value)}
@@ -312,9 +288,10 @@ function Step3({
       <button
         type="button"
         onClick={onAdd}
-        className="w-full border-2 border-dashed border-dourado text-dourado py-3 rounded-xl font-medium hover:bg-dourado/5 transition-colors flex items-center justify-center gap-2"
+        className="btn-secondary w-full flex items-center justify-center gap-1.5"
       >
-        <span className="text-xl">+</span> Adicionar custo
+        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
+        Adicionar custo
       </button>
     </div>
   )
@@ -438,94 +415,110 @@ export default function OnboardingPage() {
     }
   }
 
-  const stepTitles = ['A tua barbearia', 'Os teus serviços', 'Custos mensais']
+  const stepLabels = ['A tua barbearia', 'Os teus serviços', 'Custos mensais']
 
   return (
     <div className="min-h-screen bg-fundo flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
+
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <Logo />
-            <span className="text-xl font-bold text-verde">
-              Fatura<span className="text-dourado">+</span>
-            </span>
-          </div>
-          <StepIndicator current={step} total={3} />
+        <div className="flex flex-col items-center text-center mb-8">
+          <Image src="/images/Logo_F_.png" alt="Fatura+" width={56} height={56} className="mb-3" />
+          <h1 className="font-serif font-bold text-3xl text-verde">
+            Fatura<span className="text-dourado">+</span>
+          </h1>
+          <p className="text-ink-secondary text-sm mt-1 font-sans">Configura a tua barbearia em 3 passos</p>
         </div>
 
-        <div className="mb-3">
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
-            Passo {step} de 3 — {stepTitles[step - 1]}
-          </span>
-        </div>
-
-        {/* Card */}
-        <div className="card">
-          {step === 1 && (
-            <Step1 data={barbearia} onChange={handleBarbeariaChange} />
-          )}
-          {step === 2 && (
-            <Step2
-              servicos={servicos}
-              onChange={handleServicoChange}
-              onAdd={() => setServicos((p) => [...p, { nome: '', preco: '', tempo_minutos: '', custo_material: '' }])}
-              onRemove={(i) => setServicos((p) => p.filter((_, idx) => idx !== i))}
-            />
-          )}
-          {step === 3 && (
-            <Step3
-              custos={custos}
-              onChange={handleCustoChange}
-              onAdd={() => setCustos((p) => [...p, { descricao: '', valor: '', tipo: 'fixo', categoria: '' }])}
-              onRemove={(i) => setCustos((p) => p.filter((_, idx) => idx !== i))}
-            />
-          )}
-
-          {error && (
-            <div className="mt-4 bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg border border-red-100">
-              {error}
-            </div>
-          )}
-
-          {/* Navigation */}
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
-            {step > 1 ? (
-              <button type="button" onClick={prevStep} className="btn-secondary text-sm px-5 py-2.5">
-                ← Anterior
-              </button>
-            ) : (
-              <div />
-            )}
-
-            {step < 3 ? (
-              <button type="button" onClick={nextStep} className="btn-primary text-sm px-5 py-2.5">
-                Seguinte →
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={loading}
-                className="btn-dourado text-sm px-6 py-2.5 disabled:opacity-60 disabled:cursor-not-allowed"
+        {/* Progress bar */}
+        <div className="mb-8">
+          <div className="flex justify-between mb-2">
+            {stepLabels.map((label, i) => (
+              <span
+                key={i}
+                className={`text-xs font-medium font-sans ${i + 1 <= step ? 'text-verde' : 'text-ink-secondary'}`}
               >
-                {loading ? (
-                  <>
-                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    A guardar...
-                  </>
-                ) : (
-                  'Concluir configuração ✓'
-                )}
-              </button>
-            )}
+                {label}
+              </span>
+            ))}
+          </div>
+          <div className="h-1 bg-surface-secondary rounded-full overflow-hidden">
+            <div
+              className="h-full bg-verde rounded-full transition-all duration-500"
+              style={{ width: `${((step - 1) / 2) * 100}%` }}
+            />
           </div>
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-4">
+        {/* Step content */}
+        {step === 1 && (
+          <Step1 data={barbearia} onChange={handleBarbeariaChange} />
+        )}
+        {step === 2 && (
+          <Step2
+            servicos={servicos}
+            onChange={handleServicoChange}
+            onAdd={() => setServicos((p) => [...p, { nome: '', preco: '', tempo_minutos: '', custo_material: '' }])}
+            onRemove={(i) => setServicos((p) => p.filter((_, idx) => idx !== i))}
+          />
+        )}
+        {step === 3 && (
+          <Step3
+            custos={custos}
+            onChange={handleCustoChange}
+            onAdd={() => setCustos((p) => [...p, { descricao: '', valor: '', tipo: 'fixo', categoria: '' }])}
+            onRemove={(i) => setCustos((p) => p.filter((_, idx) => idx !== i))}
+          />
+        )}
+
+        {/* Error */}
+        {error && (
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 border border-red-100 text-red-700 text-sm mt-4 font-sans">
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>error</span>
+            {error}
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div className="flex items-center justify-between mt-6 pt-6 border-t border-surface-secondary">
+          {step > 1 ? (
+            <button type="button" onClick={prevStep} className="btn-ghost">
+              Anterior
+            </button>
+          ) : (
+            <div />
+          )}
+
+          {step < 3 ? (
+            <button type="button" onClick={nextStep} className="btn-primary">
+              Seguinte
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="btn-dourado disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  A guardar...
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check</span>
+                  Concluir configuração
+                </>
+              )}
+            </button>
+          )}
+        </div>
+
+        <p className="text-center text-xs text-ink-secondary font-sans mt-5">
           Podes alterar estas configurações mais tarde nas definições
         </p>
       </div>

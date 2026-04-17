@@ -12,17 +12,13 @@ interface PagamentoRaw {
 
 function TipoBadge({ tipo }: { tipo: string | null }) {
   const map: Record<string, { label: string; cls: string }> = {
-    mensal: { label: 'Mensal', cls: 'bg-blue-100 text-blue-800 border-blue-200' },
-    vitalicio: { label: 'Vitalício', cls: 'bg-purple-100 text-purple-800 border-purple-200' },
-    trial_ext: { label: 'Extensão Trial', cls: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+    mensal: { label: 'Mensal', cls: 'badge badge-green' },
+    vitalicio: { label: 'Vitalício', cls: 'badge badge-gold' },
+    trial_ext: { label: 'Extensão Trial', cls: 'badge badge-amber' },
   }
   const key = tipo ?? ''
-  const style = map[key] ?? { label: tipo ?? 'Outro', cls: 'bg-gray-100 text-gray-600 border-gray-200' }
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${style.cls}`}>
-      {style.label}
-    </span>
-  )
+  const style = map[key] ?? { label: tipo ?? 'Outro', cls: 'badge badge-gray' }
+  return <span className={style.cls}>{style.label}</span>
 }
 
 function formatDate(iso: string | null) {
@@ -49,7 +45,6 @@ export default async function PagamentosPage() {
 
   const pagamentos = (data as unknown as PagamentoRaw[]) ?? []
 
-  // Summary calculations
   const totalRecebido = pagamentos.reduce((sum, p) => sum + (p.valor ?? 0), 0)
 
   const now = new Date()
@@ -62,35 +57,35 @@ export default async function PagamentosPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Pagamentos</h1>
-        <p className="text-gray-500 text-sm mt-1">Histórico de pagamentos recebidos</p>
+        <h1 className="page-title">Pagamentos</h1>
+        <p className="text-sm text-ink-secondary mt-1">Histórico de pagamentos recebidos</p>
       </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total recebido</p>
-          <p className="text-3xl font-bold text-[#0e4324]">{formatCurrency(totalRecebido)}</p>
-          <p className="text-xs text-gray-400 mt-1">todos os tempos</p>
+        <div className="metric-card">
+          <p className="metric-label mb-2">Total recebido</p>
+          <p className="font-serif font-bold text-3xl text-verde">{formatCurrency(totalRecebido)}</p>
+          <p className="text-xs text-ink-secondary mt-1">todos os tempos</p>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Este mês</p>
-          <p className="text-3xl font-bold text-[#977c30]">{formatCurrency(esteMes)}</p>
-          <p className="text-xs text-gray-400 mt-1">
+        <div className="metric-card">
+          <p className="metric-label mb-2">Este mês</p>
+          <p className="font-serif font-bold text-3xl text-dourado">{formatCurrency(esteMes)}</p>
+          <p className="text-xs text-ink-secondary mt-1">
             {now.toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' })}
           </p>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Nº de pagamentos</p>
-          <p className="text-3xl font-bold text-gray-700">{pagamentos.length}</p>
-          <p className="text-xs text-gray-400 mt-1">registos no total</p>
+        <div className="metric-card">
+          <p className="metric-label mb-2">N.º de pagamentos</p>
+          <p className="metric-value">{pagamentos.length}</p>
+          <p className="text-xs text-ink-secondary mt-1">registos no total</p>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-900">Todos os pagamentos</h2>
+      <div className="card overflow-hidden p-0">
+        <div className="px-6 py-4 border-b border-[#e8e4dc]">
+          <h2 className="section-title">Todos os pagamentos</h2>
         </div>
 
         {error && (
@@ -101,66 +96,71 @@ export default async function PagamentosPage() {
 
         {pagamentos.length === 0 && !error ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-6">
-            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-              <span className="text-3xl">💳</span>
+            <div className="w-16 h-16 bg-surface rounded-full flex items-center justify-center mb-4">
+              <span
+                className="material-symbols-outlined text-[32px] text-ink-secondary/50 leading-none"
+                style={{ fontVariationSettings: "'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 40" }}
+              >
+                payments
+              </span>
             </div>
-            <h3 className="text-base font-semibold text-gray-700 mb-1">Sem pagamentos registados</h3>
-            <p className="text-sm text-gray-400 max-w-sm">
+            <h3 className="font-serif font-bold text-base text-ink mb-1">Sem pagamentos registados</h3>
+            <p className="text-sm text-ink-secondary max-w-sm">
               Quando forem registados pagamentos na tabela{' '}
-              <code className="bg-gray-100 px-1 rounded text-xs">pagamentos_recebidos</code>, aparecerão aqui.
+              <code className="bg-surface px-1 rounded text-xs">pagamentos_recebidos</code>, aparecerão aqui.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <tr className="bg-[#f7f4ee] border-b border-[#e8e4dc]">
+                  <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
                     Data
                   </th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
                     Cliente
                   </th>
-                  <th className="text-right px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <th className="text-right px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
                     Valor
                   </th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
                     Método
                   </th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
                     Tipo
                   </th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
                     Notas
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-[#f0ece4]">
                 {pagamentos.map((p) => (
-                  <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-3.5 text-gray-500 whitespace-nowrap">
+                  <tr key={p.id} className="table-row-hover transition-colors">
+                    <td className="px-6 py-3.5 text-ink-secondary whitespace-nowrap">
                       {formatDate(p.created_at)}
                     </td>
-                    <td className="px-6 py-3.5 font-medium text-gray-900">
+                    <td className="px-6 py-3.5 font-medium text-ink">
                       {p.barbearias?.nome ?? (
-                        <span className="text-gray-400 italic">Desconhecido</span>
+                        <span className="text-ink-secondary italic">Desconhecido</span>
                       )}
                     </td>
-                    <td className="px-6 py-3.5 text-right font-semibold text-[#0e4324] whitespace-nowrap">
+                    <td className="px-6 py-3.5 text-right font-semibold text-verde whitespace-nowrap">
                       {formatCurrency(p.valor)}
                     </td>
-                    <td className="px-6 py-3.5 text-gray-500">
+                    <td className="px-6 py-3.5 text-ink-secondary">
                       {p.metodo ? (
                         <span className="capitalize">{p.metodo}</span>
                       ) : (
-                        <span className="text-gray-300">—</span>
+                        <span className="text-ink-secondary/30">—</span>
                       )}
                     </td>
                     <td className="px-6 py-3.5">
                       <TipoBadge tipo={p.tipo} />
                     </td>
-                    <td className="px-6 py-3.5 text-gray-400 max-w-xs truncate">
-                      {p.notas ?? <span className="text-gray-200">—</span>}
+                    <td className="px-6 py-3.5 text-ink-secondary max-w-xs truncate">
+                      {p.notas ?? <span className="text-ink-secondary/30">—</span>}
                     </td>
                   </tr>
                 ))}
@@ -170,7 +170,7 @@ export default async function PagamentosPage() {
         )}
 
         {pagamentos.length > 0 && (
-          <div className="px-6 py-3 bg-gray-50/50 border-t border-gray-100 text-xs text-gray-400">
+          <div className="px-6 py-3 bg-[#f7f4ee] border-t border-[#e8e4dc] text-xs text-ink-secondary">
             {pagamentos.length} pagamento{pagamentos.length !== 1 ? 's' : ''}
           </div>
         )}

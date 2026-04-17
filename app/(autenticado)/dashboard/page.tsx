@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
 import {
   BarChart,
   Bar,
@@ -92,179 +93,31 @@ function monthLabel(monthsAgo: number) {
 
 // ── Loading Skeleton ────────────────────────────────────────────────
 function Skeleton({ className = '' }: { className?: string }) {
-  return <div className={`animate-pulse bg-gray-200 rounded-lg ${className}`} />
+  return <div className={`animate-pulse bg-surface-secondary rounded-lg ${className}`} />
 }
 
-// ── KPI Card ────────────────────────────────────────────────────────
-function KpiCard({
+// ── Custom Tooltip ──────────────────────────────────────────────────
+function CustomTooltip({
+  active,
+  payload,
   label,
-  value,
-  icon,
-  color,
-  loading,
-  sub,
 }: {
-  label: string
-  value: string
-  icon: string
-  color: string
-  loading: boolean
-  sub?: string
+  active?: boolean
+  payload?: Array<{ value: number; name: string; color: string }>
+  label?: string
 }) {
+  if (!active || !payload) return null
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5">
-      <div className="flex items-start justify-between mb-3">
-        <span className="text-2xl">{icon}</span>
-        {sub && (
-          <span className={`text-xs font-medium px-2 py-1 rounded-full ${color}`}>
-            {sub}
-          </span>
-        )}
-      </div>
-      {loading ? (
-        <>
-          <Skeleton className="h-8 w-32 mb-1" />
-          <Skeleton className="h-4 w-24" />
-        </>
-      ) : (
-        <>
-          <p className="text-2xl font-bold text-[#0e4324]">{value}</p>
-          <p className="text-sm text-gray-500 mt-1">{label}</p>
-        </>
-      )}
-    </div>
-  )
-}
-
-// ── Health Score ────────────────────────────────────────────────────
-function HealthScoreCard({
-  score,
-  metrics,
-  loading,
-}: {
-  score: number
-  metrics: HealthMetric[]
-  loading: boolean
-}) {
-  const status =
-    score >= 80 ? 'Excelente' : score >= 60 ? 'Bom' : score >= 40 ? 'A melhorar' : 'Crítico'
-  const statusColor =
-    score >= 80
-      ? 'text-green-600'
-      : score >= 60
-      ? 'text-[#977c30]'
-      : score >= 40
-      ? 'text-orange-500'
-      : 'text-red-600'
-  const ringColor =
-    score >= 80
-      ? '#16a34a'
-      : score >= 60
-      ? '#977c30'
-      : score >= 40
-      ? '#f97316'
-      : '#dc2626'
-
-  const circumference = 2 * Math.PI * 40
-  const offset = circumference - (score / 100) * circumference
-
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5">
-      <h3 className="text-sm font-semibold text-gray-700 mb-4">Health Score</h3>
-      {loading ? (
-        <div className="flex flex-col items-center gap-4">
-          <Skeleton className="w-28 h-28 rounded-full" />
-          <Skeleton className="w-full h-16" />
-        </div>
-      ) : (
-        <>
-          {/* Ring */}
-          <div className="flex justify-center mb-4">
-            <div className="relative">
-              <svg width="112" height="112" className="-rotate-90">
-                <circle cx="56" cy="56" r="40" fill="none" stroke="#f3f4f6" strokeWidth="10" />
-                <circle
-                  cx="56"
-                  cy="56"
-                  r="40"
-                  fill="none"
-                  stroke={ringColor}
-                  strokeWidth="10"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={offset}
-                  strokeLinecap="round"
-                  style={{ transition: 'stroke-dashoffset 1s ease' }}
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-bold text-[#0e4324]">{score}</span>
-                <span className={`text-xs font-medium ${statusColor}`}>{status}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Metrics */}
-          <div className="space-y-3">
-            {metrics.map((m) => (
-              <div key={m.label}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-gray-500">{m.label}</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-medium text-[#0e4324]">
-                      {m.value.toFixed(0)}{m.unit}
-                    </span>
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        m.status === 'good'
-                          ? 'bg-green-500'
-                          : m.status === 'warning'
-                          ? 'bg-yellow-500'
-                          : 'bg-red-500'
-                      }`}
-                    />
-                  </div>
-                </div>
-                <div className="w-full bg-gray-100 rounded-full h-1.5">
-                  <div
-                    className={`h-1.5 rounded-full transition-all duration-700 ${
-                      m.status === 'good'
-                        ? 'bg-green-500'
-                        : m.status === 'warning'
-                        ? 'bg-yellow-500'
-                        : 'bg-red-500'
-                    }`}
-                    style={{ width: `${Math.min(m.value, 100)}%` }}
-                  />
-                </div>
-                <p className="text-xs text-gray-400 mt-0.5">{m.description}</p>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
-// ── Alert Banner ────────────────────────────────────────────────────
-function AlertBanner({
-  type,
-  message,
-}: {
-  type: 'warning' | 'danger' | 'critical'
-  message: string
-}) {
-  const styles = {
-    warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-    danger: 'bg-red-50 border-red-200 text-red-800',
-    critical: 'bg-red-100 border-red-300 text-red-900 font-medium',
-  }
-  const icons = { warning: '⚠️', danger: '🔴', critical: '🚨' }
-
-  return (
-    <div className={`flex items-start gap-3 px-4 py-3 rounded-xl border ${styles[type]}`}>
-      <span>{icons[type]}</span>
-      <p className="text-sm">{message}</p>
+    <div
+      className="bg-white rounded-lg p-3 text-sm"
+      style={{ border: '0.5px solid rgba(0,0,0,0.1)', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}
+    >
+      <p className="font-medium text-ink mb-2">{label}</p>
+      {payload.map((p) => (
+        <p key={p.name} className="text-ink-secondary" style={{ color: p.color }}>
+          {p.name}: <span className="font-medium text-ink">{fmt(p.value)}</span>
+        </p>
+      ))}
     </div>
   )
 }
@@ -272,35 +125,26 @@ function AlertBanner({
 // ── Empty State ─────────────────────────────────────────────────────
 function EmptyState() {
   return (
-    <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-20 h-20 bg-[#0e4324]/5 rounded-full flex items-center justify-center mb-4">
-        <span className="text-4xl">📊</span>
+    <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
+      <div
+        className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+        style={{ background: 'rgba(14,67,36,0.06)' }}
+      >
+        <span
+          className="material-symbols-outlined text-verde"
+          style={{ fontSize: '28px' }}
+        >
+          bar_chart
+        </span>
       </div>
-      <h3 className="text-lg font-semibold text-[#0e4324] mb-2">Ainda sem dados este mês</h3>
-      <p className="text-gray-500 text-sm max-w-sm mb-6">
+      <h3 className="font-serif font-semibold text-xl text-ink mb-1">Ainda sem dados este mês</h3>
+      <p className="text-sm text-ink-secondary max-w-xs mb-6">
         Começa a registar faturação para veres as tuas métricas e análises aqui.
       </p>
-      <a
-        href="/faturacao"
-        className="inline-flex items-center gap-2 bg-[#0e4324] text-white px-5 py-2.5 rounded-lg font-medium hover:bg-[#0a3019] transition-colors text-sm"
-      >
-        Registar primeiro serviço →
-      </a>
-    </div>
-  )
-}
-
-// ── Custom Tooltip ──────────────────────────────────────────────────
-function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{value: number; name: string; color: string}>; label?: string }) {
-  if (!active || !payload) return null
-  return (
-    <div className="bg-white border border-gray-100 rounded-xl shadow-lg p-3 text-sm">
-      <p className="font-medium text-[#0e4324] mb-2">{label}</p>
-      {payload.map((p) => (
-        <p key={p.name} style={{ color: p.color }}>
-          {p.name}: {fmt(p.value)}
-        </p>
-      ))}
+      <Link href="/faturacao" className="btn-primary">
+        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>add</span>
+        Registar primeiro serviço
+      </Link>
     </div>
   )
 }
@@ -318,7 +162,9 @@ export default function DashboardPage() {
 
   const fetchData = useCallback(async () => {
     setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!user) return
 
     // Barbearia
@@ -328,7 +174,10 @@ export default function DashboardPage() {
       .eq('user_id', user.id)
       .single()
 
-    if (!barb) { setLoading(false); return }
+    if (!barb) {
+      setLoading(false)
+      return
+    }
     setBarbearia(barb)
     const bid = barb.id
 
@@ -412,12 +261,16 @@ export default function DashboardPage() {
   const faturacaoTotal = faturacaoMes.reduce((s, f) => s + f.valor + (f.gorjeta ?? 0), 0)
   const despesasTotal = despesasMes.reduce((s, d) => s + d.valor, 0)
   const resultadoLiquido = faturacaoTotal - despesasTotal
-  const ticketMedio = faturacaoMes.length > 0 ? faturacaoMes.reduce((s, f) => s + f.valor, 0) / faturacaoMes.length : 0
+  const ticketMedio =
+    faturacaoMes.length > 0
+      ? faturacaoMes.reduce((s, f) => s + f.valor, 0) / faturacaoMes.length
+      : 0
 
   // Top servicos
   const servicoMap: Record<string, TopServico> = {}
   faturacaoMes.forEach((f) => {
-    const nome = (f.servicos as { nome: string; tempo_minutos: number } | null)?.nome ?? 'Sem serviço'
+    const nome =
+      (f.servicos as { nome: string; tempo_minutos: number } | null)?.nome ?? 'Sem serviço'
     if (!servicoMap[nome]) servicoMap[nome] = { nome, volume: 0, total: 0 }
     servicoMap[nome].volume += 1
     servicoMap[nome].total += f.valor
@@ -428,18 +281,26 @@ export default function DashboardPage() {
   const maxTotal = topServicos[0]?.total ?? 1
 
   // Health score metrics
-  const horaAbertura = barbearia?.hora_abertura ? parseInt(barbearia.hora_abertura.split(':')[0]) : 9
-  const horaFecho = barbearia?.hora_fecho ? parseInt(barbearia.hora_fecho.split(':')[0]) : 19
+  const horaAbertura = barbearia?.hora_abertura
+    ? parseInt(barbearia.hora_abertura.split(':')[0])
+    : 9
+  const horaFecho = barbearia?.hora_fecho
+    ? parseInt(barbearia.hora_fecho.split(':')[0])
+    : 19
   const horasPerDay = Math.max(horaFecho - horaAbertura, 1)
   const numBarbeiros = barbearia?.num_barbeiros ?? 1
   const diasTrabalho = barbearia?.dias_trabalho_mes ?? 22
   const capacidadeMinutos = numBarbeiros * diasTrabalho * horasPerDay * 60
 
   const minutosVendidos = faturacaoMes.reduce((s, f) => {
-    return s + ((f.servicos as { nome: string; tempo_minutos: number } | null)?.tempo_minutos ?? 30)
+    return (
+      s +
+      ((f.servicos as { nome: string; tempo_minutos: number } | null)?.tempo_minutos ?? 30)
+    )
   }, 0)
 
-  const taxaOcupacao = capacidadeMinutos > 0 ? (minutosVendidos / capacidadeMinutos) * 100 : 0
+  const taxaOcupacao =
+    capacidadeMinutos > 0 ? (minutosVendidos / capacidadeMinutos) * 100 : 0
 
   const custosFixosMensais = custosFixos.reduce((s, c) => s + c.valor, 0)
   const breakEvenDiario = diasTrabalho > 0 ? custosFixosMensais / diasTrabalho : 0
@@ -447,13 +308,19 @@ export default function DashboardPage() {
   const margensServicos = servicos
     .filter((s) => s.preco > 0)
     .map((s) => ((s.preco - s.custo_material) / s.preco) * 100)
-  const margemMedia = margensServicos.length > 0
-    ? margensServicos.reduce((a, b) => a + b, 0) / margensServicos.length
-    : 0
+  const margemMedia =
+    margensServicos.length > 0
+      ? margensServicos.reduce((a, b) => a + b, 0) / margensServicos.length
+      : 0
 
   const ratioCustos = faturacaoTotal > 0 ? (despesasTotal / faturacaoTotal) * 100 : 0
 
-  const getStatus = (value: number, goodMin: number, warnMin: number, inverted = false): 'good' | 'warning' | 'critical' => {
+  const getStatus = (
+    value: number,
+    goodMin: number,
+    warnMin: number,
+    inverted = false
+  ): 'good' | 'warning' | 'critical' => {
     if (inverted) {
       if (value <= goodMin) return 'good'
       if (value <= warnMin) return 'warning'
@@ -518,115 +385,396 @@ export default function DashboardPage() {
     })
   }
 
+  // Current date string
+  const currentDateString = new Date().toLocaleDateString('pt-PT', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+  const currentMonthString = new Date().toLocaleDateString('pt-PT', {
+    month: 'long',
+    year: 'numeric',
+  })
+
+  // Health score badge + ring color
+  const healthLabel =
+    healthScore >= 80 ? 'Excelente' : healthScore >= 60 ? 'Bom' : 'Atenção'
+  const healthBadgeClass =
+    healthScore >= 80 ? 'badge-green' : healthScore >= 60 ? 'badge-amber' : 'badge-red'
+  const healthRingColor =
+    healthScore >= 80
+      ? '#16a34a'
+      : healthScore >= 60
+      ? '#977c30'
+      : healthScore >= 40
+      ? '#f97316'
+      : '#dc2626'
+  const circumference = 2 * Math.PI * 40
+  const ringOffset = circumference - (healthScore / 100) * circumference
+
   return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <div>
-        <h1 className="text-2xl font-bold text-[#0e4324]">Dashboard</h1>
-        <p className="text-gray-500 text-sm mt-0.5">
-          {new Date().toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' })}
-          {barbearia ? ` · ${barbearia.nome}` : ''}
-        </p>
+    <div className="page-container">
+
+      {/* ── Page Header ─────────────────────────────────────────── */}
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Visão geral</h1>
+          <p className="text-sm text-ink-secondary mt-0.5">
+            {currentDateString}
+            {barbearia ? ` — ${barbearia.nome}` : ''}
+          </p>
+        </div>
+        <Link href="/faturacao" className="btn-primary">
+          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+            add
+          </span>
+          Novo registo
+        </Link>
       </div>
 
-      {/* Alerts */}
+      {/* ── Alerts ──────────────────────────────────────────────── */}
       {alerts.length > 0 && (
         <div className="space-y-2">
-          {alerts.map((a, i) => (
-            <AlertBanner key={i} type={a.type} message={a.message} />
-          ))}
+          {alerts.map((a, i) => {
+            const isOccupancy = a.message.includes('ocupação')
+            const isCosts = a.message.includes('despesas')
+            const isLoss = a.message.includes('negativo')
+            const iconName = isLoss ? 'crisis_alert' : isCosts ? 'trending_down' : 'warning'
+            const borderColor = isLoss ? '#dc2626' : isCosts ? '#f97316' : '#f59e0b'
+            const bgColor = isLoss ? '#fff5f5' : isCosts ? '#fff7ed' : '#fffbf0'
+            const iconColor = isLoss ? '#dc2626' : isCosts ? '#f97316' : '#f59e0b'
+            return (
+              <div
+                key={i}
+                className="rounded-xl p-4 flex gap-3"
+                style={{ background: bgColor, borderLeft: `3px solid ${borderColor}` }}
+              >
+                <span
+                  className="material-symbols-outlined icon-filled flex-shrink-0 mt-0.5"
+                  style={{ fontSize: '20px', color: iconColor }}
+                >
+                  {iconName}
+                </span>
+                <p className="text-sm text-ink">{a.message}</p>
+              </div>
+            )
+          })}
         </div>
       )}
 
-      {/* KPI Cards */}
+      {/* ── KPI Cards ───────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard
-          label="Faturação do mês"
-          value={fmt(faturacaoTotal)}
-          icon="💰"
-          color="bg-green-100 text-green-700"
-          loading={loading}
-          sub={faturacaoMes.length > 0 ? `${faturacaoMes.length} serviços` : undefined}
-        />
-        <KpiCard
-          label="Despesas totais"
-          value={fmt(despesasTotal)}
-          icon="💳"
-          color="bg-red-100 text-red-700"
-          loading={loading}
-          sub={despesasMes.length > 0 ? `${despesasMes.length} registos` : undefined}
-        />
-        <KpiCard
-          label="Resultado líquido"
-          value={fmt(resultadoLiquido)}
-          icon={resultadoLiquido >= 0 ? '📈' : '📉'}
-          color={resultadoLiquido >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}
-          loading={loading}
-          sub={resultadoLiquido >= 0 ? 'Lucro' : 'Prejuízo'}
-        />
-        <KpiCard
-          label="Ticket médio"
-          value={fmt(ticketMedio)}
-          icon="🎫"
-          color="bg-[#977c30]/10 text-[#977c30]"
-          loading={loading}
-        />
+        {/* Faturação do mês */}
+        <div className="metric-card metric-card-accent">
+          <p className="metric-label">Faturação do mês</p>
+          {loading ? (
+            <>
+              <Skeleton className="h-9 w-28 mt-2 mb-1" />
+              <Skeleton className="h-3 w-20 mt-2" />
+            </>
+          ) : (
+            <>
+              <p className="metric-value mt-2">{fmt(faturacaoTotal)}</p>
+              <p className="text-xs text-ink-secondary mt-2 flex items-center gap-1">
+                <span
+                  className="material-symbols-outlined icon-filled"
+                  style={{ fontSize: '14px', color: '#0e4324' }}
+                >
+                  check_circle
+                </span>
+                {faturacaoMes.length} serviços concluídos
+              </p>
+            </>
+          )}
+        </div>
+
+        {/* Despesas */}
+        <div className="metric-card">
+          <p className="metric-label">Despesas totais</p>
+          {loading ? (
+            <>
+              <Skeleton className="h-9 w-28 mt-2 mb-1" />
+              <Skeleton className="h-3 w-20 mt-2" />
+            </>
+          ) : (
+            <>
+              <p className="metric-value mt-2">{fmt(despesasTotal)}</p>
+              <p className="text-xs text-ink-secondary mt-2 flex items-center gap-1">
+                <span
+                  className="material-symbols-outlined"
+                  style={{ fontSize: '14px', color: '#717971' }}
+                >
+                  receipt_long
+                </span>
+                {despesasMes.length} registos
+              </p>
+            </>
+          )}
+        </div>
+
+        {/* Resultado líquido */}
+        <div className="metric-card">
+          <p className="metric-label">Resultado líquido</p>
+          {loading ? (
+            <>
+              <Skeleton className="h-9 w-28 mt-2 mb-1" />
+              <Skeleton className="h-3 w-20 mt-2" />
+            </>
+          ) : (
+            <>
+              <p
+                className="metric-value mt-2"
+                style={{ color: resultadoLiquido >= 0 ? '#0e4324' : '#dc2626' }}
+              >
+                {fmt(resultadoLiquido)}
+              </p>
+              <p className="text-xs mt-2 flex items-center gap-1"
+                style={{ color: resultadoLiquido >= 0 ? '#0e4324' : '#dc2626' }}>
+                <span
+                  className="material-symbols-outlined icon-filled"
+                  style={{ fontSize: '14px' }}
+                >
+                  {resultadoLiquido >= 0 ? 'trending_up' : 'trending_down'}
+                </span>
+                {resultadoLiquido >= 0 ? 'Lucro' : 'Prejuízo'} este mês
+              </p>
+            </>
+          )}
+        </div>
+
+        {/* Ticket médio */}
+        <div className="metric-card">
+          <p className="metric-label">Ticket médio</p>
+          {loading ? (
+            <>
+              <Skeleton className="h-9 w-28 mt-2 mb-1" />
+              <Skeleton className="h-3 w-20 mt-2" />
+            </>
+          ) : (
+            <>
+              <p className="metric-value mt-2">{fmt(ticketMedio)}</p>
+              <p className="text-xs text-ink-secondary mt-2 flex items-center gap-1">
+                <span
+                  className="material-symbols-outlined"
+                  style={{ fontSize: '14px', color: '#977c30' }}
+                >
+                  payments
+                </span>
+                Por serviço
+              </p>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Chart + Health Score */}
+      {/* ── Chart + Health Score ─────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Bar chart */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 p-5">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">Faturação vs Despesas — últimos 6 meses</h3>
+
+        {/* Bar Chart */}
+        <div className="card lg:col-span-2">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="section-title">Faturação vs Despesas</h2>
+            <span className="text-xs text-ink-secondary">{currentMonthString.replace(/^./, c => c.toUpperCase())} — últimos 6 meses</span>
+          </div>
           {loading ? (
-            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-52 w-full" />
           ) : (
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={chartData} barCategoryGap="30%">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                <XAxis dataKey="mes" tick={{ fontSize: 12, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} tickFormatter={(v) => `€${v}`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend
-                  formatter={(value) => <span className="text-xs text-gray-500">{value}</span>}
+              <BarChart data={chartData} barCategoryGap="32%">
+                <CartesianGrid
+                  strokeDasharray="0"
+                  stroke="#f0eee8"
+                  vertical={false}
                 />
-                <Bar dataKey="faturacao" name="Faturação" fill="#0e4324" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="despesas" name="Despesas" fill="#977c30" radius={[4, 4, 0, 0]} />
+                <XAxis
+                  dataKey="mes"
+                  tick={{ fontSize: 11, fill: '#717971', fontFamily: 'Inter, system-ui, sans-serif' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: '#717971', fontFamily: 'Inter, system-ui, sans-serif' }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => `€${v}`}
+                />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.03)' }} />
+                <Legend
+                  formatter={(value) => (
+                    <span style={{ fontSize: '11px', color: '#717971', fontFamily: 'Inter, system-ui, sans-serif' }}>
+                      {value}
+                    </span>
+                  )}
+                />
+                <Bar
+                  dataKey="faturacao"
+                  name="Faturação"
+                  fill="#0e4324"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar
+                  dataKey="despesas"
+                  name="Despesas"
+                  fill="#977c30"
+                  radius={[4, 4, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           )}
         </div>
 
         {/* Health Score */}
-        <HealthScoreCard score={healthScore} metrics={healthMetrics} loading={loading} />
+        <div className="card">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="section-title">Health Score</h2>
+            {!loading && (
+              <span className={healthBadgeClass}>{healthLabel}</span>
+            )}
+          </div>
+
+          {loading ? (
+            <div className="flex flex-col items-center gap-4">
+              <Skeleton className="w-28 h-28 rounded-full" />
+              <div className="w-full space-y-3">
+                {[1, 2, 3].map((i) => <Skeleton key={i} className="h-8 w-full" />)}
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Ring */}
+              <div className="flex justify-center mb-5">
+                <div className="relative">
+                  <svg width="112" height="112" className="-rotate-90">
+                    <circle
+                      cx="56"
+                      cy="56"
+                      r="40"
+                      fill="none"
+                      stroke="#f0eee8"
+                      strokeWidth="10"
+                    />
+                    <circle
+                      cx="56"
+                      cy="56"
+                      r="40"
+                      fill="none"
+                      stroke={healthRingColor}
+                      strokeWidth="10"
+                      strokeDasharray={circumference}
+                      strokeDashoffset={ringOffset}
+                      strokeLinecap="round"
+                      style={{ transition: 'stroke-dashoffset 1s ease' }}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="font-serif font-bold text-2xl text-ink leading-none">
+                      {healthScore}
+                    </span>
+                    <span className="text-xs text-ink-secondary mt-0.5">/ 100</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Metric breakdown */}
+              <div className="space-y-4">
+                {healthMetrics.map((m) => {
+                  const statusColor =
+                    m.status === 'good'
+                      ? '#16a34a'
+                      : m.status === 'warning'
+                      ? '#d97706'
+                      : '#dc2626'
+                  const barBg =
+                    m.status === 'good'
+                      ? '#16a34a'
+                      : m.status === 'warning'
+                      ? '#f59e0b'
+                      : '#dc2626'
+                  return (
+                    <div key={m.label}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-ink-secondary">{m.label}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="text-xs font-medium"
+                            style={{ color: statusColor }}
+                          >
+                            {m.value.toFixed(0)}{m.unit}
+                          </span>
+                          <div
+                            className="w-1.5 h-1.5 rounded-full"
+                            style={{ background: statusColor }}
+                          />
+                        </div>
+                      </div>
+                      <div
+                        className="w-full rounded-full h-1"
+                        style={{ background: '#f0eee8' }}
+                      >
+                        <div
+                          className="h-1 rounded-full transition-all duration-700"
+                          style={{
+                            width: `${Math.min(m.value, 100)}%`,
+                            background: barBg,
+                          }}
+                        />
+                      </div>
+                      <p className="text-xs text-ink-tertiary mt-0.5">{m.description}</p>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Top Services */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5">
-        <h3 className="text-sm font-semibold text-gray-700 mb-4">Serviços mais faturados — este mês</h3>
+      {/* ── Top Services ────────────────────────────────────────── */}
+      <div className="card">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="section-title">Serviços mais faturados</h2>
+          <span className="text-xs text-ink-secondary">Este mês</span>
+        </div>
+
         {loading ? (
           <div className="space-y-3">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
           </div>
         ) : topServicos.length === 0 ? (
           <EmptyState />
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {topServicos.map((s, i) => (
               <div key={s.nome} className="flex items-center gap-4">
-                <span className="text-xs font-bold text-gray-300 w-4">{i + 1}</span>
+                <span
+                  className="font-serif font-bold text-sm w-5 text-center flex-shrink-0"
+                  style={{ color: i === 0 ? '#977c30' : '#a8a89f' }}
+                >
+                  {i + 1}
+                </span>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-[#0e4324] truncate">{s.nome}</span>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm text-ink font-medium truncate">{s.nome}</span>
                     <div className="flex items-center gap-3 ml-2 flex-shrink-0">
-                      <span className="text-xs text-gray-400">{s.volume}×</span>
-                      <span className="text-sm font-semibold text-[#0e4324]">{fmt(s.total)}</span>
+                      <span className="text-xs text-ink-tertiary">{s.volume}×</span>
+                      <span className="font-serif font-medium text-sm text-ink">
+                        {fmt(s.total)}
+                      </span>
                     </div>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5">
+                  <div
+                    className="w-full rounded-full h-1"
+                    style={{ background: '#f0eee8' }}
+                  >
                     <div
-                      className="bg-[#0e4324] h-1.5 rounded-full transition-all duration-700"
-                      style={{ width: `${(s.total / maxTotal) * 100}%` }}
+                      className="h-1 rounded-full transition-all duration-700"
+                      style={{
+                        width: `${(s.total / maxTotal) * 100}%`,
+                        background: i === 0 ? '#977c30' : '#0e4324',
+                      }}
                     />
                   </div>
                 </div>
@@ -636,19 +784,110 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Break-even info */}
+      {/* ── Break-even Info ──────────────────────────────────────── */}
       {!loading && barbearia && custosFixosMensais > 0 && (
-        <div className="bg-[#0e4324]/5 border border-[#0e4324]/10 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="text-3xl">🎯</div>
+        <div
+          className="rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+          style={{
+            background: 'rgba(14,67,36,0.04)',
+            border: '0.5px solid rgba(14,67,36,0.12)',
+          }}
+        >
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(14,67,36,0.08)' }}
+          >
+            <span
+              className="material-symbols-outlined text-verde"
+              style={{ fontSize: '20px' }}
+            >
+              target
+            </span>
+          </div>
           <div className="flex-1">
-            <p className="text-sm font-semibold text-[#0e4324]">Break-even diário</p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Precisas de faturar <strong>{fmt(breakEvenDiario)}</strong> por dia de trabalho para cobrir os teus custos fixos mensais de <strong>{fmt(custosFixosMensais)}</strong>.
+            <p className="text-sm font-medium text-ink">Break-even diário</p>
+            <p className="text-xs text-ink-secondary mt-0.5">
+              Precisas de faturar{' '}
+              <strong className="text-ink">{fmt(breakEvenDiario)}</strong> por dia de
+              trabalho para cobrir os teus custos fixos mensais de{' '}
+              <strong className="text-ink">{fmt(custosFixosMensais)}</strong>.
             </p>
           </div>
-          <div className="flex-shrink-0">
-            <span className="text-2xl font-bold text-[#0e4324]">{fmt(breakEvenDiario)}</span>
-            <span className="text-xs text-gray-400 block text-right">/dia</span>
+          <div className="flex-shrink-0 text-right">
+            <p className="font-serif font-bold text-2xl text-verde leading-none">
+              {fmt(breakEvenDiario)}
+            </p>
+            <p className="text-xs text-ink-tertiary mt-0.5">por dia</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Suggestions ─────────────────────────────────────────── */}
+      {!loading && hasData && (
+        <div className="card">
+          <div className="flex items-center gap-2 mb-4">
+            <span
+              className="material-symbols-outlined icon-filled"
+              style={{ fontSize: '20px', color: '#977c30' }}
+            >
+              lightbulb
+            </span>
+            <h2 className="section-title">Sugestões</h2>
+          </div>
+          <div className="space-y-3">
+            {taxaOcupacao < 70 && (
+              <div
+                className="flex items-start gap-3 p-3 rounded-lg"
+                style={{ background: '#f9f7f2' }}
+              >
+                <span
+                  className="material-symbols-outlined flex-shrink-0 mt-0.5"
+                  style={{ fontSize: '18px', color: '#0e4324' }}
+                >
+                  schedule
+                </span>
+                <p className="text-sm text-ink-secondary">
+                  A tua taxa de ocupação está em{' '}
+                  <strong className="text-ink">{taxaOcupacao.toFixed(0)}%</strong>. Considera
+                  promoções em horários de menor procura para maximizar a capacidade disponível.
+                </p>
+              </div>
+            )}
+            {margemMedia < 60 && servicos.length > 0 && (
+              <div
+                className="flex items-start gap-3 p-3 rounded-lg"
+                style={{ background: '#f9f7f2' }}
+              >
+                <span
+                  className="material-symbols-outlined flex-shrink-0 mt-0.5"
+                  style={{ fontSize: '18px', color: '#977c30' }}
+                >
+                  trending_up
+                </span>
+                <p className="text-sm text-ink-secondary">
+                  A margem média dos teus serviços é de{' '}
+                  <strong className="text-ink">{margemMedia.toFixed(0)}%</strong>. Revê os
+                  preços ou reduz os custos de material para melhorar a rentabilidade.
+                </p>
+              </div>
+            )}
+            {resultadoLiquido > 0 && taxaOcupacao >= 70 && margemMedia >= 60 && (
+              <div
+                className="flex items-start gap-3 p-3 rounded-lg"
+                style={{ background: 'rgba(14,67,36,0.04)' }}
+              >
+                <span
+                  className="material-symbols-outlined icon-filled flex-shrink-0 mt-0.5"
+                  style={{ fontSize: '18px', color: '#16a34a' }}
+                >
+                  check_circle
+                </span>
+                <p className="text-sm text-ink-secondary">
+                  A barbearia está a operar de forma saudável. Mantém o ritmo e considera
+                  reinvestir os lucros para continuar a crescer.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

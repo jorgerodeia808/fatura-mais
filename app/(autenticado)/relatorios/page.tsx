@@ -146,75 +146,26 @@ function getMonthsInRange(from: Date, to: Date): string[] {
 // ── Skeleton ───────────────────────────────────────────────────────────────────
 
 function Sk({ className = '' }: { className?: string }) {
-  return <div className={`animate-pulse bg-gray-200 rounded-lg ${className}`} />
+  return <div className={`animate-pulse bg-surface-secondary rounded-lg ${className}`} />
 }
 
-// ── Trend badge ────────────────────────────────────────────────────────────────
+// ── Empty state ────────────────────────────────────────────────────────────────
 
-function Trend({ value, suffix = '%' }: { value: number; suffix?: string }) {
-  if (value === 0) return <span className="text-xs text-gray-400">—</span>
-  const up = value > 0
+function EmptyState({ msg }: { msg: string }) {
   return (
-    <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${up ? 'text-green-600' : 'text-red-500'}`}>
-      {up ? (
-        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
-        </svg>
-      ) : (
-        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-        </svg>
-      )}
-      {Math.abs(value).toFixed(1)}{suffix}
-    </span>
+    <div className="py-12 text-center text-ink-secondary text-sm font-sans">{msg}</div>
   )
 }
 
-// ── Summary card ───────────────────────────────────────────────────────────────
-
-interface SummaryCardProps {
-  title: string
-  value: string
-  trend: number
-  loading: boolean
-  icon: React.ReactNode
-  accent?: boolean
-}
-
-function SummaryCard({ title, value, trend, loading, icon, accent }: SummaryCardProps) {
-  return (
-    <div className={`bg-white rounded-2xl border p-5 flex flex-col gap-3 ${accent ? 'border-[#0e4324]/20' : 'border-gray-100'}`}>
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-500">{title}</span>
-        <span className="text-[#0e4324] opacity-70">{icon}</span>
-      </div>
-      {loading ? (
-        <>
-          <Sk className="h-8 w-32" />
-          <Sk className="h-4 w-20" />
-        </>
-      ) : (
-        <>
-          <p className={`text-2xl font-bold ${accent ? 'text-[#0e4324]' : 'text-gray-800'}`}>{value}</p>
-          <div className="flex items-center gap-1 text-xs text-gray-400">
-            <Trend value={trend} />
-            <span>vs período anterior</span>
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
-// ── Custom tooltip ─────────────────────────────────────────────────────────────
+// ── Tooltip ────────────────────────────────────────────────────────────────────
 
 function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number; color: string }[]; label?: string }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-white border border-gray-100 rounded-xl shadow-lg p-3 text-sm">
-      <p className="font-semibold text-gray-700 mb-1">{label}</p>
+    <div style={{ background: 'white', border: '0.5px solid rgba(0,0,0,0.08)', borderRadius: '8px', fontSize: '12px', padding: '10px 14px' }}>
+      <p className="font-semibold text-ink mb-1 font-sans">{label}</p>
       {payload.map((p, i) => (
-        <p key={i} style={{ color: p.color }}>
+        <p key={i} style={{ color: p.color }} className="font-sans">
           {p.name}: {fmt(p.value)}
         </p>
       ))}
@@ -226,20 +177,10 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-50">
-        <h2 className="text-base font-bold text-[#0e4324]">{title}</h2>
-      </div>
-      <div className="p-6">{children}</div>
+    <div className="card overflow-hidden">
+      <h2 className="section-title mb-5 pb-4 border-b border-surface-secondary">{title}</h2>
+      <div>{children}</div>
     </div>
-  )
-}
-
-// ── Empty state ────────────────────────────────────────────────────────────────
-
-function EmptyState({ msg }: { msg: string }) {
-  return (
-    <div className="py-12 text-center text-gray-400 text-sm">{msg}</div>
   )
 }
 
@@ -426,6 +367,7 @@ export default function RelatoriosPage() {
   const pieMarc = [
     { name: 'Confirmadas', value: confirmadas },
     { name: 'Desistências', value: desistencias },
+    { name: 'Outras', value: Math.max(0, totalMarcacoes - confirmadas - desistencias) },
   ]
 
   // ── Despesas por categoria ─────────────────────────────────────────
@@ -443,7 +385,7 @@ export default function RelatoriosPage() {
   const pctFixas = totalDespesas > 0 ? (despFixas / totalDespesas) * 100 : 0
   const pctVariaveis = totalDespesas > 0 ? (despVariaveis / totalDespesas) * 100 : 0
 
-  const PIE_COLORS = ['#0e4324', '#977c30', '#16a34a', '#ef4444', '#3b82f6', '#a855f7', '#f97316', '#06b6d4']
+  const PIE_COLORS = ['#0e4324', '#977c30', '#d4d0c8', '#16a34a', '#ef4444', '#3b82f6', '#a855f7', '#f97316']
 
   // ── Period label ───────────────────────────────────────────────────
 
@@ -501,7 +443,7 @@ export default function RelatoriosPage() {
 
       // Body image
       const imgH = (canvas.height * contentW) / canvas.width
-      const maxImgH = pageH - 36 - 16 - 14 // header + top-margin + footer
+      const maxImgH = pageH - 36 - 16 - 14
       const usedH = Math.min(imgH, maxImgH)
       pdf.addImage(imgData, 'JPEG', margin, 40, contentW, usedH)
 
@@ -516,81 +458,81 @@ export default function RelatoriosPage() {
     }
   }
 
+  // ── Chart shared styles ────────────────────────────────────────────
+
+  const axisStyle = { fill: '#717971', fontSize: 11 }
+  const gridStyle = { stroke: '#f0eee8' }
+  const tooltipStyle = { contentStyle: { background: 'white', border: '0.5px solid rgba(0,0,0,0.08)', borderRadius: '8px', fontSize: '12px' } }
+
   // ── Render ─────────────────────────────────────────────────────────
 
+  const periods: { value: Periodo; label: string }[] = [
+    { value: 'este-mes', label: 'Este mês' },
+    { value: 'mes-anterior', label: 'Mês anterior' },
+    { value: '3-meses', label: 'Últimos 3 meses' },
+    { value: '6-meses', label: 'Últimos 6 meses' },
+    { value: 'este-ano', label: 'Este ano' },
+    { value: 'personalizado', label: 'Personalizado' },
+  ]
+
   return (
-    <div className="space-y-6 pb-10" style={{ background: '#f7f5f0', minHeight: '100vh' }}>
+    <div className="space-y-6 pb-10">
       {/* Page header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold text-[#0e4324]">Relatórios</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Análises e estatísticas detalhadas</p>
+          <h1 className="page-title">Relatórios</h1>
+          <p className="text-ink-secondary text-sm mt-0.5 font-sans">Análises e estatísticas detalhadas</p>
         </div>
         <button
+          className="btn-secondary flex items-center gap-2"
           onClick={handleExportPDF}
           disabled={exporting || loading}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity disabled:opacity-60"
-          style={{ background: '#977c30', minHeight: 44 }}
         >
           {exporting ? (
-            <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+            <span className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
           ) : (
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z" />
-            </svg>
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>picture_as_pdf</span>
           )}
           Exportar PDF
         </button>
       </div>
 
-      {/* Period filter bar */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-col gap-3">
-        <div className="flex flex-wrap gap-2">
-          {(
-            [
-              { id: 'este-mes', label: 'Este mês' },
-              { id: 'mes-anterior', label: 'Mês anterior' },
-              { id: '3-meses', label: 'Últimos 3 meses' },
-              { id: '6-meses', label: 'Últimos 6 meses' },
-              { id: 'este-ano', label: 'Este ano' },
-              { id: 'personalizado', label: 'Personalizado' },
-            ] as { id: Periodo; label: string }[]
-          ).map((p) => (
+      {/* Period filter */}
+      <div className="card">
+        <div className="inline-flex bg-surface-secondary rounded-xl p-1 gap-0.5 flex-wrap">
+          {periods.map((p) => (
             <button
-              key={p.id}
-              onClick={() => setPeriodo(p.id)}
-              className="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-              style={{
-                minHeight: 44,
-                fontSize: 16,
-                background: periodo === p.id ? '#0e4324' : '#f3f4f6',
-                color: periodo === p.id ? '#fff' : '#374151',
-              }}
+              key={p.value}
+              onClick={() => setPeriodo(p.value)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium font-sans transition-all duration-150 ${
+                periodo === p.value
+                  ? 'bg-white text-verde shadow-sm border border-black/5'
+                  : 'text-ink-secondary hover:text-ink'
+              }`}
             >
               {p.label}
             </button>
           ))}
         </div>
+
         {periodo === 'personalizado' && (
-          <div className="flex flex-col sm:flex-row gap-3 pt-1">
+          <div className="flex flex-col sm:flex-row gap-3 mt-4 pt-4 border-t border-surface-secondary">
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 font-medium">De</label>
+              <label className="text-xs text-ink-secondary font-medium font-sans">De</label>
               <input
                 type="date"
                 value={customFrom}
                 onChange={(e) => setCustomFrom(e.target.value)}
-                className="border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0e4324]/30"
-                style={{ minHeight: 44, fontSize: 16 }}
+                className="input-field"
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 font-medium">Até</label>
+              <label className="text-xs text-ink-secondary font-medium font-sans">Até</label>
               <input
                 type="date"
                 value={customTo}
                 onChange={(e) => setCustomTo(e.target.value)}
-                className="border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0e4324]/30"
-                style={{ minHeight: 44, fontSize: 16 }}
+                className="input-field"
               />
             </div>
           </div>
@@ -600,54 +542,71 @@ export default function RelatoriosPage() {
       {/* Wrapper for PDF capture */}
       <div id="relatorio-pdf" className="space-y-6">
 
-        {/* Summary cards */}
+        {/* Summary metric cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <SummaryCard
-            title="Faturação total"
-            value={fmt(totalFaturacao)}
-            trend={trendFat}
-            loading={loading}
-            accent
-            icon={
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            }
-          />
-          <SummaryCard
-            title="Despesas totais"
-            value={fmt(totalDespesas)}
-            trend={-trendDesp}
-            loading={loading}
-            icon={
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-              </svg>
-            }
-          />
-          <SummaryCard
-            title="Resultado líquido"
-            value={fmt(resultado)}
-            trend={trendRes}
-            loading={loading}
-            icon={
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            }
-          />
-          <SummaryCard
-            title="Margem (%)"
-            value={`${margem.toFixed(1)}%`}
-            trend={trendMarg}
-            loading={loading}
-            icon={
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
-              </svg>
-            }
-          />
+          {/* Faturação */}
+          <div className="metric-card">
+            <div className="flex items-center justify-between mb-2">
+              <span className="metric-label">Faturação total</span>
+              <span className="material-symbols-outlined text-verde/60" style={{ fontSize: '18px' }}>payments</span>
+            </div>
+            {loading ? <Sk className="h-8 w-32 mb-2" /> : (
+              <p className="metric-value">{fmt(totalFaturacao)}</p>
+            )}
+            {!loading && (
+              <span className={`badge ${trendFat > 0 ? 'badge-green' : trendFat < 0 ? 'badge-red' : 'badge-gray'}`}>
+                {fmtPct(trendFat)} vs anterior
+              </span>
+            )}
+          </div>
+
+          {/* Despesas */}
+          <div className="metric-card">
+            <div className="flex items-center justify-between mb-2">
+              <span className="metric-label">Despesas totais</span>
+              <span className="material-symbols-outlined text-verde/60" style={{ fontSize: '18px' }}>credit_card</span>
+            </div>
+            {loading ? <Sk className="h-8 w-32 mb-2" /> : (
+              <p className="metric-value">{fmt(totalDespesas)}</p>
+            )}
+            {!loading && (
+              <span className={`badge ${trendDesp < 0 ? 'badge-green' : trendDesp > 0 ? 'badge-red' : 'badge-gray'}`}>
+                {fmtPct(trendDesp)} vs anterior
+              </span>
+            )}
+          </div>
+
+          {/* Resultado */}
+          <div className="metric-card">
+            <div className="flex items-center justify-between mb-2">
+              <span className="metric-label">Resultado líquido</span>
+              <span className="material-symbols-outlined text-verde/60" style={{ fontSize: '18px' }}>bar_chart</span>
+            </div>
+            {loading ? <Sk className="h-8 w-32 mb-2" /> : (
+              <p className="metric-value">{fmt(resultado)}</p>
+            )}
+            {!loading && (
+              <span className={`badge ${trendRes > 0 ? 'badge-green' : trendRes < 0 ? 'badge-red' : 'badge-gray'}`}>
+                {fmtPct(trendRes)} vs anterior
+              </span>
+            )}
+          </div>
+
+          {/* Margem */}
+          <div className="metric-card">
+            <div className="flex items-center justify-between mb-2">
+              <span className="metric-label">Margem (%)</span>
+              <span className="material-symbols-outlined text-verde/60" style={{ fontSize: '18px' }}>donut_small</span>
+            </div>
+            {loading ? <Sk className="h-8 w-32 mb-2" /> : (
+              <p className="metric-value">{margem.toFixed(1)}%</p>
+            )}
+            {!loading && (
+              <span className={`badge ${trendMarg > 0 ? 'badge-green' : trendMarg < 0 ? 'badge-red' : 'badge-gray'}`}>
+                {fmtPct(trendMarg)} vs anterior
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Evolução mensal */}
@@ -658,16 +617,15 @@ export default function RelatoriosPage() {
             <EmptyState msg="Sem dados para o período selecionado." />
           ) : (
             <div className="space-y-6">
-              {/* Bar + Line chart */}
               <div className="flex flex-col lg:flex-row gap-6">
                 <div className="flex-1">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Faturação vs Despesas</p>
+                  <p className="text-xs font-semibold text-ink-secondary uppercase tracking-wide mb-3 font-sans">Faturação vs Despesas</p>
                   <ResponsiveContainer width="100%" height={260}>
                     <BarChart data={monthlyData} margin={{ top: 4, right: 12, left: 0, bottom: 4 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis dataKey="mesLabel" tick={{ fontSize: 11, fill: '#6b7280' }} />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(v) => `${v}€`} width={54} />
-                      <Tooltip content={<CustomTooltip />} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0eee8" />
+                      <XAxis dataKey="mesLabel" tick={axisStyle} />
+                      <YAxis tick={axisStyle} tickFormatter={(v) => `${v}€`} width={54} />
+                      <Tooltip {...tooltipStyle} />
                       <Legend wrapperStyle={{ fontSize: 12 }} />
                       <Bar dataKey="faturacao" name="Faturação" fill="#0e4324" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="despesas" name="Despesas" fill="#977c30" radius={[4, 4, 0, 0]} />
@@ -675,20 +633,20 @@ export default function RelatoriosPage() {
                   </ResponsiveContainer>
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Resultado líquido</p>
+                  <p className="text-xs font-semibold text-ink-secondary uppercase tracking-wide mb-3 font-sans">Resultado líquido</p>
                   <ResponsiveContainer width="100%" height={260}>
                     <ComposedChart data={monthlyData} margin={{ top: 4, right: 12, left: 0, bottom: 4 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis dataKey="mesLabel" tick={{ fontSize: 11, fill: '#6b7280' }} />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(v) => `${v}€`} width={54} />
-                      <Tooltip content={<CustomTooltip />} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0eee8" />
+                      <XAxis dataKey="mesLabel" tick={axisStyle} />
+                      <YAxis tick={axisStyle} tickFormatter={(v) => `${v}€`} width={54} />
+                      <Tooltip {...tooltipStyle} />
                       <Legend wrapperStyle={{ fontSize: 12 }} />
-                      <Bar dataKey="resultado" name="Resultado" fill="#16a34a" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="resultado" name="Resultado" fill="#0e4324" radius={[4, 4, 0, 0]} />
                       <Line
                         type="monotone"
                         dataKey="resultado"
                         name="Tendência"
-                        stroke="#ef4444"
+                        stroke="#977c30"
                         strokeWidth={2}
                         dot={false}
                       />
@@ -697,24 +655,26 @@ export default function RelatoriosPage() {
                 </div>
               </div>
 
+              <div className="border-t border-surface-secondary my-2" />
+
               {/* Monthly table */}
-              <div className="overflow-x-auto rounded-xl border border-gray-100">
-                <table className="w-full text-sm">
+              <div className="overflow-x-auto rounded-xl border border-surface-secondary">
+                <table className="w-full text-sm font-sans">
                   <thead>
-                    <tr className="bg-gray-50">
-                      <th className="text-left px-4 py-3 font-semibold text-gray-600">Mês</th>
-                      <th className="text-right px-4 py-3 font-semibold text-gray-600">Faturação</th>
-                      <th className="text-right px-4 py-3 font-semibold text-gray-600">Despesas</th>
-                      <th className="text-right px-4 py-3 font-semibold text-gray-600">Resultado</th>
-                      <th className="text-right px-4 py-3 font-semibold text-gray-600">Margem</th>
+                    <tr className="bg-surface-secondary">
+                      <th className="text-left px-4 py-3 font-semibold text-ink-secondary">Mês</th>
+                      <th className="text-right px-4 py-3 font-semibold text-ink-secondary">Faturação</th>
+                      <th className="text-right px-4 py-3 font-semibold text-ink-secondary">Despesas</th>
+                      <th className="text-right px-4 py-3 font-semibold text-ink-secondary">Resultado</th>
+                      <th className="text-right px-4 py-3 font-semibold text-ink-secondary">Margem</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-surface-secondary">
                     {monthlyData.map((m) => (
-                      <tr key={m.mes} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 font-medium text-gray-800">{m.mesLabel}</td>
-                        <td className="px-4 py-3 text-right text-[#0e4324] font-medium">{fmt(m.faturacao)}</td>
-                        <td className="px-4 py-3 text-right text-[#977c30]">{fmt(m.despesas)}</td>
+                      <tr key={m.mes} className="table-row-hover">
+                        <td className="px-4 py-3 font-medium text-ink">{m.mesLabel}</td>
+                        <td className="px-4 py-3 text-right text-verde font-medium">{fmt(m.faturacao)}</td>
+                        <td className="px-4 py-3 text-right text-dourado">{fmt(m.despesas)}</td>
                         <td className={`px-4 py-3 text-right font-semibold ${m.resultado >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                           {fmt(m.resultado)}
                         </td>
@@ -725,10 +685,10 @@ export default function RelatoriosPage() {
                     ))}
                   </tbody>
                   <tfoot>
-                    <tr className="bg-gray-50 font-bold">
-                      <td className="px-4 py-3 text-gray-800">Total</td>
-                      <td className="px-4 py-3 text-right text-[#0e4324]">{fmt(totalFaturacao)}</td>
-                      <td className="px-4 py-3 text-right text-[#977c30]">{fmt(totalDespesas)}</td>
+                    <tr className="bg-surface-secondary font-bold">
+                      <td className="px-4 py-3 text-ink">Total</td>
+                      <td className="px-4 py-3 text-right text-verde">{fmt(totalFaturacao)}</td>
+                      <td className="px-4 py-3 text-right text-dourado">{fmt(totalDespesas)}</td>
                       <td className={`px-4 py-3 text-right ${resultado >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                         {fmt(resultado)}
                       </td>
@@ -743,6 +703,8 @@ export default function RelatoriosPage() {
           )}
         </Section>
 
+        <div className="border-t border-surface-secondary" />
+
         {/* Análise de serviços */}
         <Section title="Análise de Serviços">
           {loading ? (
@@ -752,55 +714,51 @@ export default function RelatoriosPage() {
           ) : (
             <div className="space-y-6">
               <div className="flex flex-col lg:flex-row gap-6">
-                {/* Horizontal bar chart */}
                 <div className="flex-1">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Top serviços por receita</p>
+                  <p className="text-xs font-semibold text-ink-secondary uppercase tracking-wide mb-3 font-sans">Top serviços por receita</p>
                   <ResponsiveContainer width="100%" height={Math.max(200, servicosAnalise.length * 44)}>
                     <BarChart
                       layout="vertical"
                       data={servicosAnalise.slice(0, 8)}
                       margin={{ top: 4, right: 16, left: 8, bottom: 4 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
-                      <XAxis type="number" tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(v) => `${v}€`} />
-                      <YAxis type="category" dataKey="nome" tick={{ fontSize: 11, fill: '#6b7280' }} width={110} />
-                      <Tooltip content={<CustomTooltip />} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0eee8" horizontal={false} />
+                      <XAxis type="number" tick={axisStyle} tickFormatter={(v) => `${v}€`} />
+                      <YAxis type="category" dataKey="nome" tick={axisStyle} width={110} />
+                      <Tooltip {...tooltipStyle} />
                       <Bar dataKey="faturacaoTotal" name="Faturação" fill="#0e4324" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
+              <div className="border-t border-surface-secondary" />
+
               {/* Services table */}
-              <div className="overflow-x-auto rounded-xl border border-gray-100">
-                <table className="w-full text-sm">
+              <div className="overflow-x-auto rounded-xl border border-surface-secondary">
+                <table className="w-full text-sm font-sans">
                   <thead>
-                    <tr className="bg-gray-50">
-                      <th className="text-left px-4 py-3 font-semibold text-gray-600">Serviço</th>
-                      <th className="text-right px-4 py-3 font-semibold text-gray-600">Realizações</th>
-                      <th className="text-right px-4 py-3 font-semibold text-gray-600">Faturação total</th>
-                      <th className="text-right px-4 py-3 font-semibold text-gray-600">Faturação média</th>
-                      <th className="text-right px-4 py-3 font-semibold text-gray-600">Tempo total</th>
+                    <tr className="bg-surface-secondary">
+                      <th className="text-left px-4 py-3 font-semibold text-ink-secondary">Serviço</th>
+                      <th className="text-right px-4 py-3 font-semibold text-ink-secondary">Realizações</th>
+                      <th className="text-right px-4 py-3 font-semibold text-ink-secondary">Faturação total</th>
+                      <th className="text-right px-4 py-3 font-semibold text-ink-secondary">Faturação média</th>
+                      <th className="text-right px-4 py-3 font-semibold text-ink-secondary">Tempo total</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-surface-secondary">
                     {servicosAnalise.map((s, idx) => (
-                      <tr key={s.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 font-medium text-gray-800 flex items-center gap-2 flex-wrap">
+                      <tr key={s.id} className="table-row-hover">
+                        <td className="px-4 py-3 font-medium text-ink flex items-center gap-2 flex-wrap">
                           {s.nome}
                           {idx === 0 && (
-                            <span
-                              className="text-xs font-bold px-2 py-0.5 rounded-full"
-                              style={{ background: '#977c3020', color: '#977c30' }}
-                            >
-                              ⭐ Mais rentável
-                            </span>
+                            <span className="badge badge-gold">Mais rentável</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-right text-gray-700">{s.realizacoes}</td>
-                        <td className="px-4 py-3 text-right text-[#0e4324] font-medium">{fmt(s.faturacaoTotal)}</td>
-                        <td className="px-4 py-3 text-right text-gray-700">{fmt(s.faturacaoMedia)}</td>
-                        <td className="px-4 py-3 text-right text-gray-500">{s.tempoTotal} min</td>
+                        <td className="px-4 py-3 text-right text-ink-secondary">{s.realizacoes}</td>
+                        <td className="px-4 py-3 text-right text-verde font-medium">{fmt(s.faturacaoTotal)}</td>
+                        <td className="px-4 py-3 text-right text-ink-secondary">{fmt(s.faturacaoMedia)}</td>
+                        <td className="px-4 py-3 text-right text-ink-secondary">{s.tempoTotal} min</td>
                       </tr>
                     ))}
                   </tbody>
@@ -809,6 +767,8 @@ export default function RelatoriosPage() {
             </div>
           )}
         </Section>
+
+        <div className="border-t border-surface-secondary" />
 
         {/* Marcações */}
         <Section title="Marcações">
@@ -832,9 +792,10 @@ export default function RelatoriosPage() {
                       paddingAngle={3}
                     >
                       <Cell fill="#0e4324" />
-                      <Cell fill="#ef4444" />
+                      <Cell fill="#977c30" />
+                      <Cell fill="#d4d0c8" />
                     </Pie>
-                    <Tooltip formatter={(v) => [`${v}`, '']} />
+                    <Tooltip formatter={(v) => [`${v}`, '']} contentStyle={{ background: 'white', border: '0.5px solid rgba(0,0,0,0.08)', borderRadius: '8px', fontSize: '12px' }} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                   </PieChart>
                 </ResponsiveContainer>
@@ -842,26 +803,28 @@ export default function RelatoriosPage() {
 
               {/* Stats */}
               <div className="grid grid-cols-2 gap-4 flex-1">
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 font-medium">Total marcações</p>
-                  <p className="text-2xl font-bold text-gray-800 mt-1">{totalMarcacoes}</p>
+                <div className="rounded-xl bg-surface-secondary p-4">
+                  <p className="text-xs text-ink-secondary font-medium font-sans">Total marcações</p>
+                  <p className="font-serif text-2xl font-bold text-ink mt-1">{totalMarcacoes}</p>
                 </div>
-                <div className="bg-green-50 rounded-xl p-4">
-                  <p className="text-xs text-green-700 font-medium">Confirmadas</p>
-                  <p className="text-2xl font-bold text-green-700 mt-1">{confirmadas}</p>
+                <div className="rounded-xl bg-verde/5 p-4">
+                  <p className="text-xs text-verde font-medium font-sans">Confirmadas</p>
+                  <p className="font-serif text-2xl font-bold text-verde mt-1">{confirmadas}</p>
                 </div>
-                <div className="bg-red-50 rounded-xl p-4">
-                  <p className="text-xs text-red-600 font-medium">Desistências</p>
-                  <p className="text-2xl font-bold text-red-600 mt-1">{desistencias}</p>
+                <div className="rounded-xl bg-red-50 p-4">
+                  <p className="text-xs text-red-600 font-medium font-sans">Desistências</p>
+                  <p className="font-serif text-2xl font-bold text-red-600 mt-1">{desistencias}</p>
                 </div>
-                <div className="bg-orange-50 rounded-xl p-4">
-                  <p className="text-xs text-orange-600 font-medium">Taxa desistência</p>
-                  <p className="text-2xl font-bold text-orange-600 mt-1">{taxaDesistencia.toFixed(1)}%</p>
+                <div className="rounded-xl bg-dourado/10 p-4">
+                  <p className="text-xs text-dourado font-medium font-sans">Taxa desistência</p>
+                  <p className="font-serif text-2xl font-bold text-dourado mt-1">{taxaDesistencia.toFixed(1)}%</p>
                 </div>
               </div>
             </div>
           )}
         </Section>
+
+        <div className="border-t border-surface-secondary" />
 
         {/* Gorjetas */}
         <Section title="Gorjetas">
@@ -872,16 +835,19 @@ export default function RelatoriosPage() {
           ) : (
             <div className="space-y-5">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                <div className="bg-[#0e4324]/5 rounded-xl p-4">
-                  <p className="text-xs text-[#0e4324] font-medium">Total gorjetas</p>
-                  <p className="text-2xl font-bold text-[#0e4324] mt-1">{fmt(totalGorjetas)}</p>
+                <div className="rounded-xl bg-verde/5 p-4 flex items-start gap-3">
+                  <span className="material-symbols-outlined text-verde mt-0.5" style={{ fontSize: '20px' }}>trophy</span>
+                  <div>
+                    <p className="text-xs text-verde font-medium font-sans">Total gorjetas</p>
+                    <p className="font-serif text-2xl font-bold text-verde mt-1">{fmt(totalGorjetas)}</p>
+                  </div>
                 </div>
-                <div className="bg-[#977c30]/10 rounded-xl p-4">
-                  <p className="text-xs text-[#977c30] font-medium">Média por serviço</p>
-                  <p className="text-2xl font-bold text-[#977c30] mt-1">{fmt(mediaGorjeta)}</p>
+                <div className="rounded-xl bg-dourado/10 p-4">
+                  <p className="text-xs text-dourado font-medium font-sans">Média por serviço</p>
+                  <p className="font-serif text-2xl font-bold text-dourado mt-1">{fmt(mediaGorjeta)}</p>
                 </div>
-                <div className="bg-gray-50 rounded-xl p-4 col-span-2 sm:col-span-1">
-                  <p className="text-xs text-gray-500 font-medium mb-2">Distribuição por serviço</p>
+                <div className="rounded-xl bg-surface-secondary p-4 col-span-2 sm:col-span-1">
+                  <p className="text-xs text-ink-secondary font-medium font-sans mb-2">Distribuição por serviço</p>
                   <div className="space-y-1.5 max-h-48 overflow-y-auto">
                     {faturacaoRows
                       .filter((r) => r.gorjeta > 0)
@@ -892,14 +858,14 @@ export default function RelatoriosPage() {
                         const nome = r.servicos?.nome ?? 'Serviço'
                         return (
                           <div key={r.id} className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500 w-20 truncate">{nome}</span>
-                            <div className="flex-1 bg-gray-200 rounded-full h-2">
+                            <span className="text-xs text-ink-secondary w-20 truncate font-sans">{nome}</span>
+                            <div className="flex-1 bg-surface-secondary rounded-full h-2">
                               <div
                                 className="h-2 rounded-full"
                                 style={{ width: `${pct}%`, background: '#977c30' }}
                               />
                             </div>
-                            <span className="text-xs font-medium text-[#977c30] w-14 text-right">{fmt(r.gorjeta)}</span>
+                            <span className="text-xs font-medium text-dourado w-14 text-right font-sans">{fmt(r.gorjeta)}</span>
                           </div>
                         )
                       })}
@@ -909,6 +875,8 @@ export default function RelatoriosPage() {
             </div>
           )}
         </Section>
+
+        <div className="border-t border-surface-secondary" />
 
         {/* Despesas detalhadas */}
         <Section title="Despesas Detalhadas">
@@ -920,40 +888,42 @@ export default function RelatoriosPage() {
             <div className="space-y-6">
               {/* Fixas vs variáveis */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="bg-blue-50 rounded-xl p-4">
-                  <p className="text-xs text-blue-600 font-medium">Fixas</p>
-                  <p className="text-xl font-bold text-blue-700 mt-1">{fmt(despFixas)}</p>
-                  <p className="text-xs text-blue-500 mt-0.5">{pctFixas.toFixed(1)}% do total</p>
+                <div className="rounded-xl bg-verde/5 p-4">
+                  <p className="text-xs text-verde font-medium font-sans">Fixas</p>
+                  <p className="font-serif text-xl font-bold text-verde mt-1">{fmt(despFixas)}</p>
+                  <p className="text-xs text-ink-secondary mt-0.5 font-sans">{pctFixas.toFixed(1)}% do total</p>
                 </div>
-                <div className="bg-purple-50 rounded-xl p-4">
-                  <p className="text-xs text-purple-600 font-medium">Variáveis</p>
-                  <p className="text-xl font-bold text-purple-700 mt-1">{fmt(despVariaveis)}</p>
-                  <p className="text-xs text-purple-500 mt-0.5">{pctVariaveis.toFixed(1)}% do total</p>
+                <div className="rounded-xl bg-dourado/10 p-4">
+                  <p className="text-xs text-dourado font-medium font-sans">Variáveis</p>
+                  <p className="font-serif text-xl font-bold text-dourado mt-1">{fmt(despVariaveis)}</p>
+                  <p className="text-xs text-ink-secondary mt-0.5 font-sans">{pctVariaveis.toFixed(1)}% do total</p>
                 </div>
-                <div className="col-span-2 bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 font-medium mb-2">Proporção</p>
+                <div className="col-span-2 rounded-xl bg-surface-secondary p-4">
+                  <p className="text-xs text-ink-secondary font-medium font-sans mb-2">Proporção fixas / variáveis</p>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-blue-600 w-10">{pctFixas.toFixed(0)}%</span>
-                    <div className="flex-1 h-4 bg-purple-200 rounded-full overflow-hidden">
+                    <span className="text-xs text-verde w-10 font-sans">{pctFixas.toFixed(0)}%</span>
+                    <div className="flex-1 h-3 bg-dourado/20 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-blue-500 rounded-full transition-all"
+                        className="h-full bg-verde rounded-full transition-all"
                         style={{ width: `${pctFixas}%` }}
                       />
                     </div>
-                    <span className="text-xs text-purple-600 w-10 text-right">{pctVariaveis.toFixed(0)}%</span>
+                    <span className="text-xs text-dourado w-10 text-right font-sans">{pctVariaveis.toFixed(0)}%</span>
                   </div>
-                  <div className="flex justify-between text-xs text-gray-400 mt-1">
+                  <div className="flex justify-between text-xs text-ink-secondary mt-1 font-sans">
                     <span>Fixas</span>
                     <span>Variáveis</span>
                   </div>
                 </div>
               </div>
 
+              <div className="border-t border-surface-secondary" />
+
               {/* Pie by categoria + table */}
               <div className="flex flex-col lg:flex-row gap-6">
                 {despCat.length > 0 && (
                   <div className="flex-shrink-0">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Por categoria</p>
+                    <p className="text-xs font-semibold text-ink-secondary uppercase tracking-wide mb-3 font-sans">Por categoria</p>
                     <ResponsiveContainer width={260} height={260}>
                       <PieChart>
                         <Pie
@@ -970,53 +940,49 @@ export default function RelatoriosPage() {
                             <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(v) => [fmt(Number(v)), '']} />
+                        <Tooltip formatter={(v) => [fmt(Number(v)), '']} contentStyle={{ background: 'white', border: '0.5px solid rgba(0,0,0,0.08)', borderRadius: '8px', fontSize: '12px' }} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
                 )}
 
                 {/* Despesas table */}
-                <div className="flex-1 overflow-x-auto rounded-xl border border-gray-100">
-                  <table className="w-full text-sm">
+                <div className="flex-1 overflow-x-auto rounded-xl border border-surface-secondary">
+                  <table className="w-full text-sm font-sans">
                     <thead>
-                      <tr className="bg-gray-50">
-                        <th className="text-left px-4 py-3 font-semibold text-gray-600">Descrição</th>
-                        <th className="text-left px-4 py-3 font-semibold text-gray-600">Categoria</th>
-                        <th className="text-left px-4 py-3 font-semibold text-gray-600">Tipo</th>
-                        <th className="text-left px-4 py-3 font-semibold text-gray-600">Data</th>
-                        <th className="text-right px-4 py-3 font-semibold text-gray-600">Valor</th>
+                      <tr className="bg-surface-secondary">
+                        <th className="text-left px-4 py-3 font-semibold text-ink-secondary">Descrição</th>
+                        <th className="text-left px-4 py-3 font-semibold text-ink-secondary">Categoria</th>
+                        <th className="text-left px-4 py-3 font-semibold text-ink-secondary">Tipo</th>
+                        <th className="text-left px-4 py-3 font-semibold text-ink-secondary">Data</th>
+                        <th className="text-right px-4 py-3 font-semibold text-ink-secondary">Valor</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-50">
+                    <tbody className="divide-y divide-surface-secondary">
                       {despesaRows
                         .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
                         .map((d) => (
-                          <tr key={d.id} className="hover:bg-gray-50 transition-colors">
-                            <td className="px-4 py-3 text-gray-800">{d.descricao}</td>
+                          <tr key={d.id} className="table-row-hover">
+                            <td className="px-4 py-3 text-ink">{d.descricao}</td>
                             <td className="px-4 py-3">
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{d.categoria}</span>
+                              <span className="badge badge-gray">{d.categoria}</span>
                             </td>
                             <td className="px-4 py-3">
-                              <span
-                                className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                                  d.tipo === 'fixo' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
-                                }`}
-                              >
+                              <span className={`badge ${d.tipo === 'fixo' ? 'badge-green' : 'badge-amber'}`}>
                                 {d.tipo === 'fixo' ? 'Fixa' : 'Variável'}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-gray-500 text-xs">
+                            <td className="px-4 py-3 text-ink-secondary text-xs">
                               {new Date(d.data).toLocaleDateString('pt-PT')}
                             </td>
-                            <td className="px-4 py-3 text-right font-semibold text-[#977c30]">{fmt(d.valor)}</td>
+                            <td className="px-4 py-3 text-right font-semibold text-dourado">{fmt(d.valor)}</td>
                           </tr>
                         ))}
                     </tbody>
                     <tfoot>
-                      <tr className="bg-gray-50 font-bold">
-                        <td colSpan={4} className="px-4 py-3 text-gray-700">Total despesas</td>
-                        <td className="px-4 py-3 text-right text-[#977c30]">{fmt(totalDespesas)}</td>
+                      <tr className="bg-surface-secondary font-bold">
+                        <td colSpan={4} className="px-4 py-3 text-ink">Total despesas</td>
+                        <td className="px-4 py-3 text-right text-dourado">{fmt(totalDespesas)}</td>
                       </tr>
                     </tfoot>
                   </table>
