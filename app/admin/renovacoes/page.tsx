@@ -5,7 +5,7 @@ interface Barbearia {
   nome: string
   plano: string | null
   trial_termina_em: string | null
-  created_at: string
+  criado_em: string
 }
 
 function formatDate(iso: string | null) {
@@ -103,7 +103,7 @@ function SectionTable({
                   <td className="px-6 py-3.5">
                     <TrialDiffLabel iso={b.trial_termina_em} expired={expired} />
                   </td>
-                  <td className="px-6 py-3.5 text-gray-500">{formatDate(b.created_at)}</td>
+                  <td className="px-6 py-3.5 text-gray-500">{formatDate(b.criado_em)}</td>
                   <td className="px-6 py-3.5">
                     <button
                       disabled
@@ -133,16 +133,16 @@ export default async function RenovacoesPage() {
   // Fetch all trial barbearias
   const { data: trialData, error: trialError } = await supabase
     .from('barbearias')
-    .select('id, nome, plano, trial_termina_em, created_at')
+    .select('id, nome, plano, trial_termina_em, criado_em')
     .eq('plano', 'trial')
     .order('trial_termina_em', { ascending: true })
 
   // Fetch suspended barbearias
   const { data: suspData } = await supabase
     .from('barbearias')
-    .select('id, nome, plano, trial_termina_em, created_at')
+    .select('id, nome, plano, trial_termina_em, criado_em')
     .eq('plano', 'suspenso')
-    .order('created_at', { ascending: false })
+    .order('criado_em', { ascending: false })
 
   const allTrials = (trialData as unknown as Barbearia[]) ?? []
   const suspensos = (suspData as unknown as Barbearia[]) ?? []
@@ -263,7 +263,7 @@ export default async function RenovacoesPage() {
                 suspensos.map((b) => (
                   <tr key={b.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-6 py-3.5 font-medium text-gray-900">{b.nome}</td>
-                    <td className="px-6 py-3.5 text-gray-500">{formatDate(b.created_at)}</td>
+                    <td className="px-6 py-3.5 text-gray-500">{formatDate(b.criado_em)}</td>
                     <td className="px-6 py-3.5">
                       <button
                         disabled
