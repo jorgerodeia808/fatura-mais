@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 interface Barbearia {
   id: string
@@ -128,7 +128,7 @@ function SectionTable({
 }
 
 export default async function RenovacoesPage() {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   // Fetch all trial barbearias
   const { data: trialData, error: trialError } = await supabase

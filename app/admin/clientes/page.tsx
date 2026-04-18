@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 interface Barbearia {
   id: string
@@ -63,7 +63,7 @@ const planoPillColors: Record<string, string> = {
 }
 
 export default async function ClientesPage() {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('barbearias')

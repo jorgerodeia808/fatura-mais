@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 interface Barbearia {
   id: string
@@ -52,7 +52,7 @@ function MetricCard({
 }
 
 export default async function AdminPage() {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data: barbearias } = await supabase
     .from('barbearias')

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 interface PagamentoRaw {
   id: string
@@ -36,7 +36,7 @@ function formatCurrency(value: number | null) {
 }
 
 export default async function PagamentosPage() {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('pagamentos_recebidos')
