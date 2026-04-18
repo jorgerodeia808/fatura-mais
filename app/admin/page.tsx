@@ -5,7 +5,7 @@ interface Barbearia {
   nome: string
   plano: string | null
   trial_termina_em: string | null
-  created_at: string
+  criado_em: string
   user_id: string
 }
 
@@ -56,8 +56,8 @@ export default async function AdminPage() {
 
   const { data: barbearias } = await supabase
     .from('barbearias')
-    .select('id, nome, plano, trial_termina_em, created_at, user_id')
-    .order('created_at', { ascending: false })
+    .select('id, nome, plano, trial_termina_em, criado_em, user_id')
+    .order('criado_em', { ascending: false })
 
   const list = (barbearias as unknown as Barbearia[]) ?? []
 
@@ -177,7 +177,7 @@ export default async function AdminPage() {
                     <td className="px-6 py-3.5">
                       <PlanoBadge plano={b.plano} />
                     </td>
-                    <td className="px-6 py-3.5 text-ink-secondary">{formatDate(b.created_at)}</td>
+                    <td className="px-6 py-3.5 text-ink-secondary">{formatDate(b.criado_em)}</td>
                     <td className="px-6 py-3.5">
                       {b.plano === 'trial' ? (
                         <span
