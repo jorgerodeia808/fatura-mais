@@ -2,7 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 interface PagamentoRaw {
   id: string
-  created_at: string
+  criado_em: string
   valor: number | null
   metodo: string | null
   notas: string | null
@@ -41,7 +41,7 @@ export default async function PagamentosPage() {
   const { data, error } = await supabase
     .from('pagamentos_recebidos')
     .select('*, barbearias(nome)')
-    .order('created_at', { ascending: false })
+    .order('criado_em', { ascending: false })
 
   const pagamentos = (data as unknown as PagamentoRaw[]) ?? []
 
@@ -50,7 +50,7 @@ export default async function PagamentosPage() {
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
   const esteMes = pagamentos
-    .filter((p) => p.created_at && new Date(p.created_at) >= startOfMonth)
+    .filter((p) => p.criado_em && new Date(p.criado_em) >= startOfMonth)
     .reduce((sum, p) => sum + (p.valor ?? 0), 0)
 
   return (
@@ -139,7 +139,7 @@ export default async function PagamentosPage() {
                 {pagamentos.map((p) => (
                   <tr key={p.id} className="table-row-hover transition-colors">
                     <td className="px-6 py-3.5 text-ink-secondary whitespace-nowrap">
-                      {formatDate(p.created_at)}
+                      {formatDate(p.criado_em)}
                     </td>
                     <td className="px-6 py-3.5 font-medium text-ink">
                       {p.barbearias?.nome ?? (
