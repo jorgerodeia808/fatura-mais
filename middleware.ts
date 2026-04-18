@@ -43,7 +43,6 @@ export async function middleware(request: NextRequest) {
   const authRoutes = ['/login', '/registo']
   const pathname = request.nextUrl.pathname
 
-  // ── Unauthenticated user hitting a protected or admin route ──────────────
   const isProtected = protectedRoutes.some((r) => pathname.startsWith(r))
   const isAdmin = adminRoutes.some((r) => pathname.startsWith(r))
 
@@ -53,47 +52,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // ── Authenticated user hitting auth routes → go to dashboard ────────────
   if (user && authRoutes.some((r) => pathname.startsWith(r))) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 
-  // ── Admin route guard ────────────────────────────────────────────────────
+  // ── Admin route guard: email allowlist ──────────────────────────────────
   if (user && isAdmin) {
-    // Use service role if available, fall back to anon key (anon key is fine
-    // because admins table RLS already limits reads to admins).
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    const adminClient = serviceKey
-      ? createServerClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          serviceKey,
-          {
-            cookies: {
-              getAll() {
-                return request.cookies.getAll()
-              },
-              setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
-                cookiesToSet.forEach(({ name, value }) =>
-                  request.cookies.set(name, value)
-                )
-                cookiesToSet.forEach(({ name, value, options }) =>
-                  supabaseResponse.cookies.set(name, value, options)
-                )
-              },
-            },
-          }
-        )
-      : supabase
+    const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'jorgerodeia808@gmail.com')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
 
-    const { data: adminRow } = await adminClient
-      .from('admins')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle()
-
-    if (!adminRow) {
+    if (!user.email || !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
       const url = request.nextUrl.clone()
       url.pathname = '/dashboard'
       return NextResponse.redirect(url)
@@ -110,7 +81,6 @@ export async function middleware(request: NextRequest) {
       .eq('user_id', user.id)
       .maybeSingle()
 
-    // Barbearia not yet created → user is in onboarding, allow through
     if (!barbearia) {
       return supabaseResponse
     }
@@ -118,7 +88,6 @@ export async function middleware(request: NextRequest) {
     const { plano, trial_termina_em } = barbearia
 
     if (plano === 'vitalicio' || plano === 'mensal') {
-      // Full access – pass through
       return supabaseResponse
     }
 
@@ -128,7 +97,6 @@ export async function middleware(request: NextRequest) {
         const now = new Date()
 
         if (expiresAt > now) {
-          // Trial still active – attach days-remaining header
           const msRemaining = expiresAt.getTime() - now.getTime()
           const daysRemaining = Math.ceil(msRemaining / (1000 * 60 * 60 * 24))
           supabaseResponse.headers.set('x-trial-days', String(daysRemaining))
@@ -136,7 +104,6 @@ export async function middleware(request: NextRequest) {
         }
       }
 
-      // Trial expired or trial_termina_em is null
       const url = request.nextUrl.clone()
       url.pathname = '/acesso-expirado'
       return NextResponse.redirect(url)
@@ -148,7 +115,6 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    // Unknown / null plano → treat same as expired trial
     const url = request.nextUrl.clone()
     url.pathname = '/acesso-expirado'
     return NextResponse.redirect(url)
@@ -159,6 +125,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
