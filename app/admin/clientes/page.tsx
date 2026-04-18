@@ -6,7 +6,7 @@ interface Barbearia {
   nome: string
   plano: string | null
   trial_termina_em: string | null
-  created_at: string
+  criado_em: string
   valor_pago_total: number | null
   metodo_pagamento: string | null
   indicado_por: string | null
@@ -67,8 +67,8 @@ export default async function ClientesPage() {
 
   const { data, error } = await supabase
     .from('barbearias')
-    .select('id, nome, plano, trial_termina_em, created_at, valor_pago_total, metodo_pagamento, indicado_por, notas')
-    .order('created_at', { ascending: false })
+    .select('id, nome, plano, trial_termina_em, criado_em, valor_pago_total, metodo_pagamento, indicado_por, notas')
+    .order('criado_em', { ascending: false })
 
   const barbearias = (data as unknown as Barbearia[]) ?? []
 
@@ -181,7 +181,7 @@ export default async function ClientesPage() {
                         <span className="text-ink-secondary/30">—</span>
                       )}
                     </td>
-                    <td className="px-6 py-3.5 text-ink-secondary">{formatDate(b.created_at)}</td>
+                    <td className="px-6 py-3.5 text-ink-secondary">{formatDate(b.criado_em)}</td>
                     <td className="px-6 py-3.5">
                       <Link
                         href={`/admin/clientes/${b.id}`}
