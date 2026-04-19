@@ -36,7 +36,7 @@ export default async function AuthenticadoLayout({
           <div className="bg-amber-50 border-b border-amber-200 px-4 py-2.5 text-center text-sm text-amber-800">
             <strong>Trial:</strong> O teu período de teste termina em{' '}
             <strong>{trialDays} {Number(trialDays) === 1 ? 'dia' : 'dias'}</strong>.{' '}
-            <a href="https://wa.me/351XXXXXXXXX" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-amber-900">
+            <a href="https://wa.me/351934089768" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-amber-900">
               Contacta-nos para subscrever →
             </a>
           </div>

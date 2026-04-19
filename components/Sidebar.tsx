@@ -54,6 +54,12 @@ const navItems = [
     icon: 'settings',
     section: 'Sistema',
   },
+  {
+    label: 'Perfil',
+    href: '/perfil',
+    icon: 'manage_accounts',
+    section: null,
+  },
 ]
 
 export default function Sidebar({ userName, barbeariaName }: SidebarProps) {

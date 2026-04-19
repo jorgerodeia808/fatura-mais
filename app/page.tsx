@@ -305,7 +305,7 @@ export default function LandingPage() {
               </span>
             </div>
             <p className="text-xs text-ink-tertiary text-center">
-              © 2026 Fatura+ · NIF: XXXXXXXXX · suporte@fatura-mais.pt
+              © 2026 Fatura+ · faturamais30@gmail.com
             </p>
             <div className="flex items-center gap-5">
               <Link href="/privacidade" className="text-xs text-ink-secondary hover:text-verde transition-colors nav-link">Privacidade</Link>

@@ -139,13 +139,13 @@ export default function ConselheiroIAPage() {
         { data: marcacoesHoje },
         { data: custosFixos },
       ] = await Promise.all([
-        supabase.from('faturacao').select('valor_total').eq('barbearia_id', barbearia.id).gte('data', primeiroDiaMes).lte('data', ultimoDiaMes),
+        supabase.from('faturacao').select('valor, gorjeta').eq('barbearia_id', barbearia.id).gte('data_hora', primeiroDiaMes).lte('data_hora', ultimoDiaMes),
         supabase.from('despesas').select('valor').eq('barbearia_id', barbearia.id).gte('data', primeiroDiaMes).lte('data', ultimoDiaMes),
         supabase.from('marcacoes').select('id').eq('barbearia_id', barbearia.id).gte('data_hora', hoje),
         supabase.from('custos_fixos').select('valor').eq('barbearia_id', barbearia.id),
       ])
 
-      const receitaMes = faturacao?.reduce((s, f) => s + (f.valor_total || 0), 0) || 0
+      const receitaMes = faturacao?.reduce((s, f) => s + (f.valor || 0) + (f.gorjeta || 0), 0) || 0
       const despesasMes = despesas?.reduce((s, d) => s + (d.valor || 0), 0) || 0
       const lucroLiquido = receitaMes - despesasMes
       const margemLucro = receitaMes > 0 ? parseFloat((lucroLiquido / receitaMes * 100).toFixed(1)) : 0

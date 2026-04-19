@@ -355,6 +355,19 @@ export default function OnboardingPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Não autenticado')
 
+      // Verificar se barbearia já existe para evitar duplicados
+      const { data: existente } = await supabase
+        .from('barbearias')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (existente) {
+        router.push('/dashboard')
+        router.refresh()
+        return
+      }
+
       // Insert barbearia
       const { data: barb, error: barbErr } = await supabase
         .from('barbearias')

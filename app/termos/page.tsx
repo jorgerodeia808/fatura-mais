@@ -211,10 +211,10 @@ export default function TermosPage() {
             <p className="mt-2">
               Para questões ou reclamações, contacta-nos em{' '}
               <a
-                href="mailto:suporte@fatura-mais.pt"
+                href="mailto:faturamais30@gmail.com"
                 className="text-[#0e4324] underline"
               >
-                suporte@fatura-mais.pt
+                faturamais30@gmail.com
               </a>
               .
             </p>
