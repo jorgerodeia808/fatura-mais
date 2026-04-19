@@ -152,14 +152,9 @@ export default function LoginPage() {
 
             <p className="text-center text-sm text-[#717971] mt-6">
               Ainda não tens conta?{' '}
-              <a
-                href="https://wa.me/351XXXXXXXXX"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#977c30] font-semibold hover:opacity-80 transition-opacity"
-              >
-                Falar connosco
-              </a>
+              <Link href="/pedir-acesso" className="text-[#977c30] font-semibold hover:opacity-80 transition-opacity">
+                Pedir acesso
+              </Link>
             </p>
 
             {/* Footer */}

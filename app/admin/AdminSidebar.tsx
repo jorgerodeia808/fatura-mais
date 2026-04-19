@@ -10,6 +10,7 @@ const navLinks = [
   { label: 'Clientes', href: '/admin/clientes', icon: 'people' },
   { label: 'Pagamentos', href: '/admin/pagamentos', icon: 'payments' },
   { label: 'Renovações', href: '/admin/renovacoes', icon: 'autorenew' },
+  { label: 'Pedidos', href: '/admin/pedidos', icon: 'person_add' },
 ]
 
 export default function AdminSidebar({ userEmail }: { userEmail: string }) {
