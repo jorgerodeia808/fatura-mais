@@ -60,7 +60,6 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Link href="/pedir-acesso" className="btn-primary px-8 py-3.5 text-base">
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>wechat</span>
                 Pedir acesso
               </Link>
               <a href="#como-funciona" className="btn-secondary px-8 py-3.5 text-base">
@@ -227,23 +226,15 @@ export default function LandingPage() {
             <div className="bg-white rounded-2xl p-8 border-2 border-dourado relative"
                  style={{ boxShadow: '0 8px 40px rgba(151,124,48,0.12)' }}>
 
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                <span className="badge-gold text-xs font-semibold px-4 py-1 inline-flex items-center gap-1">
-                  <span className="material-symbols-outlined icon-filled" style={{ fontSize: '13px' }}>star_rate</span>
-                  Acesso completo
-                </span>
-              </div>
-
-              <p className="text-sm font-medium text-ink-secondary mb-1 mt-2">Plano Mensal</p>
+              <p className="text-sm font-medium text-ink-secondary mb-1">Plano Mensal</p>
               <div className="flex items-baseline gap-1.5 mb-1">
                 <span className="font-serif font-bold text-5xl text-ink">€14</span>
                 <span className="font-serif font-bold text-2xl text-ink">,99</span>
                 <span className="text-ink-secondary text-sm">/mês</span>
               </div>
-              <p className="text-xs text-ink-tertiary mb-6">cancela quando quiseres · formação inicial incluída</p>
+              <p className="text-xs text-ink-tertiary mb-6">cancela quando quiseres</p>
 
               <Link href="/pedir-acesso" className="btn-dourado w-full justify-center mb-8 py-3">
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>wechat</span>
                 Pedir acesso
               </Link>
 
