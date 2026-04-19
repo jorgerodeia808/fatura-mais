@@ -72,6 +72,26 @@ export async function GET(req: NextRequest) {
     } else {
       enviados++
     }
+
+    // Notify admin
+    await resend.emails.send({
+      from: 'Fatura+ <noreply@fatura-mais.pt>',
+      to: 'faturamais30@gmail.com',
+      subject: `[Admin] Trial a expirar: ${barb.nome} (${diasRestantes}d)`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+          <h2 style="color: #0e4324; margin-bottom: 12px;">Trial a expirar em breve</h2>
+          <p style="color: #374151; font-size: 14px; margin-bottom: 8px;">
+            <strong>${barb.nome}</strong> tem o trial a terminar em <strong>${diasRestantes} dia${diasRestantes !== 1 ? 's' : ''}</strong>.
+          </p>
+          <p style="color: #374151; font-size: 14px; margin-bottom: 16px;">Email do cliente: <strong>${email}</strong></p>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/clientes/${barb.id}"
+             style="display: inline-block; background: #0e4324; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">
+            Ver cliente no admin →
+          </a>
+        </div>
+      `,
+    })
   }
 
   return NextResponse.json({

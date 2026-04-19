@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import PagamentosClient from './PagamentosClient'
 
 interface PagamentoRaw {
   id: string
@@ -56,9 +57,12 @@ export default async function PagamentosPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="page-title">Pagamentos</h1>
-        <p className="text-sm text-ink-secondary mt-1">Histórico de pagamentos recebidos</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="page-title">Pagamentos</h1>
+          <p className="text-sm text-ink-secondary mt-1">Histórico de pagamentos recebidos</p>
+        </div>
+        <PagamentosClient />
       </div>
 
       {/* Summary cards */}

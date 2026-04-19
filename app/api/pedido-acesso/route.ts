@@ -30,7 +30,8 @@ export async function POST(req: NextRequest) {
   if (process.env.RESEND_API_KEY) {
     const resend = new Resend(process.env.RESEND_API_KEY)
     await resend.emails.send({
-      from: 'Fatura+ <onboarding@resend.dev>',
+      from: 'Fatura+ <noreply@fatura-mais.pt>',
+      replyTo: email.trim(),
       to: 'faturamais30@gmail.com',
       subject: `Novo pedido de acesso — ${nome_barbearia.trim()}`,
       html: `

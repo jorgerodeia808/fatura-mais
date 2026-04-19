@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 interface Barbearia {
@@ -105,17 +106,12 @@ function SectionTable({
                   </td>
                   <td className="px-6 py-3.5 text-gray-500">{formatDate(b.criado_em)}</td>
                   <td className="px-6 py-3.5">
-                    <button
-                      disabled
-                      title="Funcionalidade ainda não implementada"
-                      className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-400 bg-gray-100 px-3 py-1.5 rounded-lg cursor-not-allowed opacity-60"
+                    <Link
+                      href={`/admin/clientes/${b.id}`}
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0e4324] bg-[#0e4324]/10 hover:bg-[#0e4324]/20 px-3 py-1.5 rounded-lg transition-colors"
                     >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Renovar
-                    </button>
+                      Gerir cliente →
+                    </Link>
                   </td>
                 </tr>
               ))
@@ -265,13 +261,12 @@ export default async function RenovacoesPage() {
                     <td className="px-6 py-3.5 font-medium text-gray-900">{b.nome}</td>
                     <td className="px-6 py-3.5 text-gray-500">{formatDate(b.criado_em)}</td>
                     <td className="px-6 py-3.5">
-                      <button
-                        disabled
-                        title="Funcionalidade ainda não implementada"
-                        className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-400 bg-gray-100 px-3 py-1.5 rounded-lg cursor-not-allowed opacity-60"
+                      <Link
+                        href={`/admin/clientes/${b.id}`}
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0e4324] bg-[#0e4324]/10 hover:bg-[#0e4324]/20 px-3 py-1.5 rounded-lg transition-colors"
                       >
-                        Reativar
-                      </button>
+                        Gerir cliente →
+                      </Link>
                     </td>
                   </tr>
                 ))

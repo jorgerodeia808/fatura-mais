@@ -195,6 +195,14 @@ export default function FaturacaoPage() {
     if (barbeariaId) fetchRegistos(barbeariaId, selectedDate)
   }
 
+  // ── Delete registo ────────────────────────────────────────────────
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const deleteRegisto = async (id: string) => {
+    await supabase.from('faturacao').delete().eq('id', id)
+    setConfirmDeleteId(null)
+    if (barbeariaId) fetchRegistos(barbeariaId, selectedDate)
+  }
+
   // ── Metrics ──────────────────────────────────────────────────────
   const today = new Date()
   const isToday = selectedDate.toDateString() === today.toDateString()
@@ -542,6 +550,34 @@ export default function FaturacaoPage() {
                           </button>
                         </div>
                       )}
+
+                      {/* Delete */}
+                      <div className="ml-1 flex items-center gap-1">
+                        {confirmDeleteId === r.id ? (
+                          <>
+                            <button
+                              onClick={() => deleteRegisto(r.id)}
+                              className="btn-inline text-xs bg-red-600 text-white px-2 py-1 rounded-md font-medium hover:bg-red-700 transition-colors"
+                            >
+                              Eliminar
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteId(null)}
+                              className="btn-inline text-xs text-ink-secondary hover:text-ink px-1.5 py-1 rounded-md transition-colors"
+                            >
+                              Cancelar
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDeleteId(r.id)}
+                            className="btn-inline w-7 h-7 flex items-center justify-center rounded-md hover:bg-red-50 text-ink-secondary hover:text-red-600 transition-colors"
+                            title="Eliminar registo"
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>delete</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )
                 })}
