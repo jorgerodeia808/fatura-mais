@@ -203,6 +203,35 @@ export default function FaturacaoPage() {
     if (barbeariaId) fetchRegistos(barbeariaId, selectedDate)
   }
 
+  // ── Edit registo ──────────────────────────────────────────────────
+  const [editId, setEditId] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState({ cliente_nome: '', servico_id: '', gorjeta: '', estado: 'concluido' })
+
+  const startEdit = (r: RegistoItem) => {
+    setEditId(r.id)
+    setEditForm({
+      cliente_nome: r.cliente_nome ?? '',
+      servico_id: r.servico_id ?? '',
+      gorjeta: r.gorjeta > 0 ? String(r.gorjeta) : '',
+      estado: r.estado,
+    })
+    setConfirmDeleteId(null)
+  }
+
+  const saveEdit = async () => {
+    if (!editId || !barbeariaId) return
+    const servico = servicos.find(s => s.id === editForm.servico_id)
+    await supabase.from('faturacao').update({
+      cliente_nome: editForm.cliente_nome.trim() || null,
+      servico_id: editForm.servico_id || null,
+      valor: servico?.preco ?? registos.find(r => r.id === editId)?.valor ?? 0,
+      gorjeta: parseFloat(editForm.gorjeta) || 0,
+      estado: editForm.estado,
+    }).eq('id', editId)
+    setEditId(null)
+    fetchRegistos(barbeariaId, selectedDate)
+  }
+
   // ── Metrics ──────────────────────────────────────────────────────
   const today = new Date()
   const isToday = selectedDate.toDateString() === today.toDateString()
@@ -499,6 +528,80 @@ export default function FaturacaoPage() {
                 {registos.map(r => {
                   const servicoNome = (r.servicos as { nome: string; tempo_minutos: number } | null)?.nome ?? 'Serviço removido'
                   const servicoMin = (r.servicos as { nome: string; tempo_minutos: number } | null)?.tempo_minutos
+                  const isEditing = editId === r.id
+
+                  if (isEditing) {
+                    return (
+                      <div key={r.id} className="py-3 border-b border-[#f0eee8] last:border-0">
+                        <div className="bg-[#f8f6f1] rounded-xl p-4 space-y-3">
+                          <p className="text-xs font-medium text-ink-secondary uppercase tracking-wide">Editar registo · {formatHora(r.data_hora)}</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="col-span-2">
+                              <label className="block text-[10px] font-medium text-ink-secondary mb-1 uppercase tracking-wide">Cliente</label>
+                              <input
+                                type="text"
+                                value={editForm.cliente_nome}
+                                onChange={e => setEditForm(f => ({ ...f, cliente_nome: e.target.value }))}
+                                placeholder="Cliente anónimo"
+                                className="w-full border border-[#e8e4dc] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-verde bg-white"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-medium text-ink-secondary mb-1 uppercase tracking-wide">Serviço</label>
+                              <select
+                                value={editForm.servico_id}
+                                onChange={e => setEditForm(f => ({ ...f, servico_id: e.target.value }))}
+                                className="w-full border border-[#e8e4dc] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-verde bg-white"
+                              >
+                                <option value="">— sem serviço —</option>
+                                {servicos.map(s => (
+                                  <option key={s.id} value={s.id}>{s.nome} ({fmt(s.preco)})</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-medium text-ink-secondary mb-1 uppercase tracking-wide">Gorjeta (€)</label>
+                              <input
+                                type="number"
+                                value={editForm.gorjeta}
+                                onChange={e => setEditForm(f => ({ ...f, gorjeta: e.target.value }))}
+                                placeholder="0"
+                                min="0" step="0.50"
+                                className="w-full border border-[#e8e4dc] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-verde bg-white"
+                              />
+                            </div>
+                            <div className="col-span-2">
+                              <label className="block text-[10px] font-medium text-ink-secondary mb-1 uppercase tracking-wide">Estado</label>
+                              <select
+                                value={editForm.estado}
+                                onChange={e => setEditForm(f => ({ ...f, estado: e.target.value }))}
+                                className="w-full border border-[#e8e4dc] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-verde bg-white"
+                              >
+                                <option value="concluido">Concluído</option>
+                                <option value="pendente">Pendente</option>
+                                <option value="desistencia">Desistência</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 pt-1">
+                            <button
+                              onClick={saveEdit}
+                              className="flex-1 btn-primary py-2 text-sm"
+                            >
+                              Guardar
+                            </button>
+                            <button
+                              onClick={() => setEditId(null)}
+                              className="px-4 py-2 rounded-lg border border-[#e8e4dc] text-sm text-ink-secondary hover:bg-[#f0eee8] transition-colors"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  }
+
                   return (
                     <div
                       key={r.id}
@@ -551,8 +654,15 @@ export default function FaturacaoPage() {
                         </div>
                       )}
 
-                      {/* Delete */}
+                      {/* Edit + Delete */}
                       <div className="ml-1 flex items-center gap-1">
+                        <button
+                          onClick={() => startEdit(r)}
+                          className="btn-inline w-7 h-7 flex items-center justify-center rounded-md hover:bg-[#f0eee8] text-ink-secondary hover:text-verde transition-colors"
+                          title="Editar registo"
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>edit</span>
+                        </button>
                         {confirmDeleteId === r.id ? (
                           <>
                             <button

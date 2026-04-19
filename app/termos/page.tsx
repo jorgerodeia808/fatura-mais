@@ -61,35 +61,13 @@ export default function TermosPage() {
               2. Planos e Preços
             </h2>
             <p>
-              O Fatura+ disponibiliza os seguintes planos de acesso:
+              O Fatura+ opera por convite. O acesso é concedido mediante contacto direto com a equipa, que configura a conta e ativa o plano escolhido.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-              {/* Trial */}
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-800 mb-1">Trial</h3>
-                <p className="text-xl font-bold text-gray-900">Grátis</p>
-                <p className="text-xs text-gray-500 mb-2">14 dias</p>
-                <p className="text-xs text-gray-600">
-                  Acesso completo a todas as funcionalidades durante 14 dias,
-                  sem necessidade de introdução de dados de pagamento.
-                </p>
-              </div>
-
-              {/* Vitalício */}
-              <div className="bg-white border-2 border-[#0e4324] rounded-lg p-4">
-                <h3 className="font-semibold text-[#0e4324] mb-1">Vitalício</h3>
-                <p className="text-xl font-bold text-gray-900">€50</p>
-                <p className="text-xs text-gray-500 mb-2">pagamento único</p>
-                <p className="text-xs text-gray-600">
-                  Acesso permanente à plataforma, incluindo todas as
-                  atualizações futuras, sem qualquer custo adicional.
-                </p>
-              </div>
-
+            <div className="grid grid-cols-1 sm:grid-cols-1 gap-4 mt-4 max-w-xs">
               {/* Mensal */}
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-800 mb-1">Mensal</h3>
+              <div className="bg-white border-2 border-[#0e4324] rounded-lg p-4">
+                <h3 className="font-semibold text-[#0e4324] mb-1">Mensal</h3>
                 <p className="text-xl font-bold text-gray-900">€14,99</p>
                 <p className="text-xs text-gray-500 mb-2">/mês</p>
                 <p className="text-xs text-gray-600">
@@ -123,10 +101,6 @@ export default function TermosPage() {
               suspenso após aviso prévio.
             </p>
             <p className="mt-2">
-              O plano vitalício é ativado imediatamente após confirmação do
-              pagamento único de €50.
-            </p>
-            <p className="mt-2">
               Recibos e faturas são emitidos por email após cada cobrança
               bem-sucedida.
             </p>
@@ -142,15 +116,6 @@ export default function TermosPage() {
               através das definições da conta ou por contacto com o suporte. O
               cancelamento produz efeitos no final do período de faturação em
               curso, sem direito a reembolso proporcional.
-            </p>
-            <p className="mt-2">
-              O plano vitalício não é reembolsável após a ativação, exceto nos
-              casos previstos pela legislação de defesa do consumidor aplicável.
-            </p>
-            <p className="mt-2">
-              O período de trial termina automaticamente ao fim de 14 dias.
-              Não é cobrado qualquer valor na ausência de subscrição de um plano
-              pago.
             </p>
           </section>
 

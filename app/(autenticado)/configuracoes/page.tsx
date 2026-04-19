@@ -365,51 +365,54 @@ export default function ConfiguracoesPage() {
             <p className="text-sm text-gray-400 text-center py-4">Nenhum serviço adicionado ainda.</p>
           )}
           {servicos.map(s => (
-            <div key={s.id} className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3">
-              <div className="flex-1 min-w-0">
+            <div key={s.id} className="bg-white border border-gray-200 rounded-xl px-4 py-3 space-y-2">
+              <div className="flex items-center gap-2">
                 <input
                   type="text"
                   defaultValue={s.nome}
                   onBlur={e => { if (e.target.value !== s.nome) atualizarServico(s.id, 'nome', e.target.value) }}
-                  className="text-sm font-medium text-gray-800 bg-transparent w-full focus:outline-none focus:bg-white focus:border focus:border-gray-200 focus:rounded px-1"
+                  className="flex-1 text-sm font-medium text-gray-800 border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#0e4324] transition-colors"
                 />
-                <div className="flex gap-3 mt-1">
-                  <span className="text-xs text-gray-400">
-                    €<input
-                      type="number"
-                      defaultValue={s.preco}
-                      onBlur={e => { const v = parseFloat(e.target.value); if (v !== s.preco) atualizarServico(s.id, 'preco', v) }}
-                      className="w-14 bg-transparent focus:outline-none focus:bg-white focus:border focus:border-gray-200 focus:rounded px-1"
-                      min="0" step="0.01"
-                    />
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    <input
-                      type="number"
-                      defaultValue={s.tempo_minutos}
-                      onBlur={e => { const v = parseInt(e.target.value); if (v !== s.tempo_minutos) atualizarServico(s.id, 'tempo_minutos', v) }}
-                      className="w-10 bg-transparent focus:outline-none focus:bg-white focus:border focus:border-gray-200 focus:rounded px-1"
-                      min="1"
-                    />min
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    Mat. €<input
-                      type="number"
-                      defaultValue={s.custo_material}
-                      onBlur={e => { const v = parseFloat(e.target.value); if (v !== s.custo_material) atualizarServico(s.id, 'custo_material', v) }}
-                      className="w-14 bg-transparent focus:outline-none focus:bg-white focus:border focus:border-gray-200 focus:rounded px-1"
-                      min="0" step="0.01"
-                    />
-                  </span>
+                <button
+                  onClick={() => removerServico(s.id)}
+                  className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0"
+                  title="Remover serviço"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>delete</span>
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-[10px] font-medium text-gray-400 uppercase tracking-wide mb-1">Preço (€)</label>
+                  <input
+                    type="number"
+                    defaultValue={s.preco}
+                    onBlur={e => { const v = parseFloat(e.target.value); if (v !== s.preco) atualizarServico(s.id, 'preco', v) }}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+                    min="0" step="0.01"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-gray-400 uppercase tracking-wide mb-1">Tempo (min)</label>
+                  <input
+                    type="number"
+                    defaultValue={s.tempo_minutos}
+                    onBlur={e => { const v = parseInt(e.target.value); if (v !== s.tempo_minutos) atualizarServico(s.id, 'tempo_minutos', v) }}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+                    min="1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-gray-400 uppercase tracking-wide mb-1">Mat. (€)</label>
+                  <input
+                    type="number"
+                    defaultValue={s.custo_material}
+                    onBlur={e => { const v = parseFloat(e.target.value); if (v !== s.custo_material) atualizarServico(s.id, 'custo_material', v) }}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+                    min="0" step="0.01"
+                  />
                 </div>
               </div>
-              <button
-                onClick={() => removerServico(s.id)}
-                className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0"
-                title="Remover serviço"
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>delete</span>
-              </button>
             </div>
           ))}
         </div>

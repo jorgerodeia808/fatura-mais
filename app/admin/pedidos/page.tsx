@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import ConvidarButton from './ConvidarButton'
+import ConvidarDiretoForm from './ConvidarDiretoForm'
 
 interface Pedido {
   id: string
@@ -59,9 +60,12 @@ export default async function PedidosPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="font-serif font-bold text-2xl text-gray-900">Pedidos de acesso</h1>
-        <p className="text-sm text-gray-500 mt-1">Gere quem pode aceder ao Fatura+</p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-serif font-bold text-2xl text-gray-900">Pedidos de acesso</h1>
+          <p className="text-sm text-gray-500 mt-1">Gere quem pode aceder ao Fatura+</p>
+        </div>
+        <ConvidarDiretoForm />
       </div>
 
       <SectionTable title="Pendentes" accentColor="bg-amber-400" count={pendentes.length}>
