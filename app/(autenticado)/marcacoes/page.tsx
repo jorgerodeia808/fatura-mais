@@ -31,6 +31,14 @@ interface Barbearia {
   slug?: string | null
 }
 
+interface Bloqueio {
+  id: string
+  data: string
+  hora_inicio: string
+  hora_fim: string
+  motivo: string | null
+}
+
 // ── Constants ──────────────────────────────────────────────────────
 const HOURS = Array.from({ length: 11 }, (_, i) => i + 9) // 9..19
 const PX_PER_HOUR = 64
@@ -107,6 +115,26 @@ function ToggleSwitch({ checked, onChange, disabled = false }: { checked: boolea
   )
 }
 
+// ── Bloqueio Block ─────────────────────────────────────────────────
+function BloqueioBlock({ b }: { b: Bloqueio }) {
+  const [hI, mI] = b.hora_inicio.slice(0, 5).split(':').map(Number)
+  const [hF, mF] = b.hora_fim.slice(0, 5).split(':').map(Number)
+  const startMin = (hI - CALENDAR_START) * 60 + mI
+  const durMin   = (hF - hI) * 60 + (mF - mI)
+  const top    = (startMin / 60) * PX_PER_HOUR
+  const height = Math.max((durMin / 60) * PX_PER_HOUR, 24)
+  return (
+    <div
+      className="absolute left-0.5 right-0.5 rounded-md border border-orange-300 bg-orange-100/80 px-1 py-0.5 overflow-hidden pointer-events-none"
+      style={{ top, height, backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(251,146,60,0.15) 4px, rgba(251,146,60,0.15) 8px)' }}
+    >
+      <p className="text-[9px] font-semibold text-orange-700 leading-tight truncate">
+        {b.motivo || 'Bloqueado'}
+      </p>
+    </div>
+  )
+}
+
 // ── Calendar Block ─────────────────────────────────────────────────
 function CalendarBlock({ m, onClick }: { m: Marcacao; onClick: () => void }) {
   const dt = new Date(m.data_hora)
@@ -142,11 +170,20 @@ export default function MarcacoesPage() {
   const [barbearia, setBarbearia] = useState<Barbearia | null>(null)
   const [servicos, setServicos] = useState<Servico[]>([])
   const [marcacoes, setMarcacoes] = useState<Marcacao[]>([])
+  const [bloqueios, setBloqueios] = useState<Bloqueio[]>([])
   const [smsMes, setSmsMes] = useState(0)
   const [loadingInit, setLoadingInit] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
   const [formError, setFormError] = useState('')
+
+  // Bloqueios form
+  const [showBloqueioForm, setShowBloqueioForm] = useState(false)
+  const [bloqueioData, setBloqueioData] = useState('')
+  const [bloqueioInicio, setBloqueioInicio] = useState('09:00')
+  const [bloqueioFim, setBloqueioFim] = useState('19:00')
+  const [bloqueioMotivo, setBloqueioMotivo] = useState('')
+  const [criandoBloqueio, setCriandoBloqueio] = useState(false)
 
   // Calendar
   const [weekStart, setWeekStart] = useState(getMonday(today))
@@ -165,18 +202,28 @@ export default function MarcacoesPage() {
   const [savingOnline, setSavingOnline] = useState(false)
   const [linkCopiado, setLinkCopiado] = useState(false)
 
-  // ── Fetch marcações da semana ───────────────────────────────────
+  // ── Fetch marcações e bloqueios da semana ──────────────────────
   const fetchMarcacoes = useCallback(async (bid: string, ws: Date) => {
     const start = toDateStr(ws)
-    const end = toDateStr(addDays(ws, 7))
-    const { data } = await supabase
-      .from('marcacoes')
-      .select('id, cliente_nome, cliente_telemovel, servico_id, data_hora, estado, sms_enviado, servicos(nome, preco, tempo_minutos)')
-      .eq('barbearia_id', bid)
-      .gte('data_hora', `${start}T00:00:00`)
-      .lt('data_hora', `${end}T00:00:00`)
-      .order('data_hora')
-    setMarcacoes((data as unknown as Marcacao[]) ?? [])
+    const end   = toDateStr(addDays(ws, 7))
+    const [{ data: marcData }, { data: bloqData }] = await Promise.all([
+      supabase
+        .from('marcacoes')
+        .select('id, cliente_nome, cliente_telemovel, servico_id, data_hora, estado, sms_enviado, servicos(nome, preco, tempo_minutos)')
+        .eq('barbearia_id', bid)
+        .gte('data_hora', `${start}T00:00:00`)
+        .lt('data_hora',  `${end}T00:00:00`)
+        .order('data_hora'),
+      supabase
+        .from('bloqueios')
+        .select('id, data, hora_inicio, hora_fim, motivo')
+        .eq('barbearia_id', bid)
+        .gte('data', start)
+        .lt('data',  end)
+        .order('data'),
+    ])
+    setMarcacoes((marcData as unknown as Marcacao[]) ?? [])
+    setBloqueios((bloqData as unknown as Bloqueio[]) ?? [])
   }, [supabase])
 
   // ── Fetch SMS count do mês ─────────────────────────────────────
@@ -345,19 +392,66 @@ export default function MarcacoesPage() {
       await supabase.from('faturacao').insert({
         barbearia_id: barbearia.id,
         cliente_nome: m.cliente_nome,
-        servico_id: m.servico_id,
-        valor: m.servicos.preco,
-        gorjeta: 0,
-        estado: 'pendente',
-        data_hora: m.data_hora,
+        servico_id:   m.servico_id,
+        valor:        m.servicos.preco,
+        gorjeta:      0,
+        estado:       'pendente',
+        data_hora:    m.data_hora,
       })
+    }
+    // SMS de confirmação (fire-and-forget)
+    if (m.cliente_telemovel) {
+      fetch('/api/sms/online', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ marcacao_id: m.id, tipo: 'confirmada' }),
+      }).catch(() => {})
     }
     fetchMarcacoes(barbearia.id, weekStart)
   }
 
-  const handleDesistencia = async (id: string) => {
+  const handleDesistencia = async (m: Marcacao) => {
     if (!barbearia) return
-    await supabase.from('marcacoes').update({ estado: 'desistencia' }).eq('id', id)
+    await supabase.from('marcacoes').update({ estado: 'desistencia' }).eq('id', m.id)
+    // SMS de cancelamento (fire-and-forget)
+    if (m.cliente_telemovel) {
+      fetch('/api/sms/online', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ marcacao_id: m.id, tipo: 'cancelada' }),
+      }).catch(() => {})
+    }
+    fetchMarcacoes(barbearia.id, weekStart)
+  }
+
+  // ── Bloqueios ─────────────────────────────────────────────────
+  const criarBloqueio = async () => {
+    if (!barbearia || !bloqueioData || !bloqueioInicio || !bloqueioFim) return
+    if (bloqueioInicio >= bloqueioFim) {
+      setFormError('A hora de fim deve ser depois da hora de início.')
+      setTimeout(() => setFormError(''), 3000)
+      return
+    }
+    setCriandoBloqueio(true)
+    const { error } = await supabase.from('bloqueios').insert({
+      barbearia_id: barbearia.id,
+      data:         bloqueioData,
+      hora_inicio:  bloqueioInicio,
+      hora_fim:     bloqueioFim,
+      motivo:       bloqueioMotivo.trim() || null,
+    })
+    setCriandoBloqueio(false)
+    if (error) { setFormError('Erro ao criar bloqueio.'); setTimeout(() => setFormError(''), 3000); return }
+    setBloqueioMotivo('')
+    setShowBloqueioForm(false)
+    setSuccessMsg('Horário bloqueado ✓')
+    setTimeout(() => setSuccessMsg(''), 3000)
+    fetchMarcacoes(barbearia.id, weekStart)
+  }
+
+  const eliminarBloqueio = async (id: string) => {
+    if (!barbearia) return
+    await supabase.from('bloqueios').delete().eq('id', id)
     fetchMarcacoes(barbearia.id, weekStart)
   }
 
@@ -530,6 +624,9 @@ export default function MarcacoesPage() {
                           style={{ top: idx * PX_PER_HOUR }}
                         />
                       ))}
+                      {bloqueios.filter(b => b.data === dayStr).map(b => (
+                        <BloqueioBlock key={b.id} b={b} />
+                      ))}
                       {dayMarcacoes.map(m => (
                         <CalendarBlock
                           key={m.id}
@@ -618,7 +715,7 @@ export default function MarcacoesPage() {
                                 <span className="material-symbols-outlined" style={{fontSize:'18px'}}>check</span>
                               </button>
                               <button
-                                onClick={() => handleDesistencia(m.id)}
+                                onClick={() => handleDesistencia(m)}
                                 className="btn-ghost !p-2 text-red-600"
                                 title="Desistência"
                               >
@@ -693,6 +790,99 @@ export default function MarcacoesPage() {
                 </button>
               </div>
             )}
+          </div>
+
+          {/* Bloqueios de horário */}
+          <div className="card !p-0 overflow-hidden">
+            <div className="px-5 py-4 border-b border-black/5 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-orange-500" style={{fontSize:'20px'}}>block</span>
+                <h2 className="section-title !mb-0">Bloqueios de horário</h2>
+              </div>
+              <button
+                onClick={() => { setShowBloqueioForm(v => !v); setBloqueioData(toDateStr(selectedDay)) }}
+                className="btn-ghost !p-1.5 !rounded-lg text-ink-secondary"
+                title="Adicionar bloqueio"
+              >
+                <span className="material-symbols-outlined" style={{fontSize:'18px'}}>{showBloqueioForm ? 'close' : 'add'}</span>
+              </button>
+            </div>
+
+            {showBloqueioForm && (
+              <div className="p-5 border-b border-black/5 space-y-3 bg-[#fff8f3]">
+                <p className="text-xs font-medium text-ink-secondary uppercase tracking-wide">Novo bloqueio</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="col-span-2">
+                    <label className="block text-[10px] font-medium text-ink-secondary mb-1 uppercase tracking-wide">Data</label>
+                    <input
+                      type="date"
+                      value={bloqueioData}
+                      onChange={e => setBloqueioData(e.target.value)}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-orange-400 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-medium text-ink-secondary mb-1 uppercase tracking-wide">Das</label>
+                    <select value={bloqueioInicio} onChange={e => setBloqueioInicio(e.target.value)}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-orange-400 transition-colors">
+                      {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-medium text-ink-secondary mb-1 uppercase tracking-wide">Até</label>
+                    <select value={bloqueioFim} onChange={e => setBloqueioFim(e.target.value)}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-orange-400 transition-colors">
+                      {[...TIME_OPTIONS, '19:00'].filter(t => t > bloqueioInicio).map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-[10px] font-medium text-ink-secondary mb-1 uppercase tracking-wide">Motivo (opcional)</label>
+                    <input
+                      type="text"
+                      value={bloqueioMotivo}
+                      onChange={e => setBloqueioMotivo(e.target.value)}
+                      placeholder="Ex: Formação, pausa, feriado..."
+                      className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-orange-400 transition-colors"
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={criarBloqueio}
+                  disabled={criandoBloqueio || !bloqueioData}
+                  className="w-full py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 disabled:opacity-40 transition-colors"
+                >
+                  {criandoBloqueio ? 'A bloquear...' : 'Bloquear horário'}
+                </button>
+              </div>
+            )}
+
+            {/* Lista de bloqueios da semana */}
+            <div className="divide-y divide-black/[0.04]">
+              {bloqueios.length === 0 ? (
+                <p className="text-xs text-ink-secondary text-center py-5">Sem bloqueios esta semana.</p>
+              ) : (
+                bloqueios.map(b => (
+                  <div key={b.id} className="flex items-center gap-3 px-5 py-3">
+                    <span className="material-symbols-outlined text-orange-400 flex-shrink-0" style={{fontSize:'16px'}}>block</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-ink">
+                        {new Date(b.data + 'T12:00:00').toLocaleDateString('pt-PT', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        {' · '}
+                        {b.hora_inicio.slice(0,5)}–{b.hora_fim.slice(0,5)}
+                      </p>
+                      {b.motivo && <p className="text-[11px] text-ink-secondary truncate">{b.motivo}</p>}
+                    </div>
+                    <button
+                      onClick={() => eliminarBloqueio(b.id)}
+                      className="btn-ghost !p-1.5 !rounded-md text-ink-secondary hover:text-red-600 flex-shrink-0"
+                      title="Remover bloqueio"
+                    >
+                      <span className="material-symbols-outlined" style={{fontSize:'15px'}}>delete</span>
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
           {/* New appointment form */}

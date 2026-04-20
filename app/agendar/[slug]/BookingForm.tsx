@@ -47,6 +47,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
   const [dataSelecionada, setDataSelecionada] = useState<string>('')
   const [horaSelecionada, setHoraSelecionada] = useState<string>('')
   const [horasOcupadas, setHorasOcupadas] = useState<string[]>([])
+  const [horasBloqueadas, setHorasBloqueadas] = useState<string[]>([])
   const [loadingSlots, setLoadingSlots] = useState(false)
   const [nome, setNome] = useState('')
   const [telemovel, setTelemovel] = useState('')
@@ -63,35 +64,56 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
 
   const slots = gerarSlots(horaAbertura, horaFecho)
 
-  // Buscar horas ocupadas quando data muda
+  // Buscar horas ocupadas e bloqueadas quando data muda
   useEffect(() => {
     if (!dataSelecionada || !barbeariaId) return
-    const fetchOcupadas = async () => {
+    const fetchDisponibilidade = async () => {
       setLoadingSlots(true)
-      const inicio = `${dataSelecionada}T00:00:00`
-      const fim = `${dataSelecionada}T23:59:59`
-      const { data } = await supabase
-        .from('marcacoes')
-        .select('data_hora, servicos(tempo_minutos)')
-        .eq('barbearia_id', barbeariaId)
-        .neq('estado', 'desistencia')
-        .gte('data_hora', inicio)
-        .lte('data_hora', fim)
 
+      const [{ data: marcacoesData }, { data: bloqueiosData }] = await Promise.all([
+        supabase
+          .from('marcacoes')
+          .select('data_hora, servicos(tempo_minutos)')
+          .eq('barbearia_id', barbeariaId)
+          .neq('estado', 'desistencia')
+          .gte('data_hora', `${dataSelecionada}T00:00:00`)
+          .lte('data_hora', `${dataSelecionada}T23:59:59`),
+        supabase
+          .from('bloqueios')
+          .select('hora_inicio, hora_fim')
+          .eq('barbearia_id', barbeariaId)
+          .eq('data', dataSelecionada),
+      ])
+
+      // Slots ocupados por marcações existentes
       const ocupadas = new Set<string>()
-      for (const m of data ?? []) {
+      for (const m of marcacoesData ?? []) {
         const inicio = new Date(m.data_hora)
         const duracao = (m.servicos as unknown as { tempo_minutos: number } | null)?.tempo_minutos ?? 30
-        // marcar todos os slots cobertos por esta marcação
         for (let i = 0; i < duracao; i += 30) {
           const slot = new Date(inicio.getTime() + i * 60000)
           ocupadas.add(`${String(slot.getHours()).padStart(2, '0')}:${String(slot.getMinutes()).padStart(2, '0')}`)
         }
       }
       setHorasOcupadas(Array.from(ocupadas))
+
+      // Slots bloqueados por bloqueios de horário
+      const bloqueadas = new Set<string>()
+      for (const b of bloqueiosData ?? []) {
+        const [hI, mI] = b.hora_inicio.slice(0, 5).split(':').map(Number)
+        const [hF, mF] = b.hora_fim.slice(0, 5).split(':').map(Number)
+        let h = hI, m = mI
+        while (h < hF || (h === hF && m < mF)) {
+          bloqueadas.add(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`)
+          m += 30
+          if (m >= 60) { h++; m -= 60 }
+        }
+      }
+      setHorasBloqueadas(Array.from(bloqueadas))
+
       setLoadingSlots(false)
     }
-    fetchOcupadas()
+    fetchDisponibilidade()
   }, [dataSelecionada, barbeariaId, supabase])
 
   const handleSubmit = async () => {
@@ -262,16 +284,20 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
               ) : (
                 <div className="grid grid-cols-4 gap-2">
                   {slots.map(slot => {
-                    const ocupado = horasOcupadas.includes(slot)
+                    const ocupado   = horasOcupadas.includes(slot)
+                    const bloqueado = horasBloqueadas.includes(slot)
+                    const indisponivel = ocupado || bloqueado
                     const active = horaSelecionada === slot
                     return (
                       <button
                         key={slot}
-                        onClick={() => !ocupado && setHoraSelecionada(slot)}
-                        disabled={ocupado}
+                        onClick={() => !indisponivel && setHoraSelecionada(slot)}
+                        disabled={indisponivel}
+                        title={bloqueado ? 'Horário indisponível' : ocupado ? 'Já reservado' : undefined}
                         className={`py-2 rounded-lg text-sm font-medium transition-all ${
-                          ocupado ? 'bg-gray-100 text-gray-300 cursor-not-allowed line-through' :
-                          active ? 'bg-[#0e4324] text-white' :
+                          bloqueado ? 'bg-orange-50 text-orange-300 cursor-not-allowed' :
+                          ocupado   ? 'bg-gray-100 text-gray-300 cursor-not-allowed line-through' :
+                          active    ? 'bg-[#0e4324] text-white' :
                           'bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100'
                         }`}
                       >

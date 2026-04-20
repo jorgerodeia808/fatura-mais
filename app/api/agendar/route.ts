@@ -12,7 +12,6 @@ export async function POST(req: NextRequest) {
 
     const supabase = createAdminClient()
 
-    // Verificar que a barbearia existe e tem marcações online ativas
     const { data: barbearia, error: barbErr } = await supabase
       .from('barbearias')
       .select('id, nome, marcacoes_online')
@@ -23,7 +22,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ erro: 'Barbearia não encontrada ou marcações online desativadas.' }, { status: 404 })
     }
 
-    // Verificar que o serviço existe e pertence a esta barbearia
     const { data: servico, error: servErr } = await supabase
       .from('servicos')
       .select('id, nome, preco, tempo_minutos')
@@ -36,10 +34,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ erro: 'Serviço inválido.' }, { status: 400 })
     }
 
-    // Verificar disponibilidade — o slot não pode já estar ocupado
     const dataHoraInicio = new Date(data_hora)
-    const dataHoraFim = new Date(dataHoraInicio.getTime() + servico.tempo_minutos * 60 * 1000)
+    const dataHoraFim    = new Date(dataHoraInicio.getTime() + servico.tempo_minutos * 60 * 1000)
+    const dataStr        = dataHoraInicio.toISOString().split('T')[0]
+    const horaInicioStr  = dataHoraInicio.toTimeString().slice(0, 5)
+    const horaFimStr     = dataHoraFim.toTimeString().slice(0, 5)
 
+    // Verificar marcações conflituosas
     const { data: conflitos } = await supabase
       .from('marcacoes')
       .select('id')
@@ -52,7 +53,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ erro: 'Este horário já está ocupado. Escolhe outro.' }, { status: 409 })
     }
 
-    // Fazer match de cliente CRM por telemóvel (ou criar novo)
+    // Verificar bloqueios de horário
+    const { data: bloqueios } = await supabase
+      .from('bloqueios')
+      .select('hora_inicio, hora_fim')
+      .eq('barbearia_id', barbearia.id)
+      .eq('data', dataStr)
+
+    for (const b of bloqueios ?? []) {
+      // Há sobreposição se o slot começa antes do fim do bloqueio E acaba depois do início
+      if (horaInicioStr < b.hora_fim && horaFimStr > b.hora_inicio) {
+        return NextResponse.json({ erro: 'Este horário está bloqueado. Escolhe outro.' }, { status: 409 })
+      }
+    }
+
+    // Match de cliente CRM por telemóvel
     let clienteId: string | null = null
     if (cliente_telemovel?.trim()) {
       const { data: clienteExistente } = await supabase
@@ -64,7 +79,6 @@ export async function POST(req: NextRequest) {
 
       if (clienteExistente) {
         clienteId = clienteExistente.id
-        // Atualizar nome se mudou
         await supabase.from('clientes').update({ nome: cliente_nome.trim() }).eq('id', clienteId)
       } else {
         const { data: novoCliente } = await supabase.from('clientes').insert({
@@ -78,17 +92,26 @@ export async function POST(req: NextRequest) {
 
     // Criar marcação
     const { data: marcacao, error: marcErr } = await supabase.from('marcacoes').insert({
-      barbearia_id: barbearia.id,
-      cliente_nome: cliente_nome.trim(),
+      barbearia_id:      barbearia.id,
+      cliente_nome:      cliente_nome.trim(),
       cliente_telemovel: cliente_telemovel?.trim() || null,
-      cliente_id: clienteId,
-      servico_id: servico.id,
-      data_hora: dataHoraInicio.toISOString(),
-      estado: 'pendente',
+      cliente_id:        clienteId,
+      servico_id:        servico.id,
+      data_hora:         dataHoraInicio.toISOString(),
+      estado:            'pendente',
     }).select('id').single()
 
     if (marcErr) {
       return NextResponse.json({ erro: 'Erro ao criar marcação. Tenta novamente.' }, { status: 500 })
+    }
+
+    // SMS de confirmação de receção (fire-and-forget, não bloqueia resposta)
+    if (cliente_telemovel?.trim()) {
+      fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/sms/online`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ marcacao_id: marcacao.id, tipo: 'recebida' }),
+      }).catch(() => {})
     }
 
     return NextResponse.json({ sucesso: true, marcacao_id: marcacao.id })
