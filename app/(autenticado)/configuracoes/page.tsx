@@ -6,7 +6,14 @@ import { createClient } from '@/lib/supabase/client'
 const SMS_TEMPLATE_PADRAO =
   'Olá [nome_cliente]! Lembrete da tua marcação em [nome_barbearia] amanhã, [data] às [hora] para [nome_servico]. Até amanhã!'
 
+const SMS_ONLINE_PADRAO = {
+  recebida:   'Olá [nome_cliente]! A tua marcação em [nome_barbearia] para [nome_servico] no dia [data] às [hora] foi recebida. Aguarda confirmação.',
+  confirmada: 'Olá [nome_cliente]! A tua marcação em [nome_barbearia] para [nome_servico] no dia [data] às [hora] está confirmada. Até já!',
+  cancelada:  'Olá [nome_cliente]! Infelizmente não te conseguimos atender no dia [data] às [hora] em [nome_barbearia]. Agenda outro horário: [link_marcacoes]',
+}
+
 const SMS_VARIAVEIS = ['[nome_cliente]', '[nome_barbearia]', '[data]', '[hora]', '[nome_servico]']
+const SMS_VARIAVEIS_ONLINE = [...SMS_VARIAVEIS, '[link_marcacoes]']
 
 const CATEGORIAS_CUSTO = ['Rendas', 'Água/Luz/Gás', 'Internet/Telefone', 'Seguros', 'Contabilidade', 'Marketing', 'Software', 'Equipamento', 'Outro']
 
@@ -93,6 +100,11 @@ export default function ConfiguracoesPage() {
   // Marcações online state
   const [marcacoesOnline, setMarcacoesOnline] = useState(false)
 
+  // SMS marcações online templates
+  const [smsOnlineRecebida, setSmsOnlineRecebida] = useState(SMS_ONLINE_PADRAO.recebida)
+  const [smsOnlineConfirmada, setSmsOnlineConfirmada] = useState(SMS_ONLINE_PADRAO.confirmada)
+  const [smsOnlineCancelada, setSmsOnlineCancelada] = useState(SMS_ONLINE_PADRAO.cancelada)
+
   // Novo serviço
   const [novoServico, setNovoServico] = useState({ nome: '', preco: '', tempo_minutos: '', custo_material: '' })
   const [adicionandoServico, setAdicionandoServico] = useState(false)
@@ -117,7 +129,7 @@ export default function ConfiguracoesPage() {
     const { data: barbId } = await supabase.from('barbearias').select('id').eq('user_id', user.id).single()
     const bid = barbId?.id ?? ''
     const [{ data: barb }, { data: servs }, { data: custs }, { data: prods }] = await Promise.all([
-      supabase.from('barbearias').select('id, nome, num_barbeiros, hora_abertura, hora_fecho, dias_trabalho_mes, sms_ativo, sms_mensagem_personalizada, marcacoes_online, slug').eq('user_id', user.id).single(),
+      supabase.from('barbearias').select('id, nome, num_barbeiros, hora_abertura, hora_fecho, dias_trabalho_mes, sms_ativo, sms_mensagem_personalizada, marcacoes_online, slug, sms_reserva_recebida, sms_reserva_confirmada, sms_reserva_cancelada').eq('user_id', user.id).single(),
       supabase.from('servicos').select('id, nome, preco, tempo_minutos, custo_material, ativo').eq('barbearia_id', bid).order('criado_em'),
       supabase.from('custos_fixos').select('id, descricao, valor, tipo, categoria').eq('barbearia_id', bid).order('criado_em'),
       supabase.from('produtos').select('id, nome, preco, ativo').eq('barbearia_id', bid).order('criado_em'),
@@ -135,6 +147,9 @@ export default function ConfiguracoesPage() {
       setSmsAtivo(barb.sms_ativo !== false)
       setSmsMensagem(barb.sms_mensagem_personalizada || SMS_TEMPLATE_PADRAO)
       setMarcacoesOnline(barb.marcacoes_online ?? false)
+      setSmsOnlineRecebida(barb.sms_reserva_recebida || SMS_ONLINE_PADRAO.recebida)
+      setSmsOnlineConfirmada(barb.sms_reserva_confirmada || SMS_ONLINE_PADRAO.confirmada)
+      setSmsOnlineCancelada(barb.sms_reserva_cancelada || SMS_ONLINE_PADRAO.cancelada)
     }
     if (servs) setServicos(servs as Servico[])
     if (custs) setCustos(custs as CustoFixo[])
@@ -270,6 +285,18 @@ export default function ConfiguracoesPage() {
     await supabase.from('barbearias').update({ sms_mensagem_personalizada: smsMensagem.trim() || null }).eq('id', barbearia.id)
     setSaving(null)
     showToast('Mensagem guardada ✓')
+  }
+
+  const handleSmsOnlineGuardar = async () => {
+    if (!barbearia) return
+    setSaving('sms_online')
+    await supabase.from('barbearias').update({
+      sms_reserva_recebida:   smsOnlineRecebida.trim()   || null,
+      sms_reserva_confirmada: smsOnlineConfirmada.trim() || null,
+      sms_reserva_cancelada:  smsOnlineCancelada.trim()  || null,
+    }).eq('id', barbearia.id)
+    setSaving(null)
+    showToast('Templates guardados ✓')
   }
 
   const handleMarcacoesOnlineToggle = async (val: boolean) => {
@@ -740,6 +767,52 @@ export default function ConfiguracoesPage() {
             </div>
           </>
         )}
+      </Section>
+
+      {/* ─── SMS Marcações Online ───────────────────────────────── */}
+      <Section title="SMS de Marcações Online" description="Mensagens automáticas enviadas quando um cliente agenda pelo link público">
+        {(['recebida', 'confirmada', 'cancelada'] as const).map((tipo) => {
+          const labels = { recebida: 'Reserva recebida', confirmada: 'Reserva confirmada', cancelada: 'Reserva cancelada' }
+          const values = { recebida: smsOnlineRecebida, confirmada: smsOnlineConfirmada, cancelada: smsOnlineCancelada }
+          const setters = { recebida: setSmsOnlineRecebida, confirmada: setSmsOnlineConfirmada, cancelada: setSmsOnlineCancelada }
+          const defaults = { recebida: SMS_ONLINE_PADRAO.recebida, confirmada: SMS_ONLINE_PADRAO.confirmada, cancelada: SMS_ONLINE_PADRAO.cancelada }
+          return (
+            <div key={tipo}>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium text-gray-800">{labels[tipo]}</p>
+                <button onClick={() => setters[tipo](defaults[tipo])} className="text-xs text-gray-400 hover:text-[#977c30] transition-colors">
+                  Repor padrão
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {SMS_VARIAVEIS_ONLINE.map(v => (
+                  <button
+                    key={v}
+                    onClick={() => setters[tipo](prev => prev + v)}
+                    className="text-[10px] bg-gray-100 hover:bg-[#0e4324]/10 text-gray-600 hover:text-[#0e4324] px-2 py-0.5 rounded font-mono transition-colors"
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={values[tipo]}
+                onChange={e => setters[tipo](e.target.value)}
+                rows={3}
+                maxLength={320}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#0e4324] resize-none transition-colors"
+              />
+              <p className="text-xs text-gray-400 mt-1">{values[tipo].length}/320 caracteres</p>
+            </div>
+          )
+        })}
+        <button
+          onClick={handleSmsOnlineGuardar}
+          disabled={saving === 'sms_online'}
+          className="w-full text-sm bg-[#0e4324] text-white px-4 py-2.5 rounded-xl font-medium hover:bg-[#0a3019] disabled:opacity-50 transition-colors"
+        >
+          {saving === 'sms_online' ? 'A guardar...' : 'Guardar templates'}
+        </button>
       </Section>
 
       {/* ─── Marcações online ───────────────────────────────────── */}
