@@ -10,6 +10,13 @@ const SMS_VARIAVEIS = ['[nome_cliente]', '[nome_barbearia]', '[data]', '[hora]',
 
 const CATEGORIAS_CUSTO = ['Rendas', 'Água/Luz/Gás', 'Internet/Telefone', 'Seguros', 'Contabilidade', 'Marketing', 'Software', 'Equipamento', 'Outro']
 
+interface Produto {
+  id: string
+  nome: string
+  preco: number
+  ativo: boolean
+}
+
 interface Barbearia {
   id: string
   nome: string
@@ -69,6 +76,7 @@ export default function ConfiguracoesPage() {
   const [barbearia, setBarbearia] = useState<Barbearia | null>(null)
   const [servicos, setServicos] = useState<Servico[]>([])
   const [custos, setCustos] = useState<CustoFixo[]>([])
+  const [produtos, setProdutos] = useState<Produto[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState<string | null>(null)
   const [toast, setToast] = useState('')
@@ -93,6 +101,10 @@ export default function ConfiguracoesPage() {
   const [novoCusto, setNovoCusto] = useState({ descricao: '', valor: '', tipo: 'fixo' as 'fixo' | 'variavel', categoria: 'Outro' })
   const [adicionandoCusto, setAdicionandoCusto] = useState(false)
 
+  // Novo produto
+  const [novoProduto, setNovoProduto] = useState({ nome: '', preco: '' })
+  const [adicionandoProduto, setAdicionandoProduto] = useState(false)
+
   const showToast = (msg: string) => {
     setToast(msg)
     setTimeout(() => setToast(''), 3500)
@@ -102,10 +114,13 @@ export default function ConfiguracoesPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    const [{ data: barb }, { data: servs }, { data: custs }] = await Promise.all([
+    const { data: barbId } = await supabase.from('barbearias').select('id').eq('user_id', user.id).single()
+    const bid = barbId?.id ?? ''
+    const [{ data: barb }, { data: servs }, { data: custs }, { data: prods }] = await Promise.all([
       supabase.from('barbearias').select('id, nome, num_barbeiros, hora_abertura, hora_fecho, dias_trabalho_mes, sms_ativo, sms_mensagem_personalizada, marcacoes_online, slug').eq('user_id', user.id).single(),
-      supabase.from('servicos').select('id, nome, preco, tempo_minutos, custo_material, ativo').eq('barbearia_id', (await supabase.from('barbearias').select('id').eq('user_id', user.id).single()).data?.id ?? '').order('criado_em'),
-      supabase.from('custos_fixos').select('id, descricao, valor, tipo, categoria').eq('barbearia_id', (await supabase.from('barbearias').select('id').eq('user_id', user.id).single()).data?.id ?? '').order('criado_em'),
+      supabase.from('servicos').select('id, nome, preco, tempo_minutos, custo_material, ativo').eq('barbearia_id', bid).order('criado_em'),
+      supabase.from('custos_fixos').select('id, descricao, valor, tipo, categoria').eq('barbearia_id', bid).order('criado_em'),
+      supabase.from('produtos').select('id, nome, preco, ativo').eq('barbearia_id', bid).order('criado_em'),
     ])
 
     if (barb) {
@@ -123,6 +138,7 @@ export default function ConfiguracoesPage() {
     }
     if (servs) setServicos(servs as Servico[])
     if (custs) setCustos(custs as CustoFixo[])
+    if (prods) setProdutos(prods as Produto[])
     setLoading(false)
   }, [supabase])
 
@@ -206,6 +222,36 @@ export default function ConfiguracoesPage() {
     if (error) { showToast('Erro ao remover custo.'); return }
     setCustos(prev => prev.filter(c => c.id !== id))
     showToast('Custo removido ✓')
+  }
+
+  // ─── Produtos ───────────────────────────────────────────────────
+  const adicionarProduto = async () => {
+    if (!barbearia || !novoProduto.nome.trim()) return
+    setAdicionandoProduto(true)
+    const { data, error } = await supabase.from('produtos').insert({
+      barbearia_id: barbearia.id,
+      nome: novoProduto.nome.trim(),
+      preco: parseFloat(novoProduto.preco) || 0,
+      ativo: true,
+    }).select().single()
+    setAdicionandoProduto(false)
+    if (error) { showToast('Erro ao adicionar produto.'); return }
+    setProdutos(prev => [...prev, data as Produto])
+    setNovoProduto({ nome: '', preco: '' })
+    showToast('Produto adicionado ✓')
+  }
+
+  const atualizarProduto = async (id: string, campo: string, valor: string | number | boolean) => {
+    const { error } = await supabase.from('produtos').update({ [campo]: valor }).eq('id', id)
+    if (error) { showToast('Erro ao atualizar produto.'); return }
+    setProdutos(prev => prev.map(p => p.id === id ? { ...p, [campo]: valor } : p))
+  }
+
+  const removerProduto = async (id: string) => {
+    const { error } = await supabase.from('produtos').delete().eq('id', id)
+    if (error) { showToast('Erro ao remover produto.'); return }
+    setProdutos(prev => prev.filter(p => p.id !== id))
+    showToast('Produto removido ✓')
   }
 
   // ─── SMS ────────────────────────────────────────────────────────
@@ -548,6 +594,72 @@ export default function ConfiguracoesPage() {
           >
             <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>add</span>
             {adicionandoCusto ? 'A adicionar...' : 'Adicionar custo'}
+          </button>
+        </div>
+      </Section>
+
+      {/* ─── Produtos ───────────────────────────────────────────── */}
+      <Section title="Produtos" description="Artigos à venda na tua barbearia (ceras, after shaves, etc.)">
+        <div className="space-y-2">
+          {produtos.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-4">Nenhum produto adicionado ainda.</p>
+          )}
+          {produtos.map(p => (
+            <div key={p.id} className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-4 py-3">
+              <input
+                type="text"
+                defaultValue={p.nome}
+                onBlur={e => { if (e.target.value !== p.nome) atualizarProduto(p.id, 'nome', e.target.value) }}
+                className="flex-1 text-sm font-medium text-gray-800 border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#0e4324] transition-colors"
+              />
+              <div>
+                <label className="block text-[10px] font-medium text-gray-400 uppercase tracking-wide mb-1">Preço (€)</label>
+                <input
+                  type="number"
+                  defaultValue={p.preco}
+                  onBlur={e => { const v = parseFloat(e.target.value); if (v !== p.preco) atualizarProduto(p.id, 'preco', v) }}
+                  className="w-24 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+                  min="0" step="0.01"
+                />
+              </div>
+              <button
+                onClick={() => removerProduto(p.id)}
+                className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0"
+                title="Remover produto"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>delete</span>
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Adicionar novo produto */}
+        <div className="border border-dashed border-gray-200 rounded-xl p-4 space-y-3">
+          <p className="text-xs font-medium text-gray-500">Novo produto</p>
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="text"
+              placeholder="Nome do produto"
+              value={novoProduto.nome}
+              onChange={e => setNovoProduto(p => ({ ...p, nome: e.target.value }))}
+              className="col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+            />
+            <input
+              type="number"
+              placeholder="Preço (€)"
+              value={novoProduto.preco}
+              onChange={e => setNovoProduto(p => ({ ...p, preco: e.target.value }))}
+              className="col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+              min="0" step="0.01"
+            />
+          </div>
+          <button
+            onClick={adicionarProduto}
+            disabled={adicionandoProduto || !novoProduto.nome.trim()}
+            className="w-full text-sm bg-[#0e4324]/10 text-[#0e4324] hover:bg-[#0e4324]/20 px-3 py-2 rounded-lg font-medium disabled:opacity-40 transition-colors flex items-center justify-center gap-1.5"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>add</span>
+            {adicionandoProduto ? 'A adicionar...' : 'Adicionar produto'}
           </button>
         </div>
       </Section>

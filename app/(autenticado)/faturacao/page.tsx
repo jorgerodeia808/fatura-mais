@@ -11,15 +11,31 @@ interface Servico {
   tempo_minutos: number
 }
 
+interface Produto {
+  id: string
+  nome: string
+  preco: number
+}
+
+interface ClienteCRM {
+  id: string
+  nome: string
+  telemovel: string | null
+}
+
 interface RegistoItem {
   id: string
   cliente_nome: string | null
+  cliente_id: string | null
   servico_id: string | null
+  produto_id: string | null
+  tipo: 'servico' | 'produto' | null
   valor: number
   gorjeta: number
   estado: 'concluido' | 'pendente' | 'desistencia'
   data_hora: string
   servicos: { nome: string; tempo_minutos: number } | null
+  produtos: { nome: string } | null
 }
 
 // ── Helpers ────────────────────────────────────────────────────────
@@ -48,12 +64,10 @@ function endOfDay(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).toISOString()
 }
 
-// ── Skeleton ───────────────────────────────────────────────────────
 function Sk({ className = '' }: { className?: string }) {
   return <div className={`animate-pulse bg-[#f0eee8] rounded-lg ${className}`} />
 }
 
-// ── Badge de estado ────────────────────────────────────────────────
 function EstadoBadge({ estado }: { estado: string }) {
   if (estado === 'concluido') return <span className="badge-green">Concluído</span>
   if (estado === 'pendente') return <span className="badge-amber">Pendente</span>
@@ -66,9 +80,10 @@ export default function FaturacaoPage() {
   const supabase = createClient()
   const subscriptionRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
-  // State
   const [barbeariaId, setBarbeariaId] = useState<string | null>(null)
   const [servicos, setServicos] = useState<Servico[]>([])
+  const [produtos, setProdutos] = useState<Produto[]>([])
+  const [clientesCRM, setClientesCRM] = useState<ClienteCRM[]>([])
   const [registos, setRegistos] = useState<RegistoItem[]>([])
   const [loadingInit, setLoadingInit] = useState(true)
   const [loadingRegistos, setLoadingRegistos] = useState(false)
@@ -76,22 +91,35 @@ export default function FaturacaoPage() {
   const [selectedDate, setSelectedDate] = useState(new Date())
 
   // Form state
-  const [clienteNome, setClienteNome] = useState('')
+  const [tipoRegisto, setTipoRegisto] = useState<'servico' | 'produto'>('servico')
+  const [clienteQuery, setClienteQuery] = useState('')
+  const [clienteId, setClienteId] = useState<string | null>(null)
+  const [showSugestoes, setShowSugestoes] = useState(false)
   const [selectedServico, setSelectedServico] = useState<Servico | null>(null)
+  const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null)
   const [gorjetaPill, setGorjetaPill] = useState<number | null>(null)
   const [gorjetaManual, setGorjetaManual] = useState('')
   const [estado, setEstado] = useState<'concluido' | 'pendente' | 'desistencia'>('concluido')
   const [successMsg, setSuccessMsg] = useState('')
   const [formError, setFormError] = useState('')
 
+  const clienteInputRef = useRef<HTMLInputElement>(null)
+  const sugestoesRef = useRef<HTMLDivElement>(null)
+
   const gorjetaTotal = (gorjetaPill ?? 0) + (parseFloat(gorjetaManual) || 0)
+
+  const sugestoesFiltradas = clientesCRM.filter(c => {
+    if (!clienteQuery.trim() || clienteQuery.trim().length < 1) return false
+    const q = clienteQuery.toLowerCase()
+    return c.nome.toLowerCase().includes(q) || (c.telemovel ?? '').includes(q)
+  }).slice(0, 6)
 
   // ── Fetch registos ───────────────────────────────────────────────
   const fetchRegistos = useCallback(async (bid: string, date: Date) => {
     setLoadingRegistos(true)
     const { data } = await supabase
       .from('faturacao')
-      .select('id, cliente_nome, servico_id, valor, gorjeta, estado, data_hora, servicos(nome, tempo_minutos)')
+      .select('id, cliente_nome, cliente_id, servico_id, produto_id, tipo, valor, gorjeta, estado, data_hora, servicos(nome, tempo_minutos), produtos(nome)')
       .eq('barbearia_id', bid)
       .gte('data_hora', startOfDay(date))
       .lte('data_hora', endOfDay(date))
@@ -105,20 +133,19 @@ export default function FaturacaoPage() {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const { data: barb } = await supabase
-        .from('barbearias')
-        .select('id')
-        .eq('user_id', user.id)
-        .single()
+      const { data: barb } = await supabase.from('barbearias').select('id').eq('user_id', user.id).single()
       if (!barb) { setLoadingInit(false); return }
       setBarbeariaId(barb.id)
-      const { data: servs } = await supabase
-        .from('servicos')
-        .select('id, nome, preco, tempo_minutos')
-        .eq('barbearia_id', barb.id)
-        .eq('ativo', true)
-        .order('nome')
+
+      const [{ data: servs }, { data: prods }, { data: clts }] = await Promise.all([
+        supabase.from('servicos').select('id, nome, preco, tempo_minutos').eq('barbearia_id', barb.id).eq('ativo', true).order('nome'),
+        supabase.from('produtos').select('id, nome, preco').eq('barbearia_id', barb.id).eq('ativo', true).order('nome'),
+        supabase.from('clientes').select('id, nome, telemovel').eq('barbearia_id', barb.id).order('nome'),
+      ])
+
       setServicos((servs as Servico[]) ?? [])
+      setProdutos((prods as Produto[]) ?? [])
+      setClientesCRM((clts as ClienteCRM[]) ?? [])
       await fetchRegistos(barb.id, new Date())
       setLoadingInit(false)
     }
@@ -128,20 +155,27 @@ export default function FaturacaoPage() {
   // ── Realtime subscription ────────────────────────────────────────
   useEffect(() => {
     if (!barbeariaId) return
-    if (subscriptionRef.current) {
-      supabase.removeChannel(subscriptionRef.current)
-    }
+    if (subscriptionRef.current) supabase.removeChannel(subscriptionRef.current)
     const channel = supabase
       .channel(`faturacao-${barbeariaId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'faturacao', filter: `barbearia_id=eq.${barbeariaId}` },
-        () => { fetchRegistos(barbeariaId, selectedDate) }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'faturacao', filter: `barbearia_id=eq.${barbeariaId}` },
+        () => { fetchRegistos(barbeariaId, selectedDate) })
       .subscribe()
     subscriptionRef.current = channel
     return () => { supabase.removeChannel(channel) }
   }, [barbeariaId, selectedDate, supabase, fetchRegistos])
+
+  // ── Fechar sugestões ao clicar fora ─────────────────────────────
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (sugestoesRef.current && !sugestoesRef.current.contains(e.target as Node) &&
+          clienteInputRef.current && !clienteInputRef.current.contains(e.target as Node)) {
+        setShowSugestoes(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
 
   // ── Date navigation ──────────────────────────────────────────────
   const changeDate = (delta: number) => {
@@ -152,37 +186,60 @@ export default function FaturacaoPage() {
     if (barbeariaId) fetchRegistos(barbeariaId, d)
   }
 
+  // ── Selecionar cliente CRM ───────────────────────────────────────
+  const selecionarClienteCRM = (c: ClienteCRM) => {
+    setClienteQuery(c.nome)
+    setClienteId(c.id)
+    setShowSugestoes(false)
+  }
+
+  const limparCliente = () => {
+    setClienteQuery('')
+    setClienteId(null)
+    setShowSugestoes(false)
+    clienteInputRef.current?.focus()
+  }
+
   // ── Submit form ──────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedServico) { setFormError('Seleciona um serviço.'); return }
+    const itemSelecionado = tipoRegisto === 'servico' ? selectedServico : selectedProduto
+    if (!itemSelecionado) { setFormError(`Seleciona um ${tipoRegisto === 'servico' ? 'serviço' : 'produto'}.`); return }
     if (!barbeariaId) return
     setFormError('')
     setSubmitting(true)
-    const { error } = await supabase.from('faturacao').insert({
+
+    const payload: Record<string, unknown> = {
       barbearia_id: barbeariaId,
-      cliente_nome: clienteNome.trim() || null,
-      servico_id: selectedServico.id,
-      valor: selectedServico.preco,
-      gorjeta: gorjetaTotal,
+      cliente_nome: clienteQuery.trim() || null,
+      cliente_id: clienteId,
+      tipo: tipoRegisto,
+      valor: itemSelecionado.preco,
+      gorjeta: tipoRegisto === 'servico' ? gorjetaTotal : 0,
       estado,
       data_hora: new Date().toISOString(),
-    })
-    if (error) {
-      setFormError('Erro ao registar. Tenta novamente.')
-      setSubmitting(false)
-      return
     }
+    if (tipoRegisto === 'servico') {
+      payload.servico_id = (itemSelecionado as Servico).id
+    } else {
+      payload.produto_id = (itemSelecionado as Produto).id
+    }
+
+    const { error } = await supabase.from('faturacao').insert(payload)
+    if (error) { setFormError('Erro ao registar. Tenta novamente.'); setSubmitting(false); return }
+
     // Reset form
-    setClienteNome('')
+    setClienteQuery('')
+    setClienteId(null)
     setSelectedServico(null)
+    setSelectedProduto(null)
     setGorjetaPill(null)
     setGorjetaManual('')
     setEstado('concluido')
-    setSuccessMsg('Serviço registado!')
+    setSuccessMsg(`${tipoRegisto === 'servico' ? 'Serviço' : 'Produto'} registado!`)
     setTimeout(() => setSuccessMsg(''), 3000)
     setSubmitting(false)
-    // If viewing today, refresh list (realtime will handle it but let's be sure)
+
     const today = new Date()
     if (selectedDate.toDateString() === today.toDateString()) {
       fetchRegistos(barbeariaId, selectedDate)
@@ -251,8 +308,8 @@ export default function FaturacaoPage() {
           <Sk className="h-28" /><Sk className="h-28" /><Sk className="h-28" />
         </div>
         <div className="flex gap-4">
-          <Sk className="w-[360px] h-[480px] flex-shrink-0" />
-          <Sk className="flex-1 h-[480px]" />
+          <Sk className="w-[360px] h-[580px] flex-shrink-0" />
+          <Sk className="flex-1 h-[580px]" />
         </div>
       </div>
     )
@@ -265,10 +322,9 @@ export default function FaturacaoPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Faturação</h1>
-          <p className="text-sm text-ink-secondary mt-0.5">Regista os serviços de hoje</p>
+          <p className="text-sm text-ink-secondary mt-0.5">Regista os serviços e produtos de hoje</p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Date navigation */}
           <div className="flex items-center gap-1 bg-white rounded-lg px-2 py-1" style={{ border: '0.5px solid rgba(0,0,0,0.08)' }}>
             <button
               onClick={() => changeDate(-1)}
@@ -297,7 +353,6 @@ export default function FaturacaoPage() {
 
       {/* ── Metric cards ─────────────────────────────────────────── */}
       <div className="grid grid-cols-3 gap-4">
-        {/* Receita do dia */}
         <div className="metric-card metric-card-accent">
           <p className="metric-label mb-3">{isToday ? 'Receita do dia' : 'Receita faturada'}</p>
           {loadingRegistos ? <Sk className="h-9 w-28 mb-1" /> : (
@@ -307,10 +362,8 @@ export default function FaturacaoPage() {
             <p className="text-xs text-[#977c30] font-medium mt-1">+{fmt(gorjetasTotal)} gorjetas</p>
           )}
         </div>
-
-        {/* N.º servicos */}
         <div className="metric-card">
-          <p className="metric-label mb-3">{isToday ? 'Serviços hoje' : 'Serviços'}</p>
+          <p className="metric-label mb-3">{isToday ? 'Registos hoje' : 'Registos'}</p>
           {loadingRegistos ? <Sk className="h-9 w-16 mb-1" /> : (
             <p className="metric-value">{servicosCount}</p>
           )}
@@ -318,14 +371,12 @@ export default function FaturacaoPage() {
             {registos.filter(r => r.estado === 'pendente').length} pendentes
           </p>
         </div>
-
-        {/* Ticket médio */}
         <div className="metric-card">
           <p className="metric-label mb-3">Ticket médio</p>
           {loadingRegistos ? <Sk className="h-9 w-24 mb-1" /> : (
             <p className="metric-value">{fmt(ticketMedio)}</p>
           )}
-          <p className="text-xs text-ink-secondary mt-1">por serviço concluído</p>
+          <p className="text-xs text-ink-secondary mt-1">por registo concluído</p>
         </div>
       </div>
 
@@ -342,109 +393,206 @@ export default function FaturacaoPage() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
 
-              {/* Cliente */}
+              {/* Toggle Serviço / Produto */}
               <div>
                 <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">
-                  Cliente (opcional)
+                  Tipo
                 </label>
-                <input
-                  type="text"
-                  value={clienteNome}
-                  onChange={e => setClienteNome(e.target.value)}
-                  className="input-field"
-                  placeholder="Ex: João Silva"
-                />
+                <div className="flex rounded-lg overflow-hidden" style={{ border: '0.5px solid rgba(0,0,0,0.1)' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setTipoRegisto('servico'); setSelectedProduto(null) }}
+                    className={`flex-1 py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${
+                      tipoRegisto === 'servico' ? 'bg-verde text-white' : 'bg-white text-ink-secondary hover:bg-[#f0eee8]'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>cut</span>
+                    Serviço
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setTipoRegisto('produto'); setSelectedServico(null); setGorjetaPill(null); setGorjetaManual('') }}
+                    className={`flex-1 py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${
+                      tipoRegisto === 'produto' ? 'bg-verde text-white' : 'bg-white text-ink-secondary hover:bg-[#f0eee8]'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>inventory_2</span>
+                    Produto
+                  </button>
+                </div>
               </div>
 
-              {/* Servicos */}
-              <div>
+              {/* Cliente (autocomplete CRM) */}
+              <div className="relative">
                 <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">
-                  Serviço *
+                  Cliente (opcional)
+                  {clienteId && (
+                    <span className="ml-1.5 text-verde normal-case tracking-normal font-semibold">
+                      · ficha CRM
+                    </span>
+                  )}
                 </label>
-                {servicos.length === 0 ? (
-                  <div className="text-center py-5 text-xs text-ink-secondary border border-dashed border-black/10 rounded-lg">
-                    <a href="/configuracoes" className="text-[#977c30] underline font-medium">Configura serviços</a> primeiro
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2">
-                    {servicos.map(s => {
-                      const active = selectedServico?.id === s.id
-                      return (
-                        <button
-                          key={s.id}
-                          type="button"
-                          onClick={() => setSelectedServico(active ? null : s)}
-                          className={`p-3 rounded-lg text-left transition-all duration-150 btn-inline ${
-                            active
-                              ? 'bg-verde text-white shadow-sm'
-                              : 'bg-[#f0eee8] hover:bg-[#e8e5dd] text-ink border border-black/5'
-                          }`}
-                        >
-                          <p className="text-sm font-medium leading-tight">{s.nome}</p>
-                          <p className={`text-xs mt-1 font-serif font-semibold ${active ? 'text-white/80' : 'text-ink-secondary'}`}>
-                            {fmt(s.preco)}
-                          </p>
-                          <p className={`text-xs mt-0.5 ${active ? 'text-white/60' : 'text-ink-secondary'}`}>
-                            {s.tempo_minutos} min
-                          </p>
-                        </button>
-                      )
-                    })}
+                <div className="relative">
+                  <input
+                    ref={clienteInputRef}
+                    type="text"
+                    value={clienteQuery}
+                    onChange={e => {
+                      setClienteQuery(e.target.value)
+                      setClienteId(null)
+                      setShowSugestoes(true)
+                    }}
+                    onFocus={() => { if (clienteQuery.length > 0) setShowSugestoes(true) }}
+                    className="input-field pr-8"
+                    placeholder="Pesquisar cliente ou escrever nome..."
+                  />
+                  {clienteQuery && (
+                    <button
+                      type="button"
+                      onClick={limparCliente}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-secondary hover:text-ink transition-colors"
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
+                    </button>
+                  )}
+                </div>
+                {showSugestoes && sugestoesFiltradas.length > 0 && (
+                  <div
+                    ref={sugestoesRef}
+                    className="absolute z-20 top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg overflow-hidden"
+                    style={{ border: '0.5px solid rgba(0,0,0,0.1)' }}
+                  >
+                    {sugestoesFiltradas.map(c => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => selecionarClienteCRM(c)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-[#f0eee8] transition-colors"
+                      >
+                        <div className="w-7 h-7 rounded-full bg-[#0e4324]/10 text-[#0e4324] text-xs font-bold flex items-center justify-center flex-shrink-0">
+                          {c.nome.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-ink">{c.nome}</p>
+                          {c.telemovel && <p className="text-xs text-ink-secondary">{c.telemovel}</p>}
+                        </div>
+                        <span className="ml-auto text-[10px] text-verde font-medium">CRM</span>
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
 
-              {/* Gorjeta */}
-              <div>
-                <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">
-                  Gorjeta{gorjetaTotal > 0 && (
-                    <span className="ml-1.5 text-[#977c30] font-semibold normal-case tracking-normal">
-                      +{fmt(gorjetaTotal)}
-                    </span>
+              {/* Serviços */}
+              {tipoRegisto === 'servico' && (
+                <div>
+                  <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">
+                    Serviço *
+                  </label>
+                  {servicos.length === 0 ? (
+                    <div className="text-center py-5 text-xs text-ink-secondary border border-dashed border-black/10 rounded-lg">
+                      <a href="/configuracoes" className="text-[#977c30] underline font-medium">Configura serviços</a> primeiro
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {servicos.map(s => {
+                        const active = selectedServico?.id === s.id
+                        return (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => setSelectedServico(active ? null : s)}
+                            className={`p-3 rounded-lg text-left transition-all duration-150 btn-inline ${
+                              active ? 'bg-verde text-white shadow-sm' : 'bg-[#f0eee8] hover:bg-[#e8e5dd] text-ink border border-black/5'
+                            }`}
+                          >
+                            <p className="text-sm font-medium leading-tight">{s.nome}</p>
+                            <p className={`text-xs mt-1 font-serif font-semibold ${active ? 'text-white/80' : 'text-ink-secondary'}`}>{fmt(s.preco)}</p>
+                            <p className={`text-xs mt-0.5 ${active ? 'text-white/60' : 'text-ink-secondary'}`}>{s.tempo_minutos} min</p>
+                          </button>
+                        )
+                      })}
+                    </div>
                   )}
-                </label>
-                <div className="flex items-center gap-2">
-                  {PILL_AMOUNTS.map(a => {
-                    const active = gorjetaPill === a
-                    return (
-                      <button
-                        key={a}
-                        type="button"
-                        onClick={() => { setGorjetaPill(active ? null : a); setGorjetaManual('') }}
-                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-150 btn-inline ${
-                          active
-                            ? 'bg-[#977c30] text-white'
-                            : 'bg-[#f0eee8] text-ink-secondary hover:bg-[#e8e5dd]'
-                        }`}
-                        style={!active ? { border: '0.5px solid rgba(0,0,0,0.06)' } : {}}
-                      >
-                        +{a}€
-                      </button>
-                    )
-                  })}
-                  <input
-                    type="number"
-                    value={gorjetaManual}
-                    onChange={e => { setGorjetaManual(e.target.value); setGorjetaPill(null) }}
-                    placeholder="Outro €"
-                    min="0"
-                    step="0.50"
-                    className="input-field flex-1"
-                    style={{ minWidth: 0 }}
-                  />
                 </div>
-              </div>
+              )}
+
+              {/* Produtos */}
+              {tipoRegisto === 'produto' && (
+                <div>
+                  <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">
+                    Produto *
+                  </label>
+                  {produtos.length === 0 ? (
+                    <div className="text-center py-5 text-xs text-ink-secondary border border-dashed border-black/10 rounded-lg">
+                      <a href="/configuracoes" className="text-[#977c30] underline font-medium">Configura produtos</a> primeiro
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {produtos.map(p => {
+                        const active = selectedProduto?.id === p.id
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => setSelectedProduto(active ? null : p)}
+                            className={`p-3 rounded-lg text-left transition-all duration-150 btn-inline ${
+                              active ? 'bg-verde text-white shadow-sm' : 'bg-[#f0eee8] hover:bg-[#e8e5dd] text-ink border border-black/5'
+                            }`}
+                          >
+                            <p className="text-sm font-medium leading-tight">{p.nome}</p>
+                            <p className={`text-xs mt-1 font-serif font-semibold ${active ? 'text-white/80' : 'text-ink-secondary'}`}>{fmt(p.preco)}</p>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Gorjeta (só para serviços) */}
+              {tipoRegisto === 'servico' && (
+                <div>
+                  <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">
+                    Gorjeta{gorjetaTotal > 0 && (
+                      <span className="ml-1.5 text-[#977c30] font-semibold normal-case tracking-normal">+{fmt(gorjetaTotal)}</span>
+                    )}
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {PILL_AMOUNTS.map(a => {
+                      const active = gorjetaPill === a
+                      return (
+                        <button
+                          key={a}
+                          type="button"
+                          onClick={() => { setGorjetaPill(active ? null : a); setGorjetaManual('') }}
+                          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-150 btn-inline ${
+                            active ? 'bg-[#977c30] text-white' : 'bg-[#f0eee8] text-ink-secondary hover:bg-[#e8e5dd]'
+                          }`}
+                          style={!active ? { border: '0.5px solid rgba(0,0,0,0.06)' } : {}}
+                        >
+                          +{a}€
+                        </button>
+                      )
+                    })}
+                    <input
+                      type="number"
+                      value={gorjetaManual}
+                      onChange={e => { setGorjetaManual(e.target.value); setGorjetaPill(null) }}
+                      placeholder="Outro €"
+                      min="0"
+                      step="0.50"
+                      className="input-field flex-1"
+                      style={{ minWidth: 0 }}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Estado */}
               <div>
-                <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">
-                  Estado
-                </label>
-                <select
-                  value={estado}
-                  onChange={e => setEstado(e.target.value as typeof estado)}
-                  className="input-field"
-                >
+                <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">Estado</label>
+                <select value={estado} onChange={e => setEstado(e.target.value as typeof estado)} className="input-field">
                   <option value="concluido">Concluído</option>
                   <option value="pendente">Pendente</option>
                   <option value="desistencia">Desistência</option>
@@ -467,7 +615,7 @@ export default function FaturacaoPage() {
 
               <button
                 type="submit"
-                disabled={submitting || !selectedServico}
+                disabled={submitting || (tipoRegisto === 'servico' ? !selectedServico : !selectedProduto)}
                 className="btn-primary w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? (
@@ -481,7 +629,7 @@ export default function FaturacaoPage() {
                 ) : (
                   <>
                     <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
-                    Registar serviço
+                    Registar {tipoRegisto === 'servico' ? 'serviço' : 'produto'}
                   </>
                 )}
               </button>
@@ -489,10 +637,9 @@ export default function FaturacaoPage() {
           </div>
         </div>
 
-        {/* ── RIGHT: Historico ─────────────────────────────────────── */}
+        {/* ── RIGHT: Histórico ─────────────────────────────────────── */}
         <div className="flex-1 min-w-0">
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-            {/* Card header */}
             <div className="px-6 py-4 border-b border-[#f0eee8] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-verde" style={{ fontSize: '18px' }}>history</span>
@@ -512,22 +659,23 @@ export default function FaturacaoPage() {
             ) : registos.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
                 <div className="w-14 h-14 bg-[#f0eee8] rounded-xl flex items-center justify-center mb-4">
-                  <span className="material-symbols-outlined text-ink-secondary" style={{ fontSize: '28px' }}>cut</span>
+                  <span className="material-symbols-outlined text-ink-secondary" style={{ fontSize: '28px' }}>receipt_long</span>
                 </div>
                 <p className="font-serif font-semibold text-ink text-lg mb-1">
-                  {isToday ? 'Ainda sem serviços hoje' : 'Sem registos neste dia'}
+                  {isToday ? 'Ainda sem registos hoje' : 'Sem registos neste dia'}
                 </p>
                 <p className="text-sm text-ink-secondary max-w-xs">
-                  {isToday
-                    ? 'Usa o formulário ao lado para registar o primeiro serviço do dia.'
-                    : 'Não foram registados serviços neste dia.'}
+                  {isToday ? 'Usa o formulário ao lado para registar o primeiro serviço ou produto do dia.' : 'Não foram feitos registos neste dia.'}
                 </p>
               </div>
             ) : (
               <div className="px-6">
                 {registos.map(r => {
-                  const servicoNome = (r.servicos as { nome: string; tempo_minutos: number } | null)?.nome ?? 'Serviço removido'
-                  const servicoMin = (r.servicos as { nome: string; tempo_minutos: number } | null)?.tempo_minutos
+                  const isProduto = r.tipo === 'produto'
+                  const itemNome = isProduto
+                    ? (r.produtos as { nome: string } | null)?.nome ?? 'Produto removido'
+                    : (r.servicos as { nome: string; tempo_minutos: number } | null)?.nome ?? 'Serviço removido'
+                  const servicoMin = !isProduto ? (r.servicos as { nome: string; tempo_minutos: number } | null)?.tempo_minutos : null
                   const isEditing = editId === r.id
 
                   if (isEditing) {
@@ -546,31 +694,35 @@ export default function FaturacaoPage() {
                                 className="w-full border border-[#e8e4dc] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-verde bg-white"
                               />
                             </div>
-                            <div>
-                              <label className="block text-[10px] font-medium text-ink-secondary mb-1 uppercase tracking-wide">Serviço</label>
-                              <select
-                                value={editForm.servico_id}
-                                onChange={e => setEditForm(f => ({ ...f, servico_id: e.target.value }))}
-                                className="w-full border border-[#e8e4dc] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-verde bg-white"
-                              >
-                                <option value="">— sem serviço —</option>
-                                {servicos.map(s => (
-                                  <option key={s.id} value={s.id}>{s.nome} ({fmt(s.preco)})</option>
-                                ))}
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-medium text-ink-secondary mb-1 uppercase tracking-wide">Gorjeta (€)</label>
-                              <input
-                                type="number"
-                                value={editForm.gorjeta}
-                                onChange={e => setEditForm(f => ({ ...f, gorjeta: e.target.value }))}
-                                placeholder="0"
-                                min="0" step="0.50"
-                                className="w-full border border-[#e8e4dc] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-verde bg-white"
-                              />
-                            </div>
-                            <div className="col-span-2">
+                            {!isProduto && (
+                              <div>
+                                <label className="block text-[10px] font-medium text-ink-secondary mb-1 uppercase tracking-wide">Serviço</label>
+                                <select
+                                  value={editForm.servico_id}
+                                  onChange={e => setEditForm(f => ({ ...f, servico_id: e.target.value }))}
+                                  className="w-full border border-[#e8e4dc] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-verde bg-white"
+                                >
+                                  <option value="">— sem serviço —</option>
+                                  {servicos.map(s => (
+                                    <option key={s.id} value={s.id}>{s.nome} ({fmt(s.preco)})</option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+                            {!isProduto && (
+                              <div>
+                                <label className="block text-[10px] font-medium text-ink-secondary mb-1 uppercase tracking-wide">Gorjeta (€)</label>
+                                <input
+                                  type="number"
+                                  value={editForm.gorjeta}
+                                  onChange={e => setEditForm(f => ({ ...f, gorjeta: e.target.value }))}
+                                  placeholder="0"
+                                  min="0" step="0.50"
+                                  className="w-full border border-[#e8e4dc] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-verde bg-white"
+                                />
+                              </div>
+                            )}
+                            <div className={isProduto ? 'col-span-2' : 'col-span-2'}>
                               <label className="block text-[10px] font-medium text-ink-secondary mb-1 uppercase tracking-wide">Estado</label>
                               <select
                                 value={editForm.estado}
@@ -584,18 +736,8 @@ export default function FaturacaoPage() {
                             </div>
                           </div>
                           <div className="flex gap-2 pt-1">
-                            <button
-                              onClick={saveEdit}
-                              className="flex-1 btn-primary py-2 text-sm"
-                            >
-                              Guardar
-                            </button>
-                            <button
-                              onClick={() => setEditId(null)}
-                              className="px-4 py-2 rounded-lg border border-[#e8e4dc] text-sm text-ink-secondary hover:bg-[#f0eee8] transition-colors"
-                            >
-                              Cancelar
-                            </button>
+                            <button onClick={saveEdit} className="flex-1 btn-primary py-2 text-sm">Guardar</button>
+                            <button onClick={() => setEditId(null)} className="px-4 py-2 rounded-lg border border-[#e8e4dc] text-sm text-ink-secondary hover:bg-[#f0eee8] transition-colors">Cancelar</button>
                           </div>
                         </div>
                       </div>
@@ -603,22 +745,22 @@ export default function FaturacaoPage() {
                   }
 
                   return (
-                    <div
-                      key={r.id}
-                      className="flex items-center justify-between py-3 border-b border-[#f0eee8] last:border-0 table-row-hover px-1 -mx-1 rounded-lg"
-                    >
+                    <div key={r.id} className="flex items-center justify-between py-3 border-b border-[#f0eee8] last:border-0 table-row-hover px-1 -mx-1 rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-[#f0eee8] flex items-center justify-center flex-shrink-0">
-                          <span className="material-symbols-outlined text-verde" style={{ fontSize: '16px' }}>cut</span>
+                          <span className="material-symbols-outlined text-verde" style={{ fontSize: '16px' }}>
+                            {isProduto ? 'inventory_2' : 'cut'}
+                          </span>
                         </div>
                         <div>
                           <p className="text-sm font-medium text-ink">
                             {r.cliente_nome || <span className="text-ink-secondary italic font-normal">Cliente anónimo</span>}
+                            {r.cliente_id && <span className="ml-1.5 text-[10px] text-verde font-medium bg-verde/10 px-1.5 py-0.5 rounded">CRM</span>}
                           </p>
                           <p className="text-xs text-ink-secondary mt-0.5">
                             {formatHora(r.data_hora)}
                             {' · '}
-                            {servicoNome}
+                            {itemNome}
                             {servicoMin ? ` · ${servicoMin} min` : ''}
                           </p>
                         </div>
@@ -627,63 +769,35 @@ export default function FaturacaoPage() {
                       <div className="flex items-center gap-3 flex-shrink-0">
                         <div className="text-right">
                           <p className="font-serif font-medium text-ink text-base">{fmt(r.valor)}</p>
-                          {r.gorjeta > 0 && (
-                            <p className="text-xs text-[#977c30] font-medium">+{fmt(r.gorjeta)} gorjeta</p>
-                          )}
+                          {r.gorjeta > 0 && <p className="text-xs text-[#977c30] font-medium">+{fmt(r.gorjeta)} gorjeta</p>}
                         </div>
                         <EstadoBadge estado={r.estado} />
                       </div>
 
-                      {/* Pending actions inline */}
                       {r.estado === 'pendente' && (
                         <div className="flex items-center gap-2 ml-2">
-                          <button
-                            onClick={() => updateEstado(r.id, 'concluido')}
-                            className="btn-inline text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-md font-medium hover:bg-emerald-100 transition-colors"
-                          >
+                          <button onClick={() => updateEstado(r.id, 'concluido')} className="btn-inline text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-md font-medium hover:bg-emerald-100 transition-colors">
                             <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>check</span>
                             Confirmar
                           </button>
-                          <button
-                            onClick={() => updateEstado(r.id, 'desistencia')}
-                            className="btn-inline text-xs bg-red-50 text-red-800 border border-red-200 px-2.5 py-1 rounded-md font-medium hover:bg-red-100 transition-colors"
-                          >
+                          <button onClick={() => updateEstado(r.id, 'desistencia')} className="btn-inline text-xs bg-red-50 text-red-800 border border-red-200 px-2.5 py-1 rounded-md font-medium hover:bg-red-100 transition-colors">
                             <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>close</span>
                             Desistência
                           </button>
                         </div>
                       )}
 
-                      {/* Edit + Delete */}
                       <div className="ml-1 flex items-center gap-1">
-                        <button
-                          onClick={() => startEdit(r)}
-                          className="btn-inline w-7 h-7 flex items-center justify-center rounded-md hover:bg-[#f0eee8] text-ink-secondary hover:text-verde transition-colors"
-                          title="Editar registo"
-                        >
+                        <button onClick={() => startEdit(r)} className="btn-inline w-7 h-7 flex items-center justify-center rounded-md hover:bg-[#f0eee8] text-ink-secondary hover:text-verde transition-colors" title="Editar registo">
                           <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>edit</span>
                         </button>
                         {confirmDeleteId === r.id ? (
                           <>
-                            <button
-                              onClick={() => deleteRegisto(r.id)}
-                              className="btn-inline text-xs bg-red-600 text-white px-2 py-1 rounded-md font-medium hover:bg-red-700 transition-colors"
-                            >
-                              Eliminar
-                            </button>
-                            <button
-                              onClick={() => setConfirmDeleteId(null)}
-                              className="btn-inline text-xs text-ink-secondary hover:text-ink px-1.5 py-1 rounded-md transition-colors"
-                            >
-                              Cancelar
-                            </button>
+                            <button onClick={() => deleteRegisto(r.id)} className="btn-inline text-xs bg-red-600 text-white px-2 py-1 rounded-md font-medium hover:bg-red-700 transition-colors">Eliminar</button>
+                            <button onClick={() => setConfirmDeleteId(null)} className="btn-inline text-xs text-ink-secondary hover:text-ink px-1.5 py-1 rounded-md transition-colors">Cancelar</button>
                           </>
                         ) : (
-                          <button
-                            onClick={() => setConfirmDeleteId(r.id)}
-                            className="btn-inline w-7 h-7 flex items-center justify-center rounded-md hover:bg-red-50 text-ink-secondary hover:text-red-600 transition-colors"
-                            title="Eliminar registo"
-                          >
+                          <button onClick={() => setConfirmDeleteId(r.id)} className="btn-inline w-7 h-7 flex items-center justify-center rounded-md hover:bg-red-50 text-ink-secondary hover:text-red-600 transition-colors" title="Eliminar registo">
                             <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>delete</span>
                           </button>
                         )}

@@ -37,6 +37,12 @@ const navItems = [
     section: null,
   },
   {
+    label: 'Clientes',
+    href: '/clientes',
+    icon: 'group',
+    section: null,
+  },
+  {
     label: 'Relatórios',
     href: '/relatorios',
     icon: 'bar_chart',

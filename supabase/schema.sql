@@ -162,6 +162,49 @@ CREATE POLICY "Utilizador gere as suas marcações" ON public.marcacoes
     )
   );
 
+-- ----------------------------------------------------------------
+-- CLIENTES (CRM)
+-- ----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.clientes (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  barbearia_id  UUID NOT NULL REFERENCES public.barbearias(id) ON DELETE CASCADE,
+  nome          TEXT NOT NULL,
+  telemovel     TEXT,
+  observacoes   TEXT,
+  criado_em     TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(barbearia_id, telemovel)
+);
+
+ALTER TABLE public.clientes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Utilizador gere os seus clientes" ON public.clientes
+  FOR ALL USING (
+    barbearia_id IN (
+      SELECT id FROM public.barbearias WHERE user_id = auth.uid()
+    )
+  );
+
+-- ----------------------------------------------------------------
+-- PRODUTOS
+-- ----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.produtos (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  barbearia_id  UUID NOT NULL REFERENCES public.barbearias(id) ON DELETE CASCADE,
+  nome          TEXT NOT NULL,
+  preco         NUMERIC(10,2) NOT NULL DEFAULT 0,
+  ativo         BOOLEAN DEFAULT TRUE,
+  criado_em     TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.produtos ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Utilizador gere os seus produtos" ON public.produtos
+  FOR ALL USING (
+    barbearia_id IN (
+      SELECT id FROM public.barbearias WHERE user_id = auth.uid()
+    )
+  );
+
 -- ================================================================
 -- ÍNDICES para melhor performance
 -- ================================================================
@@ -170,3 +213,6 @@ CREATE INDEX IF NOT EXISTS idx_despesas_barbearia_data ON public.despesas(barbea
 CREATE INDEX IF NOT EXISTS idx_marcacoes_barbearia_data ON public.marcacoes(barbearia_id, data_hora);
 CREATE INDEX IF NOT EXISTS idx_servicos_barbearia ON public.servicos(barbearia_id);
 CREATE INDEX IF NOT EXISTS idx_barbeiros_barbearia ON public.barbeiros(barbearia_id);
+CREATE INDEX IF NOT EXISTS idx_clientes_barbearia ON public.clientes(barbearia_id);
+CREATE INDEX IF NOT EXISTS idx_clientes_telemovel ON public.clientes(barbearia_id, telemovel);
+CREATE INDEX IF NOT EXISTS idx_produtos_barbearia ON public.produtos(barbearia_id);
