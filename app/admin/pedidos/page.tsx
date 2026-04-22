@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import ConvidarButton from './ConvidarButton'
 import ConvidarDiretoForm from './ConvidarDiretoForm'
+import ReenviarButton from './ReenviarButton'
 
 interface Pedido {
   id: string
@@ -114,12 +115,13 @@ export default async function PedidosPage() {
                 <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Email</th>
                 <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Instagram</th>
                 <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Convidado em</th>
+                <th className="px-6 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {convidados.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-sm text-gray-400 italic">
+                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-400 italic">
                     Nenhum convite enviado ainda
                   </td>
                 </tr>
@@ -131,6 +133,9 @@ export default async function PedidosPage() {
                     <td className="px-6 py-4 text-gray-400">{p.instagram ? `@${p.instagram}` : '—'}</td>
                     <td className="px-6 py-4 text-gray-500 text-xs">
                       {p.convidado_em ? formatDate(p.convidado_em) : '—'}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <ReenviarButton email={p.email} nomeBarbearia={p.nome_barbearia} />
                     </td>
                   </tr>
                 ))
