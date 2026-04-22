@@ -64,7 +64,9 @@ function fmt(n: number) {
   return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(n)
 }
 
-function toDateStr(d: Date) { return d.toISOString().split('T')[0] }
+function toDateStr(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 function getMonday(d: Date): Date {
   const date = new Date(d)
@@ -308,10 +310,32 @@ export default function MarcacoesPage() {
     setFormError('')
     setSubmitting(true)
     const dataHora = new Date(`${dataForm}T${horaForm}:00`).toISOString()
+
+    // CRM match por telemóvel
+    let clienteId: string | null = null
+    const tel = clienteTel.trim()
+    if (tel) {
+      const { data: clienteExistente } = await supabase
+        .from('clientes').select('id')
+        .eq('barbearia_id', barbearia.id).eq('telemovel', tel).single()
+      if (clienteExistente) {
+        clienteId = clienteExistente.id
+        await supabase.from('clientes').update({ nome: clienteNome.trim() }).eq('id', clienteId)
+      } else {
+        const { data: novoCliente } = await supabase.from('clientes').insert({
+          barbearia_id: barbearia.id,
+          nome: clienteNome.trim(),
+          telemovel: tel,
+        }).select('id').single()
+        if (novoCliente) clienteId = novoCliente.id
+      }
+    }
+
     const { data: novaMarcacao, error } = await supabase.from('marcacoes').insert({
       barbearia_id: barbearia.id,
       cliente_nome: clienteNome.trim(),
-      cliente_telemovel: clienteTel.trim() || null,
+      cliente_telemovel: tel || null,
+      cliente_id: clienteId,
       servico_id: selectedServico.id,
       data_hora: dataHora,
       estado: 'pendente',
