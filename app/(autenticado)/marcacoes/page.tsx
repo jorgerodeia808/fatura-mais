@@ -314,6 +314,11 @@ export default function MarcacoesPage() {
     // CRM match por telemóvel
     let clienteId: string | null = null
     const tel = clienteTel.trim()
+    if (tel && !/^\d{9}$/.test(tel)) {
+      setFormError('Telemóvel inválido. Usa 9 dígitos sem espaços (ex: 912345678).')
+      setSubmitting(false)
+      return
+    }
     if (tel) {
       const { data: clienteExistente } = await supabase
         .from('clientes').select('id')

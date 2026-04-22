@@ -67,14 +67,18 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Match de cliente CRM por telemóvel
+    // Match de cliente CRM por telemóvel (só aceita 9 dígitos sem espaços)
     let clienteId: string | null = null
-    if (cliente_telemovel?.trim()) {
+    const telLimpo = cliente_telemovel?.trim() ?? ''
+    if (telLimpo && !/^\d{9}$/.test(telLimpo)) {
+      return NextResponse.json({ erro: 'Telemóvel inválido. Usa 9 dígitos sem espaços (ex: 912345678).' }, { status: 400 })
+    }
+    if (telLimpo) {
       const { data: clienteExistente } = await supabase
         .from('clientes')
         .select('id')
         .eq('barbearia_id', barbearia.id)
-        .eq('telemovel', cliente_telemovel.trim())
+        .eq('telemovel', telLimpo)
         .single()
 
       if (clienteExistente) {
@@ -84,7 +88,7 @@ export async function POST(req: NextRequest) {
         const { data: novoCliente } = await supabase.from('clientes').insert({
           barbearia_id: barbearia.id,
           nome: cliente_nome.trim(),
-          telemovel: cliente_telemovel.trim(),
+          telemovel: telLimpo,
         }).select('id').single()
         if (novoCliente) clienteId = novoCliente.id
       }

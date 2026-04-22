@@ -156,10 +156,15 @@ export default function ClientesPage() {
 
   const guardarCliente = async () => {
     if (!selectedId || !barbeariaId) return
+    const tel = editTelemovel.trim()
+    if (tel && !/^\d{9}$/.test(tel)) {
+      showToast('Telemóvel inválido. Usa 9 dígitos sem espaços (ex: 912345678).')
+      return
+    }
     setSaving(true)
     const { error } = await supabase.from('clientes').update({
       nome: editNome.trim(),
-      telemovel: editTelemovel.trim() || null,
+      telemovel: tel || null,
       observacoes: editObs.trim() || null,
     }).eq('id', selectedId)
     setSaving(false)
@@ -184,11 +189,16 @@ export default function ClientesPage() {
 
   const criarCliente = async () => {
     if (!barbeariaId || !novoNome.trim()) return
+    const tel = novoTelemovel.trim()
+    if (tel && !/^\d{9}$/.test(tel)) {
+      showToast('Telemóvel inválido. Usa 9 dígitos sem espaços (ex: 912345678).')
+      return
+    }
     setCriando(true)
     const { data, error } = await supabase.from('clientes').insert({
       barbearia_id: barbeariaId,
       nome: novoNome.trim(),
-      telemovel: novoTelemovel.trim() || null,
+      telemovel: tel || null,
       observacoes: novoObs.trim() || null,
     }).select().single()
     setCriando(false)
