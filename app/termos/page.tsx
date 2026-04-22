@@ -68,7 +68,7 @@ export default function TermosPage() {
               {/* Mensal */}
               <div className="bg-white border-2 border-[#0e4324] rounded-lg p-4">
                 <h3 className="font-semibold text-[#0e4324] mb-1">Mensal</h3>
-                <p className="text-xl font-bold text-gray-900">€14,99</p>
+                <p className="text-xl font-bold text-gray-900">€12,99</p>
                 <p className="text-xs text-gray-500 mb-2">/mês</p>
                 <p className="text-xs text-gray-600">
                   Acesso mensal renovado automaticamente. Cancelamento disponível

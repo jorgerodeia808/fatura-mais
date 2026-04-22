@@ -91,10 +91,13 @@ export default function FaturacaoPage() {
   const [selectedDate, setSelectedDate] = useState(new Date())
 
   // Form state
+  const [tipoRegisto, setTipoRegisto] = useState<'servico' | 'produto'>('servico')
   const [clienteQuery, setClienteQuery] = useState('')
   const [clienteId, setClienteId] = useState<string | null>(null)
   const [showSugestoes, setShowSugestoes] = useState(false)
+  const [selectedServico, setSelectedServico] = useState<Servico | null>(null)
   const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null)
+  const [avisoDuplicado, setAvisoDuplicado] = useState('')
   const [estado, setEstado] = useState<'concluido' | 'pendente' | 'desistencia'>('concluido')
   const [successMsg, setSuccessMsg] = useState('')
   const [formError, setFormError] = useState('')
@@ -197,31 +200,51 @@ export default function FaturacaoPage() {
   // ── Submit form ──────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedProduto) { setFormError('Seleciona um produto.'); return }
+    const item = tipoRegisto === 'servico' ? selectedServico : selectedProduto
+    if (!item) { setFormError(`Seleciona um ${tipoRegisto === 'servico' ? 'serviço' : 'produto'}.`); return }
     if (!barbeariaId) return
     setFormError('')
+    setAvisoDuplicado('')
     setSubmitting(true)
 
-    const { error } = await supabase.from('faturacao').insert({
+    // Verificar duplicado de serviço para o mesmo cliente no mesmo dia
+    if (tipoRegisto === 'servico' && clienteId) {
+      const { data: dups } = await supabase.from('faturacao')
+        .select('id')
+        .eq('barbearia_id', barbeariaId)
+        .eq('cliente_id', clienteId)
+        .eq('tipo', 'servico')
+        .gte('data_hora', startOfDay(selectedDate))
+        .lte('data_hora', endOfDay(selectedDate))
+      if (dups && dups.length > 0) {
+        setAvisoDuplicado(`Atenção: este cliente já tem ${dups.length} serviço(s) registado(s) hoje. Registo guardado na mesma.`)
+      }
+    }
+
+    const payload: Record<string, unknown> = {
       barbearia_id: barbeariaId,
       cliente_nome: clienteQuery.trim() || null,
       cliente_id: clienteId,
-      tipo: 'produto',
-      produto_id: selectedProduto.id,
-      valor: selectedProduto.preco,
+      tipo: tipoRegisto,
+      valor: item.preco,
       gorjeta: 0,
       estado,
       data_hora: new Date().toISOString(),
-    })
+    }
+    if (tipoRegisto === 'servico') payload.servico_id = (item as Servico).id
+    else payload.produto_id = (item as Produto).id
+
+    const { error } = await supabase.from('faturacao').insert(payload)
     if (error) { setFormError('Erro ao registar. Tenta novamente.'); setSubmitting(false); return }
 
     // Reset form
     setClienteQuery('')
     setClienteId(null)
+    setSelectedServico(null)
     setSelectedProduto(null)
     setEstado('concluido')
-    setSuccessMsg('Produto registado!')
-    setTimeout(() => setSuccessMsg(''), 3000)
+    setSuccessMsg(`${tipoRegisto === 'servico' ? 'Serviço' : 'Produto'} registado!`)
+    setTimeout(() => setSuccessMsg(''), 4000)
     setSubmitting(false)
 
     const today = new Date()
@@ -306,7 +329,7 @@ export default function FaturacaoPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Faturação</h1>
-          <p className="text-sm text-ink-secondary mt-0.5">Regista produtos vendidos · Serviços entram automaticamente pelas marcações</p>
+          <p className="text-sm text-ink-secondary mt-0.5">Regista produtos e serviços · Serviços confirmados entram automaticamente pelas marcações</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 bg-white rounded-lg px-2 py-1" style={{ border: '0.5px solid rgba(0,0,0,0.08)' }}>
@@ -377,6 +400,30 @@ export default function FaturacaoPage() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
 
+              {/* Toggle Serviço / Produto */}
+              <div>
+                <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">Tipo</label>
+                <div className="flex rounded-lg overflow-hidden" style={{ border: '0.5px solid rgba(0,0,0,0.1)' }}>
+                  {(['servico', 'produto'] as const).map(t => (
+                    <button key={t} type="button"
+                      onClick={() => { setTipoRegisto(t); setSelectedServico(null); setSelectedProduto(null); setAvisoDuplicado('') }}
+                      className={`flex-1 py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${
+                        tipoRegisto === t ? 'bg-verde text-white' : 'bg-white text-ink-secondary hover:bg-[#f0eee8]'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>{t === 'servico' ? 'cut' : 'inventory_2'}</span>
+                      {t === 'servico' ? 'Serviço' : 'Produto'}
+                    </button>
+                  ))}
+                </div>
+                {tipoRegisto === 'servico' && (
+                  <p className="text-[10px] text-amber-600 mt-1.5 flex items-center gap-1">
+                    <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>info</span>
+                    Os serviços das marcações confirmadas entram automaticamente — evita duplicados.
+                  </p>
+                )}
+              </div>
+
               {/* Cliente (autocomplete CRM) */}
               <div className="relative">
                 <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">
@@ -438,8 +485,34 @@ export default function FaturacaoPage() {
                 )}
               </div>
 
+              {/* Serviços */}
+              {tipoRegisto === 'servico' && (
+                <div>
+                  <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">Serviço *</label>
+                  {servicos.length === 0 ? (
+                    <div className="text-center py-5 text-xs text-ink-secondary border border-dashed border-black/10 rounded-lg">
+                      <a href="/configuracoes" className="text-[#977c30] underline font-medium">Configura serviços</a> primeiro
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {servicos.map(s => {
+                        const active = selectedServico?.id === s.id
+                        return (
+                          <button key={s.id} type="button" onClick={() => setSelectedServico(active ? null : s)}
+                            className={`p-3 rounded-lg text-left transition-all duration-150 btn-inline ${active ? 'bg-verde text-white shadow-sm' : 'bg-[#f0eee8] hover:bg-[#e8e5dd] text-ink border border-black/5'}`}>
+                            <p className="text-sm font-medium leading-tight">{s.nome}</p>
+                            <p className={`text-xs mt-1 font-serif font-semibold ${active ? 'text-white/80' : 'text-ink-secondary'}`}>{fmt(s.preco)}</p>
+                            <p className={`text-xs mt-0.5 ${active ? 'text-white/60' : 'text-ink-secondary'}`}>{s.tempo_minutos} min</p>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Produtos */}
-              <div>
+              {tipoRegisto === 'produto' && <div>
                 <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">
                   Produto *
                 </label>
@@ -469,6 +542,14 @@ export default function FaturacaoPage() {
                 )}
               </div>
 
+              {/* Aviso duplicado */}
+              {avisoDuplicado && (
+                <div className="flex items-start gap-2 text-amber-700 text-xs bg-amber-50 px-3 py-2 rounded-lg" style={{ border: '0.5px solid #fcd34d' }}>
+                  <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '14px' }}>warning</span>
+                  {avisoDuplicado}
+                </div>
+              )}
+
               {/* Estado */}
               <div>
                 <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">Estado</label>
@@ -495,7 +576,7 @@ export default function FaturacaoPage() {
 
               <button
                 type="submit"
-                disabled={submitting || !selectedProduto}
+                disabled={submitting || (tipoRegisto === 'servico' ? !selectedServico : !selectedProduto)}
                 className="btn-primary w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? (
@@ -509,7 +590,7 @@ export default function FaturacaoPage() {
                 ) : (
                   <>
                     <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
-                    Registar produto
+                    Registar {tipoRegisto === 'servico' ? 'serviço' : 'produto'}
                   </>
                 )}
               </button>

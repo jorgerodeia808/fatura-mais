@@ -32,7 +32,7 @@ export default function AcessoExpiradoPage() {
               <span className="badge-gold text-xs">Recomendado</span>
             </div>
             <div className="flex items-baseline gap-1 mb-3">
-              <span className="font-serif font-bold text-4xl text-[#0e4324]">€14,99</span>
+              <span className="font-serif font-bold text-4xl text-[#0e4324]">€12,99</span>
               <span className="text-sm text-[#717971]">/mês</span>
             </div>
             <ul className="space-y-2">

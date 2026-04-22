@@ -14,8 +14,12 @@ export default function ConvidarDiretoForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
     setError('')
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError('Email inválido. Verifica o formato (ex: nome@gmail.com)')
+      return
+    }
+    setLoading(true)
 
     const res = await fetch('/api/admin/convidar-direto', {
       method: 'POST',

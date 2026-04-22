@@ -228,7 +228,7 @@ export default function LandingPage() {
 
               <p className="text-sm font-medium text-ink-secondary mb-1">Plano Mensal</p>
               <div className="flex items-baseline gap-1.5 mb-1">
-                <span className="font-serif font-bold text-5xl text-ink">€14</span>
+                <span className="font-serif font-bold text-5xl text-ink">€12</span>
                 <span className="font-serif font-bold text-2xl text-ink">,99</span>
                 <span className="text-ink-secondary text-sm">/mês</span>
               </div>
