@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -11,8 +11,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
   const router = useRouter()
   const supabase = createClient()
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const erro = params.get('erro')
+    if (erro === 'link_expirado') setNotice('O link de acesso expirou. Pede ao administrador que reenvie o convite.')
+    else if (erro === 'link_invalido') setNotice('O link de acesso é inválido. Pede ao administrador que reenvie o convite.')
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -93,6 +101,12 @@ export default function LoginPage() {
 
             <h2 className="font-serif font-bold text-2xl text-[#1c1c18] mb-1">Bem-vindo de volta</h2>
             <p className="text-sm text-[#717971] mb-8">Entra na tua conta para continuar</p>
+
+            {notice && (
+              <div className="bg-amber-50 text-amber-800 text-sm px-4 py-3 rounded-lg border border-amber-200 mb-4">
+                {notice}
+              </div>
+            )}
 
             {/* Form */}
             <form onSubmit={handleLogin} className="space-y-4">

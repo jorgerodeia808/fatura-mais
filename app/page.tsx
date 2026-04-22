@@ -1,10 +1,12 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import AuthErrorRedirect from './components/AuthErrorRedirect'
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-fundo font-sans">
+      <AuthErrorRedirect />
 
       {/* ── NAVBAR ─────────────────────────────────────────────────────── */}
       <nav className="bg-[#fcf9f3]/80 backdrop-blur-xl border-b border-black/5 sticky top-0 z-50">
