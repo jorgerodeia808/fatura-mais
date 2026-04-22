@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
     type: 'invite',
     email,
-    options: { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback` },
+    options: { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/onboarding` },
   })
 
   if (linkError) {
@@ -68,11 +68,11 @@ export async function POST(req: NextRequest) {
             <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f7f2;border-radius:12px;padding:20px 24px;margin-bottom:24px;">
               <tr><td>
                 <p style="margin:0 0 14px;font-size:12px;font-weight:600;color:#0e4324;letter-spacing:0.8px;text-transform:uppercase;">O que inclui o teu plano</p>
-                <p style="margin:0 0 8px;font-size:14px;color:#374151;">📅 Calendário de marcações</p>
-                <p style="margin:0 0 8px;font-size:14px;color:#374151;">💶 Faturação e despesas</p>
-                <p style="margin:0 0 8px;font-size:14px;color:#374151;">👥 CRM de clientes</p>
-                <p style="margin:0 0 8px;font-size:14px;color:#374151;">📲 Marcações online</p>
-                <p style="margin:0 0 8px;font-size:14px;color:#374151;">📊 Relatórios e análise</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#374151;">Calendário de marcações</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#374151;">Faturação e despesas</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#374151;">CRM de clientes</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#374151;">Marcações online</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#374151;">Relatórios e análise</p>
               </td></tr>
             </table>
             <p style="margin:0;font-size:13px;color:#9ca3af;line-height:1.6;">
