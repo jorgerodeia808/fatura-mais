@@ -10,8 +10,6 @@ export default function ConvidarDiretoForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  const [inviteUrl, setInviteUrl] = useState('')
-  const [copied, setCopied] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,18 +36,13 @@ export default function ConvidarDiretoForm() {
     }
 
     setSuccess(true)
-    if (data.invite_url) setInviteUrl(data.invite_url)
     setEmail('')
     setNomeBarbearia('')
-    if (data.email_enviado) {
-      setTimeout(() => {
-        setSuccess(false)
-        setOpen(false)
-        router.refresh()
-      }, 2000)
-    } else {
+    setTimeout(() => {
+      setSuccess(false)
+      setOpen(false)
       router.refresh()
-    }
+    }, 2500)
   }
 
   return (
@@ -75,24 +68,9 @@ export default function ConvidarDiretoForm() {
           </div>
 
           {success ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm">
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check_circle</span>
-                {inviteUrl ? 'Conta criada! Partilha o link abaixo (email falhou — domínio não verificado).' : 'Convite enviado por email com sucesso!'}
-              </div>
-              {inviteUrl && (
-                <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Link de acesso (válido 24h)</p>
-                  <p className="text-xs text-gray-700 break-all font-mono">{inviteUrl}</p>
-                  <button
-                    onClick={() => { navigator.clipboard.writeText(inviteUrl); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-                    className="flex items-center gap-1.5 text-xs bg-[#0e4324] text-white px-3 py-1.5 rounded-lg font-medium hover:bg-[#0a3318] transition-colors"
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>{copied ? 'check' : 'content_copy'}</span>
-                    {copied ? 'Copiado!' : 'Copiar link'}
-                  </button>
-                </div>
-              )}
+            <div className="flex items-center gap-2 text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm">
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check_circle</span>
+              Convite enviado por email com sucesso!
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3">

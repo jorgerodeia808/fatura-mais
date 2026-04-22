@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
 export async function POST(req: NextRequest) {
   const { email, nome_barbearia } = await req.json()
@@ -24,15 +24,19 @@ export async function POST(req: NextRequest) {
 
   const inviteUrl = linkData.properties?.action_link
 
-  // Tentar enviar por email — se falhar, devolver o link para partilha manual
-  let emailEnviado = false
-  try {
-    const resend = new Resend(process.env.RESEND_API_KEY)
-    const { error: emailError } = await resend.emails.send({
-      from: 'Fatura+ <noreply@fatura-mais.pt>',
-      to: email,
-      subject: 'O teu acesso ao Fatura+ está pronto',
-      html: `<!DOCTYPE html>
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  })
+
+  await transporter.sendMail({
+    from: `"Fatura+" <${process.env.GMAIL_USER}>`,
+    to: email,
+    subject: 'O teu acesso ao Fatura+ está pronto',
+    html: `<!DOCTYPE html>
 <html lang="pt">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#f5f0e8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
@@ -47,19 +51,29 @@ export async function POST(req: NextRequest) {
         </tr>
         <tr>
           <td style="padding:40px 40px 32px;">
-            <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1a1a1a;">Bem-vindo ao Fatura+!</h1>
+            <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1a1a1a;line-height:1.3;">Bem-vindo ao Fatura+!</h1>
             <p style="margin:0 0 24px;font-size:15px;color:#6b7280;line-height:1.6;">
               O acesso para a barbearia <strong style="color:#1a1a1a;">${nome_barbearia}</strong> foi criado.
-              Clica no botão abaixo para ativares a tua conta.
+              Clica no botão abaixo para ativares a tua conta e começares a usar o Fatura+.
             </p>
             <table cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
               <tr>
                 <td style="background:#0e4324;border-radius:10px;">
-                  <a href="${inviteUrl}" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;">
+                  <a href="${inviteUrl}" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.2px;">
                     Ativar a minha conta →
                   </a>
                 </td>
               </tr>
+            </table>
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f7f2;border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+              <tr><td>
+                <p style="margin:0 0 14px;font-size:12px;font-weight:600;color:#0e4324;letter-spacing:0.8px;text-transform:uppercase;">O que inclui o teu plano</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#374151;">📅 Calendário de marcações</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#374151;">💶 Faturação e despesas</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#374151;">👥 CRM de clientes</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#374151;">📲 Marcações online</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#374151;">📊 Relatórios e análise</p>
+              </td></tr>
             </table>
             <p style="margin:0;font-size:13px;color:#9ca3af;line-height:1.6;">
               Este link expira em 24 horas. Se não pediste este acesso, podes ignorar este email.
@@ -76,11 +90,7 @@ export async function POST(req: NextRequest) {
   </table>
 </body>
 </html>`,
-    })
-    if (!emailError) emailEnviado = true
-  } catch {
-    // Email falhou — continuar com link manual
-  }
+  })
 
   await supabase.from('pedidos_acesso').insert({
     email,
@@ -90,9 +100,5 @@ export async function POST(req: NextRequest) {
     convidado_em: new Date().toISOString(),
   }).catch(() => {})
 
-  return NextResponse.json({
-    success: true,
-    email_enviado: emailEnviado,
-    invite_url: emailEnviado ? null : inviteUrl,
-  })
+  return NextResponse.json({ success: true })
 }
