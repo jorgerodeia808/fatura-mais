@@ -11,18 +11,29 @@ export async function POST(req: NextRequest) {
 
   const supabase = createAdminClient()
 
-  const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+  const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/onboarding`
+
+  let linkResult = await supabase.auth.admin.generateLink({
     type: 'invite',
     email,
-    options: { redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/onboarding` },
+    options: { redirectTo },
   })
 
-  if (linkError) {
-    console.error('Generate invite link error:', linkError)
-    return NextResponse.json({ error: linkError.message }, { status: 500 })
+  // Se o utilizador já existe no auth, gera um magic link em vez de convite
+  if (linkResult.error) {
+    linkResult = await supabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email,
+      options: { redirectTo },
+    })
   }
 
-  const inviteUrl = linkData.properties?.action_link
+  if (linkResult.error) {
+    console.error('Generate link error:', linkResult.error)
+    return NextResponse.json({ error: linkResult.error.message }, { status: 500 })
+  }
+
+  const inviteUrl = linkResult.data.properties?.action_link
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
