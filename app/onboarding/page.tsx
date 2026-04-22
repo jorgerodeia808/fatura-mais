@@ -13,6 +13,11 @@ interface Servico {
   custo_material: string
 }
 
+interface Produto {
+  nome: string
+  preco: string
+}
+
 interface CustoFixo {
   descricao: string
   valor: string
@@ -197,7 +202,61 @@ function Step2({
   )
 }
 
-// ── Step 3: Custos Fixos ──────────────────────────────────────────
+// ── Step 3: Produtos ─────────────────────────────────────────────
+function Step3Produtos({
+  produtos,
+  onChange,
+  onAdd,
+  onRemove,
+}: {
+  produtos: Produto[]
+  onChange: (index: number, field: keyof Produto, value: string) => void
+  onAdd: () => void
+  onRemove: (index: number) => void
+}) {
+  return (
+    <div className="card">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="w-8 h-8 rounded-lg bg-verde/10 flex items-center justify-center">
+          <span className="material-symbols-outlined text-verde" style={{ fontSize: '18px' }}>inventory_2</span>
+        </div>
+        <h2 className="section-title">Os teus produtos</h2>
+      </div>
+      <p className="text-xs text-ink-secondary mb-5">Ceras, after-shaves, óleos — produtos que vendes aos clientes. Podes adicionar mais depois.</p>
+
+      <div className="space-y-3 mb-4">
+        {produtos.map((p, i) => (
+          <div key={i} className="rounded-xl bg-surface-secondary p-4 relative">
+            {produtos.length > 1 && (
+              <button type="button" onClick={() => onRemove(i)} className="btn-ghost absolute top-2 right-2 !p-1 !h-auto" aria-label="Remover produto">
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
+              </button>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-ink mb-1">Nome do produto</label>
+                <input type="text" value={p.nome} onChange={e => onChange(i, 'nome', e.target.value)}
+                  className="input-field text-sm py-2" placeholder="Ex: Cera de cabelo" />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-ink mb-1">Preço (€)</label>
+                <input type="number" value={p.preco} onChange={e => onChange(i, 'preco', e.target.value)}
+                  className="input-field text-sm py-2" placeholder="0.00" min="0" step="0.01" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button type="button" onClick={onAdd} className="btn-secondary w-full flex items-center justify-center gap-1.5">
+        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
+        Adicionar produto
+      </button>
+    </div>
+  )
+}
+
+// ── Step 4: Custos Fixos ──────────────────────────────────────────
 function Step3({
   custos,
   onChange,
@@ -320,6 +379,11 @@ export default function OnboardingPage() {
   ])
 
   // Step 3 data
+  const [produtos, setProdutos] = useState<Produto[]>([
+    { nome: '', preco: '' },
+  ])
+
+  // Step 4 data
   const [custos, setCustos] = useState<CustoFixo[]>([
     { descricao: '', valor: '', tipo: 'fixo', categoria: '' },
   ])
@@ -330,6 +394,10 @@ export default function OnboardingPage() {
 
   const handleServicoChange = (i: number, field: keyof Servico, value: string) => {
     setServicos((prev) => prev.map((s, idx) => (idx === i ? { ...s, [field]: value } : s)))
+  }
+
+  const handleProdutoChange = (i: number, field: keyof Produto, value: string) => {
+    setProdutos((prev) => prev.map((p, idx) => (idx === i ? { ...p, [field]: value } : p)))
   }
 
   const handleCustoChange = (i: number, field: keyof CustoFixo, value: string) => {
@@ -405,6 +473,19 @@ export default function OnboardingPage() {
         if (servErr) throw servErr
       }
 
+      // Insert produtos válidos
+      const produtosValidos = produtos.filter((p) => p.nome.trim())
+      if (produtosValidos.length > 0) {
+        await supabase.from('produtos').insert(
+          produtosValidos.map((p) => ({
+            barbearia_id,
+            nome: p.nome.trim(),
+            preco: parseFloat(p.preco) || 0,
+            ativo: true,
+          }))
+        )
+      }
+
       // Insert custos válidos
       const custosValidos = custos.filter((c) => c.descricao.trim())
       if (custosValidos.length > 0) {
@@ -428,7 +509,7 @@ export default function OnboardingPage() {
     }
   }
 
-  const stepLabels = ['A tua barbearia', 'Os teus serviços', 'Custos mensais']
+  const stepLabels = ['A tua barbearia', 'Os teus serviços', 'Os teus produtos', 'Custos mensais']
 
   return (
     <div className="min-h-screen bg-fundo flex items-center justify-center px-4 py-12">
@@ -440,7 +521,7 @@ export default function OnboardingPage() {
           <h1 className="font-serif font-bold text-3xl text-verde">
             Fatura<span className="text-dourado">+</span>
           </h1>
-          <p className="text-ink-secondary text-sm mt-1 font-sans">Configura a tua barbearia em 3 passos</p>
+          <p className="text-ink-secondary text-sm mt-1 font-sans">Configura a tua barbearia em 4 passos</p>
         </div>
 
         {/* Progress bar */}
@@ -458,7 +539,7 @@ export default function OnboardingPage() {
           <div className="h-1 bg-surface-secondary rounded-full overflow-hidden">
             <div
               className="h-full bg-verde rounded-full transition-all duration-500"
-              style={{ width: `${((step - 1) / 2) * 100}%` }}
+              style={{ width: `${((step - 1) / 3) * 100}%` }}
             />
           </div>
         </div>
@@ -476,6 +557,14 @@ export default function OnboardingPage() {
           />
         )}
         {step === 3 && (
+          <Step3Produtos
+            produtos={produtos}
+            onChange={handleProdutoChange}
+            onAdd={() => setProdutos((p) => [...p, { nome: '', preco: '' }])}
+            onRemove={(i) => setProdutos((p) => p.filter((_, idx) => idx !== i))}
+          />
+        )}
+        {step === 4 && (
           <Step3
             custos={custos}
             onChange={handleCustoChange}
@@ -502,7 +591,7 @@ export default function OnboardingPage() {
             <div />
           )}
 
-          {step < 3 ? (
+          {step < 4 ? (
             <button type="button" onClick={nextStep} className="btn-primary">
               Seguinte
             </button>

@@ -91,22 +91,16 @@ export default function FaturacaoPage() {
   const [selectedDate, setSelectedDate] = useState(new Date())
 
   // Form state
-  const [tipoRegisto, setTipoRegisto] = useState<'servico' | 'produto'>('servico')
   const [clienteQuery, setClienteQuery] = useState('')
   const [clienteId, setClienteId] = useState<string | null>(null)
   const [showSugestoes, setShowSugestoes] = useState(false)
-  const [selectedServico, setSelectedServico] = useState<Servico | null>(null)
   const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null)
-  const [gorjetaPill, setGorjetaPill] = useState<number | null>(null)
-  const [gorjetaManual, setGorjetaManual] = useState('')
   const [estado, setEstado] = useState<'concluido' | 'pendente' | 'desistencia'>('concluido')
   const [successMsg, setSuccessMsg] = useState('')
   const [formError, setFormError] = useState('')
 
   const clienteInputRef = useRef<HTMLInputElement>(null)
   const sugestoesRef = useRef<HTMLDivElement>(null)
-
-  const gorjetaTotal = (gorjetaPill ?? 0) + (parseFloat(gorjetaManual) || 0)
 
   const sugestoesFiltradas = clientesCRM.filter(c => {
     if (!clienteQuery.trim() || clienteQuery.trim().length < 1) return false
@@ -203,40 +197,30 @@ export default function FaturacaoPage() {
   // ── Submit form ──────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const itemSelecionado = tipoRegisto === 'servico' ? selectedServico : selectedProduto
-    if (!itemSelecionado) { setFormError(`Seleciona um ${tipoRegisto === 'servico' ? 'serviço' : 'produto'}.`); return }
+    if (!selectedProduto) { setFormError('Seleciona um produto.'); return }
     if (!barbeariaId) return
     setFormError('')
     setSubmitting(true)
 
-    const payload: Record<string, unknown> = {
+    const { error } = await supabase.from('faturacao').insert({
       barbearia_id: barbeariaId,
       cliente_nome: clienteQuery.trim() || null,
       cliente_id: clienteId,
-      tipo: tipoRegisto,
-      valor: itemSelecionado.preco,
-      gorjeta: tipoRegisto === 'servico' ? gorjetaTotal : 0,
+      tipo: 'produto',
+      produto_id: selectedProduto.id,
+      valor: selectedProduto.preco,
+      gorjeta: 0,
       estado,
       data_hora: new Date().toISOString(),
-    }
-    if (tipoRegisto === 'servico') {
-      payload.servico_id = (itemSelecionado as Servico).id
-    } else {
-      payload.produto_id = (itemSelecionado as Produto).id
-    }
-
-    const { error } = await supabase.from('faturacao').insert(payload)
+    })
     if (error) { setFormError('Erro ao registar. Tenta novamente.'); setSubmitting(false); return }
 
     // Reset form
     setClienteQuery('')
     setClienteId(null)
-    setSelectedServico(null)
     setSelectedProduto(null)
-    setGorjetaPill(null)
-    setGorjetaManual('')
     setEstado('concluido')
-    setSuccessMsg(`${tipoRegisto === 'servico' ? 'Serviço' : 'Produto'} registado!`)
+    setSuccessMsg('Produto registado!')
     setTimeout(() => setSuccessMsg(''), 3000)
     setSubmitting(false)
 
@@ -322,7 +306,7 @@ export default function FaturacaoPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Faturação</h1>
-          <p className="text-sm text-ink-secondary mt-0.5">Regista os serviços e produtos de hoje</p>
+          <p className="text-sm text-ink-secondary mt-0.5">Regista produtos vendidos · Serviços entram automaticamente pelas marcações</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 bg-white rounded-lg px-2 py-1" style={{ border: '0.5px solid rgba(0,0,0,0.08)' }}>
@@ -393,35 +377,6 @@ export default function FaturacaoPage() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
 
-              {/* Toggle Serviço / Produto */}
-              <div>
-                <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">
-                  Tipo
-                </label>
-                <div className="flex rounded-lg overflow-hidden" style={{ border: '0.5px solid rgba(0,0,0,0.1)' }}>
-                  <button
-                    type="button"
-                    onClick={() => { setTipoRegisto('servico'); setSelectedProduto(null) }}
-                    className={`flex-1 py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${
-                      tipoRegisto === 'servico' ? 'bg-verde text-white' : 'bg-white text-ink-secondary hover:bg-[#f0eee8]'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>cut</span>
-                    Serviço
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setTipoRegisto('produto'); setSelectedServico(null); setGorjetaPill(null); setGorjetaManual('') }}
-                    className={`flex-1 py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${
-                      tipoRegisto === 'produto' ? 'bg-verde text-white' : 'bg-white text-ink-secondary hover:bg-[#f0eee8]'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>inventory_2</span>
-                    Produto
-                  </button>
-                </div>
-              </div>
-
               {/* Cliente (autocomplete CRM) */}
               <div className="relative">
                 <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">
@@ -483,111 +438,36 @@ export default function FaturacaoPage() {
                 )}
               </div>
 
-              {/* Serviços */}
-              {tipoRegisto === 'servico' && (
-                <div>
-                  <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">
-                    Serviço *
-                  </label>
-                  {servicos.length === 0 ? (
-                    <div className="text-center py-5 text-xs text-ink-secondary border border-dashed border-black/10 rounded-lg">
-                      <a href="/configuracoes" className="text-[#977c30] underline font-medium">Configura serviços</a> primeiro
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-2">
-                      {servicos.map(s => {
-                        const active = selectedServico?.id === s.id
-                        return (
-                          <button
-                            key={s.id}
-                            type="button"
-                            onClick={() => setSelectedServico(active ? null : s)}
-                            className={`p-3 rounded-lg text-left transition-all duration-150 btn-inline ${
-                              active ? 'bg-verde text-white shadow-sm' : 'bg-[#f0eee8] hover:bg-[#e8e5dd] text-ink border border-black/5'
-                            }`}
-                          >
-                            <p className="text-sm font-medium leading-tight">{s.nome}</p>
-                            <p className={`text-xs mt-1 font-serif font-semibold ${active ? 'text-white/80' : 'text-ink-secondary'}`}>{fmt(s.preco)}</p>
-                            <p className={`text-xs mt-0.5 ${active ? 'text-white/60' : 'text-ink-secondary'}`}>{s.tempo_minutos} min</p>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-
               {/* Produtos */}
-              {tipoRegisto === 'produto' && (
-                <div>
-                  <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">
-                    Produto *
-                  </label>
-                  {produtos.length === 0 ? (
-                    <div className="text-center py-5 text-xs text-ink-secondary border border-dashed border-black/10 rounded-lg">
-                      <a href="/configuracoes" className="text-[#977c30] underline font-medium">Configura produtos</a> primeiro
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-2">
-                      {produtos.map(p => {
-                        const active = selectedProduto?.id === p.id
-                        return (
-                          <button
-                            key={p.id}
-                            type="button"
-                            onClick={() => setSelectedProduto(active ? null : p)}
-                            className={`p-3 rounded-lg text-left transition-all duration-150 btn-inline ${
-                              active ? 'bg-verde text-white shadow-sm' : 'bg-[#f0eee8] hover:bg-[#e8e5dd] text-ink border border-black/5'
-                            }`}
-                          >
-                            <p className="text-sm font-medium leading-tight">{p.nome}</p>
-                            <p className={`text-xs mt-1 font-serif font-semibold ${active ? 'text-white/80' : 'text-ink-secondary'}`}>{fmt(p.preco)}</p>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Gorjeta (só para serviços) */}
-              {tipoRegisto === 'servico' && (
-                <div>
-                  <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">
-                    Gorjeta{gorjetaTotal > 0 && (
-                      <span className="ml-1.5 text-[#977c30] font-semibold normal-case tracking-normal">+{fmt(gorjetaTotal)}</span>
-                    )}
-                  </label>
-                  <div className="flex items-center gap-2">
-                    {PILL_AMOUNTS.map(a => {
-                      const active = gorjetaPill === a
+              <div>
+                <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">
+                  Produto *
+                </label>
+                {produtos.length === 0 ? (
+                  <div className="text-center py-5 text-xs text-ink-secondary border border-dashed border-black/10 rounded-lg">
+                    <a href="/configuracoes" className="text-[#977c30] underline font-medium">Configura produtos</a> primeiro
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    {produtos.map(p => {
+                      const active = selectedProduto?.id === p.id
                       return (
                         <button
-                          key={a}
+                          key={p.id}
                           type="button"
-                          onClick={() => { setGorjetaPill(active ? null : a); setGorjetaManual('') }}
-                          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-150 btn-inline ${
-                            active ? 'bg-[#977c30] text-white' : 'bg-[#f0eee8] text-ink-secondary hover:bg-[#e8e5dd]'
+                          onClick={() => setSelectedProduto(active ? null : p)}
+                          className={`p-3 rounded-lg text-left transition-all duration-150 btn-inline ${
+                            active ? 'bg-verde text-white shadow-sm' : 'bg-[#f0eee8] hover:bg-[#e8e5dd] text-ink border border-black/5'
                           }`}
-                          style={!active ? { border: '0.5px solid rgba(0,0,0,0.06)' } : {}}
                         >
-                          +{a}€
+                          <p className="text-sm font-medium leading-tight">{p.nome}</p>
+                          <p className={`text-xs mt-1 font-serif font-semibold ${active ? 'text-white/80' : 'text-ink-secondary'}`}>{fmt(p.preco)}</p>
                         </button>
                       )
                     })}
-                    <input
-                      type="number"
-                      value={gorjetaManual}
-                      onChange={e => { setGorjetaManual(e.target.value); setGorjetaPill(null) }}
-                      placeholder="Outro €"
-                      min="0"
-                      step="0.50"
-                      className="input-field flex-1"
-                      style={{ minWidth: 0 }}
-                    />
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Estado */}
               <div>
@@ -615,7 +495,7 @@ export default function FaturacaoPage() {
 
               <button
                 type="submit"
-                disabled={submitting || (tipoRegisto === 'servico' ? !selectedServico : !selectedProduto)}
+                disabled={submitting || !selectedProduto}
                 className="btn-primary w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? (
@@ -629,7 +509,7 @@ export default function FaturacaoPage() {
                 ) : (
                   <>
                     <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
-                    Registar {tipoRegisto === 'servico' ? 'serviço' : 'produto'}
+                    Registar produto
                   </>
                 )}
               </button>
