@@ -103,13 +103,25 @@ export async function POST(req: NextRequest) {
 </html>`,
   })
 
-  await supabase.from('pedidos_acesso').insert({
-    email,
-    nome_barbearia,
-    instagram: null,
-    estado: 'convidado',
-    convidado_em: new Date().toISOString(),
-  })
+  const { data: existing } = await supabase
+    .from('pedidos_acesso')
+    .select('id')
+    .eq('email', email)
+    .maybeSingle()
+
+  if (existing) {
+    await supabase.from('pedidos_acesso')
+      .update({ estado: 'convidado', convidado_em: new Date().toISOString() })
+      .eq('id', existing.id)
+  } else {
+    await supabase.from('pedidos_acesso').insert({
+      email,
+      nome_barbearia,
+      instagram: null,
+      estado: 'convidado',
+      convidado_em: new Date().toISOString(),
+    })
+  }
 
   return NextResponse.json({ success: true })
 }
