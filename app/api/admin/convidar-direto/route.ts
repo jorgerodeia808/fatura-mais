@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
     instagram: null,
     estado: 'convidado',
     convidado_em: new Date().toISOString(),
-  }).catch(() => {})
+  })
 
   return NextResponse.json({ success: true })
 }

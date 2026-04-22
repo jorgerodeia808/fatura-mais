@@ -512,35 +512,37 @@ export default function FaturacaoPage() {
               )}
 
               {/* Produtos */}
-              {tipoRegisto === 'produto' && <div>
-                <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">
-                  Produto *
-                </label>
-                {produtos.length === 0 ? (
-                  <div className="text-center py-5 text-xs text-ink-secondary border border-dashed border-black/10 rounded-lg">
-                    <a href="/configuracoes" className="text-[#977c30] underline font-medium">Configura produtos</a> primeiro
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2">
-                    {produtos.map(p => {
-                      const active = selectedProduto?.id === p.id
-                      return (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => setSelectedProduto(active ? null : p)}
-                          className={`p-3 rounded-lg text-left transition-all duration-150 btn-inline ${
-                            active ? 'bg-verde text-white shadow-sm' : 'bg-[#f0eee8] hover:bg-[#e8e5dd] text-ink border border-black/5'
-                          }`}
-                        >
-                          <p className="text-sm font-medium leading-tight">{p.nome}</p>
-                          <p className={`text-xs mt-1 font-serif font-semibold ${active ? 'text-white/80' : 'text-ink-secondary'}`}>{fmt(p.preco)}</p>
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
+              {tipoRegisto === 'produto' && (
+                <div>
+                  <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">
+                    Produto *
+                  </label>
+                  {produtos.length === 0 ? (
+                    <div className="text-center py-5 text-xs text-ink-secondary border border-dashed border-black/10 rounded-lg">
+                      <a href="/configuracoes" className="text-[#977c30] underline font-medium">Configura produtos</a> primeiro
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {produtos.map(p => {
+                        const active = selectedProduto?.id === p.id
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => setSelectedProduto(active ? null : p)}
+                            className={`p-3 rounded-lg text-left transition-all duration-150 btn-inline ${
+                              active ? 'bg-verde text-white shadow-sm' : 'bg-[#f0eee8] hover:bg-[#e8e5dd] text-ink border border-black/5'
+                            }`}
+                          >
+                            <p className="text-sm font-medium leading-tight">{p.nome}</p>
+                            <p className={`text-xs mt-1 font-serif font-semibold ${active ? 'text-white/80' : 'text-ink-secondary'}`}>{fmt(p.preco)}</p>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Aviso duplicado */}
               {avisoDuplicado && (
