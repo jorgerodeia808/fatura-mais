@@ -467,7 +467,7 @@ export default function OnboardingPage() {
         if (custErr) throw custErr
       }
 
-      router.push('/dashboard')
+      router.push('/bem-vindo')
       router.refresh()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erro ao guardar configuração.')

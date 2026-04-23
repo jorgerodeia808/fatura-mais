@@ -31,6 +31,7 @@ export async function middleware(request: NextRequest) {
 
   const protectedRoutes = [
     '/dashboard',
+    '/bem-vindo',
     '/onboarding',
     '/faturacao',
     '/despesas',
@@ -83,7 +84,10 @@ export async function middleware(request: NextRequest) {
       .maybeSingle()
 
     if (!barbearia) {
-      return supabaseResponse
+      if (pathname === '/onboarding' || pathname === '/bem-vindo') return supabaseResponse
+      const url = request.nextUrl.clone()
+      url.pathname = '/onboarding'
+      return NextResponse.redirect(url)
     }
 
     if (barbearia.plano === 'vitalicio' || barbearia.plano === 'mensal') {
