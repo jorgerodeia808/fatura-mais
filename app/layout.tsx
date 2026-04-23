@@ -17,51 +17,78 @@ const notoSerif = Noto_Serif({
   display: 'swap',
 })
 
-export const metadata: Metadata = {
-  title: 'Fatura+ | Gestão financeira para barbearias',
-  description: 'Controla a faturação, despesas e marcações da tua barbearia. Com conselheiro financeiro IA incluído.',
-  keywords: 'barbearia, gestão financeira, faturação, despesas, marcações, SaaS',
-  authors: [{ name: 'Fatura+' }],
-  manifest: '/manifest.json',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'Fatura+',
+const nichoMeta: Record<string, { nome: string; descricao: string; cor: string; url: string }> = {
+  barbeiro: {
+    nome: 'Barber+',
+    descricao: 'Gestão financeira para barbearias. Faturação, marcações e relatórios num só lugar.',
+    cor: '#2d2d2d',
+    url: 'https://barbeiro.fatura-mais.pt',
   },
-  openGraph: {
-    title: 'Fatura+ | Gestão financeira para barbearias',
-    description: 'Controla a faturação, despesas e marcações da tua barbearia. Com conselheiro financeiro IA incluído.',
-    url: 'https://fatura-mais.pt',
-    siteName: 'Fatura+',
-    locale: 'pt_PT',
-    type: 'website',
-    images: [
-      {
-        url: 'https://fatura-mais.pt/icons/icon-512.png',
-        width: 512,
-        height: 512,
-        alt: 'Fatura+',
-      },
-    ],
+  nails: {
+    nome: 'Nails+',
+    descricao: 'Gestão do teu estúdio de unhas. Clientes, serviços e faturação sem complicações.',
+    cor: '#e8779a',
+    url: 'https://nails.fatura-mais.pt',
   },
-  twitter: {
-    card: 'summary',
-    title: 'Fatura+ | Gestão financeira para barbearias',
-    description: 'Controla a faturação, despesas e marcações da tua barbearia.',
-    images: ['https://fatura-mais.pt/icons/icon-512.png'],
+  lash: {
+    nome: 'Lash+',
+    descricao: 'Gestão para estúdios de pestanas.',
+    cor: '#4a148c',
+    url: 'https://lash.fatura-mais.pt',
   },
-  icons: {
-    icon: '/icons/icon-192.png',
-    apple: '/icons/icon-192.png',
+  tatuador: {
+    nome: 'Tattoo+',
+    descricao: 'Gestão para estúdios de tatuagem e piercing.',
+    cor: '#111111',
+    url: 'https://tatuador.fatura-mais.pt',
   },
 }
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  themeColor: '#0e4324',
+export function generateMetadata(): Metadata {
+  const nicho = process.env.NEXT_PUBLIC_NICHO
+  const meta = nicho ? nichoMeta[nicho] : null
+
+  const title = meta ? `Fatura+ | ${meta.nome}` : 'Fatura+ | Gestão para profissionais'
+  const description = meta?.descricao ?? 'A plataforma de gestão para profissionais de beleza e estilo.'
+  const url = meta?.url ?? 'https://fatura-mais.pt'
+
+  return {
+    title,
+    description,
+    keywords: 'gestão financeira, faturação, marcações, SaaS',
+    authors: [{ name: 'Fatura+' }],
+    manifest: '/manifest.json',
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: 'black-translucent',
+      title: meta?.nome ?? 'Fatura+',
+    },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: 'Fatura+',
+      locale: 'pt_PT',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary',
+      title,
+      description,
+    },
+  }
+}
+
+export function generateViewport(): Viewport {
+  const nicho = process.env.NEXT_PUBLIC_NICHO
+  const themeColor = nicho ? (nichoMeta[nicho]?.cor ?? '#0e4324') : '#0e4324'
+  return {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    themeColor,
+  }
 }
 
 export default function RootLayout({
@@ -72,12 +99,6 @@ export default function RootLayout({
   return (
     <html lang="pt" className={`${inter.variable} ${notoSerif.variable}`}>
       <head>
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Fatura+" />
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-        <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png" />
-        <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512.png" />
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
