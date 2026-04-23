@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import Image from 'next/image'
+import { getNichoConfig } from '@/lib/nicho'
 
 // ── Types ────────────────────────────────────────────────────────
 interface Servico {
@@ -25,44 +25,94 @@ interface CustoFixo {
   categoria: string
 }
 
-// ── Step 1: Barbearia ─────────────────────────────────────────────
+// Cor escura por nicho (para botões, destaques, barra de progresso)
+const primaryColor: Record<string, string> = {
+  barbeiro: '#0e4324',
+  nails:    '#8B1A4A',
+  lash:     '#3b0764',
+  tatuador: '#111827',
+}
+
+// Exemplos de placeholder por nicho
+const nichoExemplos: Record<string, {
+  nomeNegocio: string
+  servico: string
+  produto: string
+  descProdutos: string
+}> = {
+  barbeiro: {
+    nomeNegocio: 'Barbearia do João',
+    servico: 'Corte de cabelo',
+    produto: 'Cera de cabelo',
+    descProdutos: 'Ceras, after-shaves, óleos — produtos que vendes aos clientes. Podes adicionar mais depois.',
+  },
+  nails: {
+    nomeNegocio: 'Estúdio da Ana',
+    servico: 'Manicure gel',
+    produto: 'Verniz de gel',
+    descProdutos: 'Vernizes, géis, acrílicos — produtos que vendes às clientes. Podes adicionar mais depois.',
+  },
+  lash: {
+    nomeNegocio: 'Estúdio da Sofia',
+    servico: 'Lifting de pestanas',
+    produto: 'Soro de pestanas',
+    descProdutos: 'Soros, máscaras, adesivos — produtos que vendes às clientes. Podes adicionar mais depois.',
+  },
+  tatuador: {
+    nomeNegocio: 'Estúdio do Miguel',
+    servico: 'Tatuagem pequena',
+    produto: 'Creme cicatrizante',
+    descProdutos: 'Cremes, tintas, kits de cuidado pós-tattoo — produtos que vendes aos clientes. Podes adicionar mais depois.',
+  },
+}
+
+// ── Step 1: Negócio ───────────────────────────────────────────────
 function Step1({
   data,
   onChange,
+  primary,
+  nomeNegocio,
+  nomePlural,
+  exemploNome,
 }: {
   data: { nome: string; num_barbeiros: string; hora_abertura: string; hora_fecho: string; dias_trabalho_mes: string }
   onChange: (field: string, value: string) => void
+  primary: string
+  nomeNegocio: string
+  nomePlural: string
+  exemploNome: string
 }) {
+  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
   return (
     <div className="card">
       <div className="flex items-center gap-2 mb-6">
-        <div className="w-8 h-8 rounded-lg bg-verde/10 flex items-center justify-center">
-          <span className="material-symbols-outlined text-verde" style={{ fontSize: '18px' }}>storefront</span>
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${primary}18` }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '18px', color: primary }}>storefront</span>
         </div>
-        <h2 className="section-title">A tua barbearia</h2>
+        <h2 className="section-title">O teu {nomeNegocio}</h2>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-ink mb-1.5">Nome da barbearia *</label>
+          <label className="block text-sm font-medium text-ink mb-1.5">Nome do {nomeNegocio} *</label>
           <input
             type="text"
             value={data.nome}
             onChange={(e) => onChange('nome', e.target.value)}
             className="input-field"
-            placeholder="Ex: Barbearia do João"
+            placeholder={`Ex: ${exemploNome}`}
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-ink mb-1.5">Número de barbeiros</label>
+          <label className="block text-sm font-medium text-ink mb-1.5">Número de {nomePlural}</label>
           <input
             type="number"
             value={data.num_barbeiros}
             onChange={(e) => onChange('num_barbeiros', e.target.value)}
             className="input-field"
-            placeholder="Ex: 3"
+            placeholder="Ex: 1"
             min="1"
           />
         </div>
@@ -70,21 +120,11 @@ function Step1({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-ink mb-1.5">Hora de abertura</label>
-            <input
-              type="time"
-              value={data.hora_abertura}
-              onChange={(e) => onChange('hora_abertura', e.target.value)}
-              className="input-field"
-            />
+            <input type="time" value={data.hora_abertura} onChange={(e) => onChange('hora_abertura', e.target.value)} className="input-field" />
           </div>
           <div>
             <label className="block text-sm font-medium text-ink mb-1.5">Hora de fecho</label>
-            <input
-              type="time"
-              value={data.hora_fecho}
-              onChange={(e) => onChange('hora_fecho', e.target.value)}
-              className="input-field"
-            />
+            <input type="time" value={data.hora_fecho} onChange={(e) => onChange('hora_fecho', e.target.value)} className="input-field" />
           </div>
         </div>
 
@@ -111,17 +151,21 @@ function Step2({
   onChange,
   onAdd,
   onRemove,
+  primary,
+  exemploServico,
 }: {
   servicos: Servico[]
   onChange: (index: number, field: keyof Servico, value: string) => void
   onAdd: () => void
   onRemove: (index: number) => void
+  primary: string
+  exemploServico: string
 }) {
   return (
     <div className="card">
       <div className="flex items-center gap-2 mb-6">
-        <div className="w-8 h-8 rounded-lg bg-verde/10 flex items-center justify-center">
-          <span className="material-symbols-outlined text-verde" style={{ fontSize: '18px' }}>content_cut</span>
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${primary}18` }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '18px', color: primary }}>spa</span>
         </div>
         <h2 className="section-title">Os teus serviços</h2>
       </div>
@@ -130,71 +174,37 @@ function Step2({
         {servicos.map((s, i) => (
           <div key={i} className="rounded-xl bg-surface-secondary p-4 relative">
             {servicos.length > 1 && (
-              <button
-                type="button"
-                onClick={() => onRemove(i)}
-                className="btn-ghost absolute top-2 right-2 !p-1 !h-auto"
-                aria-label="Remover serviço"
-              >
+              <button type="button" onClick={() => onRemove(i)} className="btn-ghost absolute top-2 right-2 !p-1 !h-auto" aria-label="Remover serviço">
                 <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
               </button>
             )}
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-ink mb-1">Nome do serviço</label>
-                <input
-                  type="text"
-                  value={s.nome}
-                  onChange={(e) => onChange(i, 'nome', e.target.value)}
-                  className="input-field text-sm py-2"
-                  placeholder="Ex: Corte de cabelo"
-                />
+                <input type="text" value={s.nome} onChange={(e) => onChange(i, 'nome', e.target.value)}
+                  className="input-field text-sm py-2" placeholder={`Ex: ${exemploServico}`} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-ink mb-1">Preço (€)</label>
-                <input
-                  type="number"
-                  value={s.preco}
-                  onChange={(e) => onChange(i, 'preco', e.target.value)}
-                  className="input-field text-sm py-2"
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                />
+                <input type="number" value={s.preco} onChange={(e) => onChange(i, 'preco', e.target.value)}
+                  className="input-field text-sm py-2" placeholder="0.00" min="0" step="0.01" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-ink mb-1">Tempo (min)</label>
-                <input
-                  type="number"
-                  value={s.tempo_minutos}
-                  onChange={(e) => onChange(i, 'tempo_minutos', e.target.value)}
-                  className="input-field text-sm py-2"
-                  placeholder="30"
-                  min="1"
-                />
+                <input type="number" value={s.tempo_minutos} onChange={(e) => onChange(i, 'tempo_minutos', e.target.value)}
+                  className="input-field text-sm py-2" placeholder="30" min="1" />
               </div>
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-ink mb-1">Custo de material (€)</label>
-                <input
-                  type="number"
-                  value={s.custo_material}
-                  onChange={(e) => onChange(i, 'custo_material', e.target.value)}
-                  className="input-field text-sm py-2"
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                />
+                <input type="number" value={s.custo_material} onChange={(e) => onChange(i, 'custo_material', e.target.value)}
+                  className="input-field text-sm py-2" placeholder="0.00" min="0" step="0.01" />
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      <button
-        type="button"
-        onClick={onAdd}
-        className="btn-secondary w-full flex items-center justify-center gap-1.5"
-      >
+      <button type="button" onClick={onAdd} className="btn-secondary w-full flex items-center justify-center gap-1.5">
         <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
         Adicionar serviço
       </button>
@@ -208,21 +218,27 @@ function Step3Produtos({
   onChange,
   onAdd,
   onRemove,
+  primary,
+  exemploProduto,
+  descProdutos,
 }: {
   produtos: Produto[]
   onChange: (index: number, field: keyof Produto, value: string) => void
   onAdd: () => void
   onRemove: (index: number) => void
+  primary: string
+  exemploProduto: string
+  descProdutos: string
 }) {
   return (
     <div className="card">
       <div className="flex items-center gap-2 mb-2">
-        <div className="w-8 h-8 rounded-lg bg-verde/10 flex items-center justify-center">
-          <span className="material-symbols-outlined text-verde" style={{ fontSize: '18px' }}>inventory_2</span>
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${primary}18` }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '18px', color: primary }}>inventory_2</span>
         </div>
         <h2 className="section-title">Os teus produtos</h2>
       </div>
-      <p className="text-xs text-ink-secondary mb-5">Ceras, after-shaves, óleos — produtos que vendes aos clientes. Podes adicionar mais depois.</p>
+      <p className="text-xs text-ink-secondary mb-5">{descProdutos}</p>
 
       <div className="space-y-3 mb-4">
         {produtos.map((p, i) => (
@@ -236,7 +252,7 @@ function Step3Produtos({
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-ink mb-1">Nome do produto</label>
                 <input type="text" value={p.nome} onChange={e => onChange(i, 'nome', e.target.value)}
-                  className="input-field text-sm py-2" placeholder="Ex: Cera de cabelo" />
+                  className="input-field text-sm py-2" placeholder={`Ex: ${exemploProduto}`} />
               </div>
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-ink mb-1">Preço (€)</label>
@@ -257,24 +273,26 @@ function Step3Produtos({
 }
 
 // ── Step 4: Custos Fixos ──────────────────────────────────────────
-function Step3({
+function Step4({
   custos,
   onChange,
   onAdd,
   onRemove,
+  primary,
 }: {
   custos: CustoFixo[]
   onChange: (index: number, field: keyof CustoFixo, value: string) => void
   onAdd: () => void
   onRemove: (index: number) => void
+  primary: string
 }) {
   const categorias = ['Rendas', 'Água/Luz/Gás', 'Internet/Telefone', 'Seguros', 'Contabilidade', 'Marketing', 'Software', 'Equipamento', 'Outro']
 
   return (
     <div className="card">
       <div className="flex items-center gap-2 mb-6">
-        <div className="w-8 h-8 rounded-lg bg-verde/10 flex items-center justify-center">
-          <span className="material-symbols-outlined text-verde" style={{ fontSize: '18px' }}>receipt_long</span>
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${primary}18` }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '18px', color: primary }}>receipt_long</span>
         </div>
         <h2 className="section-title">Custos mensais</h2>
       </div>
@@ -283,60 +301,33 @@ function Step3({
         {custos.map((c, i) => (
           <div key={i} className="rounded-xl bg-surface-secondary p-4 relative">
             {custos.length > 1 && (
-              <button
-                type="button"
-                onClick={() => onRemove(i)}
-                className="btn-ghost absolute top-2 right-2 !p-1 !h-auto"
-                aria-label="Remover custo"
-              >
+              <button type="button" onClick={() => onRemove(i)} className="btn-ghost absolute top-2 right-2 !p-1 !h-auto" aria-label="Remover custo">
                 <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
               </button>
             )}
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-ink mb-1">Descrição</label>
-                <input
-                  type="text"
-                  value={c.descricao}
-                  onChange={(e) => onChange(i, 'descricao', e.target.value)}
-                  className="input-field text-sm py-2"
-                  placeholder="Ex: Renda do espaço"
-                />
+                <input type="text" value={c.descricao} onChange={(e) => onChange(i, 'descricao', e.target.value)}
+                  className="input-field text-sm py-2" placeholder="Ex: Renda do espaço" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-ink mb-1">Valor (€/mês)</label>
-                <input
-                  type="number"
-                  value={c.valor}
-                  onChange={(e) => onChange(i, 'valor', e.target.value)}
-                  className="input-field text-sm py-2"
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                />
+                <input type="number" value={c.valor} onChange={(e) => onChange(i, 'valor', e.target.value)}
+                  className="input-field text-sm py-2" placeholder="0.00" min="0" step="0.01" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-ink mb-1">Tipo</label>
-                <select
-                  value={c.tipo}
-                  onChange={(e) => onChange(i, 'tipo', e.target.value as 'fixo' | 'variavel')}
-                  className="input-field text-sm py-2"
-                >
+                <select value={c.tipo} onChange={(e) => onChange(i, 'tipo', e.target.value as 'fixo' | 'variavel')} className="input-field text-sm py-2">
                   <option value="fixo">Fixo</option>
                   <option value="variavel">Variável</option>
                 </select>
               </div>
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-ink mb-1">Categoria</label>
-                <select
-                  value={c.categoria}
-                  onChange={(e) => onChange(i, 'categoria', e.target.value)}
-                  className="input-field text-sm py-2"
-                >
+                <select value={c.categoria} onChange={(e) => onChange(i, 'categoria', e.target.value)} className="input-field text-sm py-2">
                   <option value="">Seleciona...</option>
-                  {categorias.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
+                  {categorias.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
               </div>
             </div>
@@ -344,11 +335,7 @@ function Step3({
         ))}
       </div>
 
-      <button
-        type="button"
-        onClick={onAdd}
-        className="btn-secondary w-full flex items-center justify-center gap-1.5"
-      >
+      <button type="button" onClick={onAdd} className="btn-secondary w-full flex items-center justify-center gap-1.5">
         <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
         Adicionar custo
       </button>
@@ -360,12 +347,15 @@ function Step3({
 export default function OnboardingPage() {
   const router = useRouter()
   const supabase = createClient()
+  const nicho = getNichoConfig()
+  const primary = primaryColor[nicho.id] ?? '#0e4324'
+  const exemplos = nichoExemplos[nicho.id] ?? nichoExemplos.barbeiro
+
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Step 1 data
-  const [barbearia, setBarbearia] = useState({
+  const [negocio, setNegocio] = useState({
     nome: '',
     num_barbeiros: '',
     hora_abertura: '09:00',
@@ -373,40 +363,21 @@ export default function OnboardingPage() {
     dias_trabalho_mes: '22',
   })
 
-  // Step 2 data
   const [servicos, setServicos] = useState<Servico[]>([
     { nome: '', preco: '', tempo_minutos: '', custo_material: '' },
   ])
 
-  // Step 3 data
   const [produtos, setProdutos] = useState<Produto[]>([
     { nome: '', preco: '' },
   ])
 
-  // Step 4 data
   const [custos, setCustos] = useState<CustoFixo[]>([
     { descricao: '', valor: '', tipo: 'fixo', categoria: '' },
   ])
 
-  const handleBarbeariaChange = (field: string, value: string) => {
-    setBarbearia((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const handleServicoChange = (i: number, field: keyof Servico, value: string) => {
-    setServicos((prev) => prev.map((s, idx) => (idx === i ? { ...s, [field]: value } : s)))
-  }
-
-  const handleProdutoChange = (i: number, field: keyof Produto, value: string) => {
-    setProdutos((prev) => prev.map((p, idx) => (idx === i ? { ...p, [field]: value } : p)))
-  }
-
-  const handleCustoChange = (i: number, field: keyof CustoFixo, value: string) => {
-    setCustos((prev) => prev.map((c, idx) => (idx === i ? { ...c, [field]: value } : c)))
-  }
-
   const nextStep = () => {
-    if (step === 1 && !barbearia.nome.trim()) {
-      setError('Por favor, introduz o nome da barbearia.')
+    if (step === 1 && !negocio.nome.trim()) {
+      setError(`Por favor, introduz o nome do ${nicho.nomeNegocio}.`)
       return
     }
     setError('')
@@ -423,7 +394,6 @@ export default function OnboardingPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Não autenticado')
 
-      // Verificar se barbearia já existe para evitar duplicados
       const { data: existente } = await supabase
         .from('barbearias')
         .select('id')
@@ -436,16 +406,15 @@ export default function OnboardingPage() {
         return
       }
 
-      // Insert barbearia
       const { data: barb, error: barbErr } = await supabase
         .from('barbearias')
         .insert({
           user_id: user.id,
-          nome: barbearia.nome.trim(),
-          num_barbeiros: parseInt(barbearia.num_barbeiros) || 1,
-          hora_abertura: barbearia.hora_abertura,
-          hora_fecho: barbearia.hora_fecho,
-          dias_trabalho_mes: parseInt(barbearia.dias_trabalho_mes) || 22,
+          nome: negocio.nome.trim(),
+          num_barbeiros: parseInt(negocio.num_barbeiros) || 1,
+          hora_abertura: negocio.hora_abertura,
+          hora_fecho: negocio.hora_fecho,
+          dias_trabalho_mes: parseInt(negocio.dias_trabalho_mes) || 22,
           plano: 'suspenso',
           nicho: process.env.NEXT_PUBLIC_NICHO ?? 'barbeiro',
         })
@@ -456,7 +425,6 @@ export default function OnboardingPage() {
 
       const barbearia_id = barb.id
 
-      // Insert servicos válidos
       const servicosValidos = servicos.filter((s) => s.nome.trim())
       if (servicosValidos.length > 0) {
         const { error: servErr } = await supabase.from('servicos').insert(
@@ -473,7 +441,6 @@ export default function OnboardingPage() {
         if (servErr) throw servErr
       }
 
-      // Insert produtos válidos
       const produtosValidos = produtos.filter((p) => p.nome.trim())
       if (produtosValidos.length > 0) {
         await supabase.from('produtos').insert(
@@ -486,7 +453,6 @@ export default function OnboardingPage() {
         )
       }
 
-      // Insert custos válidos
       const custosValidos = custos.filter((c) => c.descricao.trim())
       if (custosValidos.length > 0) {
         const { error: custErr } = await supabase.from('custos_fixos').insert(
@@ -509,67 +475,89 @@ export default function OnboardingPage() {
     }
   }
 
-  const stepLabels = ['A tua barbearia', 'Os teus serviços', 'Os teus produtos', 'Custos mensais']
+  const stepLabels = [
+    `O teu ${nicho.nomeNegocio}`,
+    'Os teus serviços',
+    'Os teus produtos',
+    'Custos mensais',
+  ]
 
   return (
-    <div className="min-h-screen bg-fundo flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ backgroundColor: nicho.corFundo }}>
       <div className="w-full max-w-lg">
 
         {/* Header */}
         <div className="flex flex-col items-center text-center mb-8">
-          <Image src="/images/Logo_F_.png" alt="Fatura+" width={56} height={56} className="mb-3" />
-          <h1 className="font-serif font-bold text-3xl text-verde">
-            Fatura<span className="text-dourado">+</span>
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-xl mb-3"
+            style={{ backgroundColor: primary, color: nicho.corDestaque === '#ffffff' ? nicho.cor : nicho.corDestaque }}
+          >
+            {nicho.letraLogo}+
+          </div>
+          <h1 className="font-serif font-bold text-3xl" style={{ color: primary }}>
+            {nicho.nome}
           </h1>
-          <p className="text-ink-secondary text-sm mt-1 font-sans">Configura a tua barbearia em 4 passos</p>
+          <p className="text-ink-secondary text-sm mt-1 font-sans">
+            Configura o teu {nicho.nomeNegocio} em 4 passos
+          </p>
         </div>
 
         {/* Progress bar */}
         <div className="mb-8">
           <div className="flex justify-between mb-2">
             {stepLabels.map((label, i) => (
-              <span
-                key={i}
-                className={`text-xs font-medium font-sans ${i + 1 <= step ? 'text-verde' : 'text-ink-secondary'}`}
-              >
+              <span key={i} className="text-xs font-medium font-sans" style={{ color: i + 1 <= step ? primary : '#717971' }}>
                 {label}
               </span>
             ))}
           </div>
           <div className="h-1 bg-surface-secondary rounded-full overflow-hidden">
             <div
-              className="h-full bg-verde rounded-full transition-all duration-500"
-              style={{ width: `${((step - 1) / 3) * 100}%` }}
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${((step - 1) / 3) * 100}%`, backgroundColor: primary }}
             />
           </div>
         </div>
 
         {/* Step content */}
         {step === 1 && (
-          <Step1 data={barbearia} onChange={handleBarbeariaChange} />
+          <Step1
+            data={negocio}
+            onChange={(f, v) => setNegocio(p => ({ ...p, [f]: v }))}
+            primary={primary}
+            nomeNegocio={nicho.nomeNegocio}
+            nomePlural={nicho.nomePlural}
+            exemploNome={exemplos.nomeNegocio}
+          />
         )}
         {step === 2 && (
           <Step2
             servicos={servicos}
-            onChange={handleServicoChange}
-            onAdd={() => setServicos((p) => [...p, { nome: '', preco: '', tempo_minutos: '', custo_material: '' }])}
-            onRemove={(i) => setServicos((p) => p.filter((_, idx) => idx !== i))}
+            onChange={(i, f, v) => setServicos(p => p.map((s, idx) => idx === i ? { ...s, [f]: v } : s))}
+            onAdd={() => setServicos(p => [...p, { nome: '', preco: '', tempo_minutos: '', custo_material: '' }])}
+            onRemove={(i) => setServicos(p => p.filter((_, idx) => idx !== i))}
+            primary={primary}
+            exemploServico={exemplos.servico}
           />
         )}
         {step === 3 && (
           <Step3Produtos
             produtos={produtos}
-            onChange={handleProdutoChange}
-            onAdd={() => setProdutos((p) => [...p, { nome: '', preco: '' }])}
-            onRemove={(i) => setProdutos((p) => p.filter((_, idx) => idx !== i))}
+            onChange={(i, f, v) => setProdutos(p => p.map((pr, idx) => idx === i ? { ...pr, [f]: v } : pr))}
+            onAdd={() => setProdutos(p => [...p, { nome: '', preco: '' }])}
+            onRemove={(i) => setProdutos(p => p.filter((_, idx) => idx !== i))}
+            primary={primary}
+            exemploProduto={exemplos.produto}
+            descProdutos={exemplos.descProdutos}
           />
         )}
         {step === 4 && (
-          <Step3
+          <Step4
             custos={custos}
-            onChange={handleCustoChange}
-            onAdd={() => setCustos((p) => [...p, { descricao: '', valor: '', tipo: 'fixo', categoria: '' }])}
-            onRemove={(i) => setCustos((p) => p.filter((_, idx) => idx !== i))}
+            onChange={(i, f, v) => setCustos(p => p.map((c, idx) => idx === i ? { ...c, [f]: v } : c))}
+            onAdd={() => setCustos(p => [...p, { descricao: '', valor: '', tipo: 'fixo', categoria: '' }])}
+            onRemove={(i) => setCustos(p => p.filter((_, idx) => idx !== i))}
+            primary={primary}
           />
         )}
 
@@ -584,15 +572,18 @@ export default function OnboardingPage() {
         {/* Navigation */}
         <div className="flex items-center justify-between mt-6 pt-6 border-t border-surface-secondary">
           {step > 1 ? (
-            <button type="button" onClick={prevStep} className="btn-ghost">
-              Anterior
-            </button>
+            <button type="button" onClick={prevStep} className="btn-ghost">Anterior</button>
           ) : (
             <div />
           )}
 
           {step < 4 ? (
-            <button type="button" onClick={nextStep} className="btn-primary">
+            <button
+              type="button"
+              onClick={nextStep}
+              className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              style={{ backgroundColor: primary }}
+            >
               Seguinte
             </button>
           ) : (
@@ -600,7 +591,8 @@ export default function OnboardingPage() {
               type="button"
               onClick={handleSubmit}
               disabled={loading}
-              className="btn-dourado disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+              style={{ backgroundColor: primary }}
             >
               {loading ? (
                 <>
