@@ -2,10 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import nodemailer from 'nodemailer'
 
+const NICHO_CORES: Record<string, { primary: string; accent: string; bg: string }> = {
+  barbeiro: { primary: '#0e4324', accent: '#977c30', bg: '#f5f0e8' },
+  nails:    { primary: '#DB2777', accent: '#F472B6', bg: '#fff0f6' },
+  lash:     { primary: '#3B0764', accent: '#D8B4FE', bg: '#faf5ff' },
+  tatuador: { primary: '#111827', accent: '#6B7280', bg: '#f9fafb' },
+}
+
 export async function GET(req: NextRequest) {
   if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  const cor = NICHO_CORES[process.env.NEXT_PUBLIC_NICHO ?? 'barbeiro'] ?? NICHO_CORES.barbeiro
 
   const supabase = createAdminClient()
   const now = new Date()
@@ -27,10 +36,6 @@ export async function GET(req: NextRequest) {
   const fmt = (iso: string) => new Date(iso).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })
   const diasAte = (iso: string) => Math.ceil((new Date(iso).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
 
-  const linhas = barbearias.map(b =>
-    `• ${b.nome} — renova em ${fmt(b.subscricao_renovacao!)} (${diasAte(b.subscricao_renovacao!)} dias)`
-  ).join('\n')
-
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
@@ -41,9 +46,9 @@ export async function GET(req: NextRequest) {
     to: process.env.GMAIL_USER,
     subject: `Fatura+ · ${barbearias.length} renovação(ões) nos próximos 5 dias`,
     html: `
-<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#f5f0e8;">
-  <div style="background:#0e4324;padding:24px 32px;border-radius:12px 12px 0 0;text-align:center;">
-    <p style="margin:0;font-size:22px;font-weight:700;color:#fff;">Fatura<span style="color:#c9a84c;">+</span></p>
+<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:${cor.bg};">
+  <div style="background:${cor.primary};padding:24px 32px;border-radius:12px 12px 0 0;text-align:center;">
+    <p style="margin:0;font-size:22px;font-weight:700;color:#fff;">Fatura<span style="color:${cor.accent};">+</span></p>
     <p style="margin:6px 0 0;font-size:12px;color:rgba(255,255,255,0.6);">LEMBRETE DE RENOVAÇÕES</p>
   </div>
   <div style="background:#fff;padding:32px;border-radius:0 0 12px 12px;">
@@ -56,13 +61,13 @@ export async function GET(req: NextRequest) {
         <div style="padding:10px 0;border-bottom:1px solid #ede8df;">
           <p style="margin:0;font-size:14px;font-weight:600;color:#1a1a1a;">${b.nome}</p>
           <p style="margin:4px 0 0;font-size:13px;color:#6b7280;">
-            Renova em ${fmt(b.subscricao_renovacao!)} · <strong style="color:#0e4324;">${diasAte(b.subscricao_renovacao!)} dia${diasAte(b.subscricao_renovacao!) !== 1 ? 's' : ''}</strong>
+            Renova em ${fmt(b.subscricao_renovacao!)} · <strong style="color:${cor.primary};">${diasAte(b.subscricao_renovacao!)} dia${diasAte(b.subscricao_renovacao!) !== 1 ? 's' : ''}</strong>
           </p>
         </div>
       `).join('')}
     </div>
     <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/clientes"
-       style="display:inline-block;background:#0e4324;color:#fff;font-weight:600;font-size:14px;padding:12px 28px;border-radius:8px;text-decoration:none;">
+       style="display:inline-block;background:${cor.primary};color:#fff;font-weight:600;font-size:14px;padding:12px 28px;border-radius:8px;text-decoration:none;">
       Ir para o painel →
     </a>
   </div>
