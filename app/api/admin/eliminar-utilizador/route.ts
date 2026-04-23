@@ -21,11 +21,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Erro ao apagar dados' }, { status: 500 })
   }
 
-  // Apaga o utilizador do auth (remove acesso)
-  const { error: authError } = await supabase.auth.admin.deleteUser(user_id)
+  // Apaga o utilizador do auth via REST API (mais fiável que o JS client)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+  const authRes = await fetch(`${supabaseUrl}/auth/v1/admin/users/${user_id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${serviceKey}`,
+      apikey: serviceKey,
+    },
+  })
 
-  if (authError) {
-    console.error('Erro ao apagar utilizador auth:', authError)
+  if (!authRes.ok) {
+    const body = await authRes.text()
+    console.error('Erro ao apagar utilizador auth:', body)
     return NextResponse.json({ error: 'Dados apagados mas erro ao remover auth' }, { status: 500 })
   }
 
