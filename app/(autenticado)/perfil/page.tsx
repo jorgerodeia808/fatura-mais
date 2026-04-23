@@ -17,15 +17,26 @@ export default function PerfilPage() {
   const [deletingAccount, setDeletingAccount] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [subscricao, setSubscricao] = useState<{ plano: string | null; subscricao_renovacao: string | null } | null>(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
       if (user?.email) {
         setEmail(user.email)
         setNovoEmail(user.email)
       }
       setLoading(false)
-    })
+      if (user) {
+        const { data } = await supabase
+          .from('barbearias')
+          .select('plano, subscricao_renovacao')
+          .eq('user_id', user.id)
+          .single()
+        setSubscricao(data)
+      }
+    }
+    init()
   }, [supabase])
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
@@ -172,6 +183,59 @@ export default function PerfilPage() {
           </div>
         </form>
       </div>
+      {/* Subscrição */}
+      {subscricao && (() => {
+        const plano = subscricao.plano
+        const renovacao = subscricao.subscricao_renovacao
+        const dias = renovacao
+          ? Math.ceil((new Date(renovacao).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+          : null
+        const dataFmt = renovacao
+          ? new Date(renovacao).toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' })
+          : null
+        const urgente = dias !== null && dias <= 5 && dias > 0
+
+        return (
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-50">
+              <h2 className="text-sm font-semibold text-verde">Subscrição</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Plano atual e informações de renovação</p>
+            </div>
+            <div className="p-6 flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    plano === 'vitalicio' ? 'bg-dourado/10 text-dourado-escuro' :
+                    plano === 'mensal'    ? 'bg-verde/10 text-verde' :
+                                           'bg-red-50 text-red-700'
+                  }`}>
+                    {plano === 'vitalicio' ? 'Vitalício' : plano === 'mensal' ? 'Mensal' : 'Suspenso'}
+                  </span>
+                </div>
+                {plano === 'mensal' && dataFmt && (
+                  <p className={`text-sm ${urgente ? 'text-amber-700 font-medium' : 'text-gray-500'}`}>
+                    {urgente
+                      ? `⚠️ Renova ${dias === 1 ? 'amanhã' : `em ${dias} dias`} — ${dataFmt}`
+                      : `Renova em ${dataFmt}${dias !== null ? ` (${dias} dias)` : ''}`}
+                  </p>
+                )}
+                {plano === 'vitalicio' && (
+                  <p className="text-sm text-gray-500">Acesso permanente sem renovações.</p>
+                )}
+              </div>
+              {plano === 'mensal' && urgente && (
+                <a
+                  href="mailto:faturamais30@gmail.com?subject=Renovação%20de%20subscrição"
+                  className="flex-shrink-0 text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1.5 rounded-lg hover:bg-amber-100 transition-colors"
+                >
+                  Renovar →
+                </a>
+              )}
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Danger zone */}
       <div className="bg-white rounded-2xl border border-red-100 overflow-hidden">
         <div className="px-6 py-4 border-b border-red-50 bg-red-50/50">
