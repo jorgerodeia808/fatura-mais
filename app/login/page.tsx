@@ -119,10 +119,10 @@ export default function LoginPage() {
 
       {/* Right panel — form */}
       <div className="w-full lg:w-1/2">
-        <div className="flex items-center justify-center px-6 py-12 min-h-screen" style={{ backgroundColor: nicho.corFundo }}>
+        <div className="flex items-center justify-center px-6 py-8 lg:py-12 min-h-screen" style={{ backgroundColor: nicho.corFundo }}>
           <div className="w-full max-w-sm">
             {/* Mobile only: logo */}
-            <div className="lg:hidden text-center mb-8">
+            <div className="lg:hidden text-center mb-6">
               <div className="flex justify-center mb-3">
                 <NichoLogo size="lg" />
               </div>
@@ -133,8 +133,8 @@ export default function LoginPage() {
               </span>
             </div>
 
-            <h2 className="font-serif font-bold text-2xl text-[#1c1c18] mb-1">Bem-vindo de volta</h2>
-            <p className="text-sm text-[#717971] mb-8">Entra na tua conta para continuar</p>
+            <h2 className="font-serif font-bold text-2xl text-[#1c1c18] mb-1 text-center lg:text-left">Bem-vindo de volta</h2>
+            <p className="text-sm text-[#717971] mb-6 text-center lg:text-left">Entra na tua conta para continuar</p>
 
             {notice && (
               <div className="bg-amber-50 text-amber-800 text-sm px-4 py-3 rounded-lg border border-amber-200 mb-4">
