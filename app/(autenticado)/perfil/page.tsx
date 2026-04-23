@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -89,12 +89,12 @@ export default function PerfilPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold text-[#0e4324]">Perfil</h1>
+        <h1 className="text-2xl font-bold text-verde">Perfil</h1>
         <p className="text-gray-500 text-sm mt-0.5">Gere os dados da tua conta</p>
       </div>
 
       {toast && (
-        <div className={`fixed bottom-6 right-6 px-4 py-3 rounded-xl shadow-lg text-sm font-medium z-50 text-white ${toastType === 'error' ? 'bg-red-600' : 'bg-[#0e4324]'}`}>
+        <div className={`fixed bottom-6 right-6 px-4 py-3 rounded-xl shadow-lg text-sm font-medium z-50 text-white ${toastType === 'error' ? 'bg-red-600' : 'bg-verde'}`}>
           {toast}
         </div>
       )}
@@ -102,7 +102,7 @@ export default function PerfilPage() {
       {/* Email */}
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-50">
-          <h2 className="text-sm font-semibold text-[#0e4324]">Endereço de email</h2>
+          <h2 className="text-sm font-semibold text-verde">Endereço de email</h2>
           <p className="text-xs text-gray-400 mt-0.5">Email atual: <strong>{email}</strong></p>
         </div>
         <form onSubmit={handleAlterarEmail} className="p-6 space-y-4">
@@ -113,7 +113,7 @@ export default function PerfilPage() {
               value={novoEmail}
               onChange={e => setNovoEmail(e.target.value)}
               required
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-verde transition-colors"
             />
           </div>
           <p className="text-xs text-gray-400">Será enviado um email de confirmação para o novo endereço.</p>
@@ -121,7 +121,7 @@ export default function PerfilPage() {
             <button
               type="submit"
               disabled={savingEmail || novoEmail === email}
-              className="text-sm bg-[#0e4324] text-white px-4 py-2 rounded-xl font-medium hover:bg-[#0a3019] disabled:opacity-50 transition-colors"
+              className="text-sm bg-verde text-white px-4 py-2 rounded-xl font-medium hover:bg-verde-escuro disabled:opacity-50 transition-colors"
             >
               {savingEmail ? 'A guardar...' : 'Alterar email'}
             </button>
@@ -132,7 +132,7 @@ export default function PerfilPage() {
       {/* Password */}
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-50">
-          <h2 className="text-sm font-semibold text-[#0e4324]">Password</h2>
+          <h2 className="text-sm font-semibold text-verde">Password</h2>
           <p className="text-xs text-gray-400 mt-0.5">Define uma nova password para a tua conta</p>
         </div>
         <form onSubmit={handleAlterarPassword} className="p-6 space-y-4">
@@ -146,7 +146,7 @@ export default function PerfilPage() {
               minLength={6}
               placeholder="Mínimo 6 caracteres"
               autoComplete="new-password"
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-verde transition-colors"
             />
           </div>
           <div>
@@ -158,14 +158,14 @@ export default function PerfilPage() {
               required
               placeholder="Repete a password"
               autoComplete="new-password"
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-verde transition-colors"
             />
           </div>
           <div className="flex justify-end">
             <button
               type="submit"
               disabled={savingPassword || !novaPassword || !confirmarPassword}
-              className="text-sm bg-[#0e4324] text-white px-4 py-2 rounded-xl font-medium hover:bg-[#0a3019] disabled:opacity-50 transition-colors"
+              className="text-sm bg-verde text-white px-4 py-2 rounded-xl font-medium hover:bg-verde-escuro disabled:opacity-50 transition-colors"
             >
               {savingPassword ? 'A guardar...' : 'Alterar password'}
             </button>
@@ -231,3 +231,4 @@ export default function PerfilPage() {
     </div>
   )
 }
+

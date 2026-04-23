@@ -46,7 +46,7 @@ function Avatar({ nome, size = 'md' }: { nome: string; size?: 'sm' | 'md' | 'lg'
   const initials = nome.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
   const sizes = { sm: 'w-8 h-8 text-xs', md: 'w-10 h-10 text-sm', lg: 'w-14 h-14 text-lg' }
   return (
-    <div className={`${sizes[size]} rounded-full bg-[#0e4324]/10 text-[#0e4324] font-bold flex items-center justify-center flex-shrink-0`}>
+    <div className={`${sizes[size]} rounded-full bg-verde/10 text-verde font-bold flex items-center justify-center flex-shrink-0`}>
       {initials || '?'}
     </div>
   )
@@ -237,7 +237,7 @@ export default function ClientesPage() {
   return (
     <div className="space-y-6">
       {toast && (
-        <div className="fixed bottom-6 right-6 bg-[#0e4324] text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium z-50">
+        <div className="fixed bottom-6 right-6 bg-verde text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium z-50">
           {toast}
         </div>
       )}
@@ -291,7 +291,7 @@ export default function ClientesPage() {
                     key={c.id}
                     onClick={() => selecionarCliente(c)}
                     className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-[#f0eee8] last:border-0 transition-colors ${
-                      selectedId === c.id ? 'bg-[#0e4324]/5' : 'hover:bg-[#f8f6f1]'
+                      selectedId === c.id ? 'bg-verde/5' : 'hover:bg-[#f8f6f1]'
                     }`}
                   >
                     <Avatar nome={c.nome} size="sm" />
@@ -470,7 +470,7 @@ export default function ClientesPage() {
                           <div className="text-right">
                             <p className="font-serif font-medium text-ink">{fmt(v.valor)}</p>
                             {v.gorjeta > 0 && (
-                              <p className="text-xs text-[#977c30]">+{fmt(v.gorjeta)} gorjeta</p>
+                              <p className="text-xs text-dourado">+{fmt(v.gorjeta)} gorjeta</p>
                             )}
                           </div>
                         </div>

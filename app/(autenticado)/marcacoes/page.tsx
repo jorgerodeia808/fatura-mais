@@ -107,7 +107,7 @@ function ToggleSwitch({ checked, onChange, disabled = false }: { checked: boolea
       onClick={onChange}
       disabled={disabled}
       className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-50 ${
-        checked ? 'bg-[#0e4324]' : 'bg-[#d4d4cc]'
+        checked ? 'bg-verde' : 'bg-[#d4d4cc]'
       }`}
     >
       <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
@@ -552,12 +552,12 @@ export default function MarcacoesPage() {
           <span className="text-ink-secondary">pendentes</span>
         </div>
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-black/5 text-sm">
-          <span className="material-symbols-outlined text-[#0e4324]" style={{fontSize:'15px'}}>check_circle</span>
+          <span className="material-symbols-outlined text-verde" style={{fontSize:'15px'}}>check_circle</span>
           <span className="text-ink font-medium">{confirmadas}</span>
           <span className="text-ink-secondary">confirmadas</span>
         </div>
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-black/5 text-sm">
-          <span className="material-symbols-outlined text-[#977c30]" style={{fontSize:'15px'}}>sms</span>
+          <span className="material-symbols-outlined text-dourado" style={{fontSize:'15px'}}>sms</span>
           <span className="text-ink font-medium">{smsMes}</span>
           <span className="text-ink-secondary">SMS este mês</span>
         </div>
@@ -609,7 +609,7 @@ export default function MarcacoesPage() {
                   >
                     <p className="text-[10px] text-ink-secondary font-medium tracking-wide uppercase">{DIAS_PT[d.getDay()]}</p>
                     <div className={`w-6 h-6 rounded-full mx-auto mt-0.5 flex items-center justify-center text-xs font-bold ${
-                      isToday ? 'bg-[#0e4324] text-white' : 'text-ink'
+                      isToday ? 'bg-verde text-white' : 'text-ink'
                     }`}>
                       {d.getDate()}
                     </div>
@@ -714,7 +714,7 @@ export default function MarcacoesPage() {
                             <p className="text-sm font-medium text-ink">{m.cliente_nome}</p>
                             <span className={`badge ${s.badge}`}>{s.label}</span>
                             {m.sms_enviado && (
-                              <span className="material-symbols-outlined text-[#0e4324]" style={{fontSize:'15px'}} title="SMS enviado">check_circle</span>
+                              <span className="material-symbols-outlined text-verde" style={{fontSize:'15px'}} title="SMS enviado">check_circle</span>
                             )}
                           </div>
                           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
@@ -724,7 +724,7 @@ export default function MarcacoesPage() {
                               </span>
                             )}
                             {m.servicos?.preco ? (
-                              <span className="text-xs text-[#977c30] font-medium">{fmt(m.servicos.preco)}</span>
+                              <span className="text-xs text-dourado font-medium">{fmt(m.servicos.preco)}</span>
                             ) : null}
                             {m.cliente_telemovel && (
                               <span className="text-xs text-ink-secondary">{m.cliente_telemovel}</span>
@@ -738,7 +738,7 @@ export default function MarcacoesPage() {
                             <>
                               <button
                                 onClick={() => handleConfirmar(m)}
-                                className="btn-ghost !p-2 text-[#0e4324]"
+                                className="btn-ghost !p-2 text-verde"
                                 title="Confirmar"
                               >
                                 <span className="material-symbols-outlined" style={{fontSize:'18px'}}>check</span>
@@ -779,7 +779,7 @@ export default function MarcacoesPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-[#f0eee8] flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[#0e4324]" style={{fontSize:'20px'}}>public</span>
+                  <span className="material-symbols-outlined text-verde" style={{fontSize:'20px'}}>public</span>
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-ink">Marcações online</p>
@@ -805,7 +805,7 @@ export default function MarcacoesPage() {
             {marcacoesOnline && barbearia?.slug && (
               <div className="mt-4 bg-[#f0eee8] rounded-xl p-3">
                 <p className="text-[10px] text-ink-secondary uppercase tracking-widest font-medium mb-1.5">Link público</p>
-                <p className="text-xs text-[#0e4324] font-mono truncate mb-3">
+                <p className="text-xs text-verde font-mono truncate mb-3">
                   fatura-mais.pt/agendar/{barbearia.slug}
                 </p>
                 <button
@@ -917,7 +917,7 @@ export default function MarcacoesPage() {
           {/* New appointment form */}
           <div className="card !p-0 overflow-hidden">
             <div className="px-5 py-4 border-b border-black/5 flex items-center gap-2.5">
-              <span className="material-symbols-outlined text-[#0e4324]" style={{fontSize:'20px'}}>calendar_today</span>
+              <span className="material-symbols-outlined text-verde" style={{fontSize:'20px'}}>calendar_today</span>
               <h2 className="section-title !mb-0">Nova Marcação</h2>
             </div>
 
@@ -970,7 +970,7 @@ export default function MarcacoesPage() {
                 </select>
                 {selectedServico && (
                   <div className="flex items-center gap-3 mt-2 px-1">
-                    <span className="text-xs text-[#977c30] font-semibold">{fmt(selectedServico.preco)}</span>
+                    <span className="text-xs text-dourado font-semibold">{fmt(selectedServico.preco)}</span>
                     <span className="text-xs text-ink-secondary">{selectedServico.tempo_minutos} min</span>
                   </div>
                 )}
@@ -1007,7 +1007,7 @@ export default function MarcacoesPage() {
               {/* SMS toggle */}
               <label className="flex items-center justify-between p-3 rounded-xl bg-[#f0eee8] cursor-pointer">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#0e4324]" style={{fontSize:'18px'}}>sms</span>
+                  <span className="material-symbols-outlined text-verde" style={{fontSize:'18px'}}>sms</span>
                   <div>
                     <p className="text-sm font-medium text-ink">Enviar SMS de confirmação</p>
                     <p className="text-[10px] text-ink-secondary mt-0.5">Enviado automaticamente 24h antes</p>
@@ -1023,9 +1023,9 @@ export default function MarcacoesPage() {
                 </div>
               )}
               {successMsg && (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-[#f0eee8] border border-[#0e4324]/10">
-                  <span className="material-symbols-outlined text-[#0e4324]" style={{fontSize:'16px'}}>check_circle</span>
-                  <p className="text-[#0e4324] text-xs font-medium">{successMsg}</p>
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-[#f0eee8] border border-verde/10">
+                  <span className="material-symbols-outlined text-verde" style={{fontSize:'16px'}}>check_circle</span>
+                  <p className="text-verde text-xs font-medium">{successMsg}</p>
                 </div>
               )}
 

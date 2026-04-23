@@ -366,7 +366,7 @@ export default function FaturacaoPage() {
             <p className="metric-value text-verde">{fmt(faturadoTotal)}</p>
           )}
           {gorjetasTotal > 0 && (
-            <p className="text-xs text-[#977c30] font-medium mt-1">+{fmt(gorjetasTotal)} gorjetas</p>
+            <p className="text-xs text-dourado font-medium mt-1">+{fmt(gorjetasTotal)} gorjetas</p>
           )}
         </div>
         <div className="metric-card">
@@ -471,7 +471,7 @@ export default function FaturacaoPage() {
                         onClick={() => selecionarClienteCRM(c)}
                         className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-[#f0eee8] transition-colors"
                       >
-                        <div className="w-7 h-7 rounded-full bg-[#0e4324]/10 text-[#0e4324] text-xs font-bold flex items-center justify-center flex-shrink-0">
+                        <div className="w-7 h-7 rounded-full bg-verde/10 text-verde text-xs font-bold flex items-center justify-center flex-shrink-0">
                           {c.nome.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
                         </div>
                         <div>
@@ -491,7 +491,7 @@ export default function FaturacaoPage() {
                   <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">Serviço *</label>
                   {servicos.length === 0 ? (
                     <div className="text-center py-5 text-xs text-ink-secondary border border-dashed border-black/10 rounded-lg">
-                      <a href="/configuracoes" className="text-[#977c30] underline font-medium">Configura serviços</a> primeiro
+                      <a href="/configuracoes" className="text-dourado underline font-medium">Configura serviços</a> primeiro
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
@@ -519,7 +519,7 @@ export default function FaturacaoPage() {
                   </label>
                   {produtos.length === 0 ? (
                     <div className="text-center py-5 text-xs text-ink-secondary border border-dashed border-black/10 rounded-lg">
-                      <a href="/configuracoes" className="text-[#977c30] underline font-medium">Configura produtos</a> primeiro
+                      <a href="/configuracoes" className="text-dourado underline font-medium">Configura produtos</a> primeiro
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
@@ -732,7 +732,7 @@ export default function FaturacaoPage() {
                       <div className="flex items-center gap-3 flex-shrink-0">
                         <div className="text-right">
                           <p className="font-serif font-medium text-ink text-base">{fmt(r.valor)}</p>
-                          {r.gorjeta > 0 && <p className="text-xs text-[#977c30] font-medium">+{fmt(r.gorjeta)} gorjeta</p>}
+                          {r.gorjeta > 0 && <p className="text-xs text-dourado font-medium">+{fmt(r.gorjeta)} gorjeta</p>}
                         </div>
                         <EstadoBadge estado={r.estado} />
                       </div>

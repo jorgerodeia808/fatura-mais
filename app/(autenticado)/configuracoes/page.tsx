@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -60,7 +60,7 @@ function Toggle({ value, onChange, disabled = false }: { value: boolean; onChang
     <button
       onClick={() => onChange(!value)}
       disabled={disabled}
-      className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-50 ${value ? 'bg-[#0e4324]' : 'bg-gray-200'}`}
+      className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-50 ${value ? 'bg-verde' : 'bg-gray-200'}`}
     >
       <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${value ? 'translate-x-5' : 'translate-x-0'}`} />
     </button>
@@ -71,7 +71,7 @@ function Section({ title, description, children }: { title: string; description?
   return (
     <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-50">
-        <h2 className="text-sm font-semibold text-[#0e4324]">{title}</h2>
+        <h2 className="text-sm font-semibold text-verde">{title}</h2>
         {description && <p className="text-xs text-gray-400 mt-0.5">{description}</p>}
       </div>
       <div className="p-6 space-y-5">{children}</div>
@@ -361,12 +361,12 @@ export default function ConfiguracoesPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold text-[#0e4324]">Configurações</h1>
+        <h1 className="text-2xl font-bold text-verde">Configurações</h1>
         <p className="text-gray-500 text-sm mt-0.5">Gere as preferências do teu {nicho.nomeNegocio}</p>
       </div>
 
       {toast && (
-        <div className="fixed bottom-6 right-6 bg-[#0e4324] text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium z-50">
+        <div className="fixed bottom-6 right-6 bg-verde text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium z-50">
           {toast}
         </div>
       )}
@@ -379,7 +379,7 @@ export default function ConfiguracoesPage() {
             type="text"
             value={editBarbearia.nome}
             onChange={e => setEditBarbearia(p => ({ ...p, nome: e.target.value }))}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-verde transition-colors"
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -390,7 +390,7 @@ export default function ConfiguracoesPage() {
               value={editBarbearia.num_barbeiros}
               onChange={e => setEditBarbearia(p => ({ ...p, num_barbeiros: e.target.value }))}
               min="1"
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-verde transition-colors"
             />
           </div>
           <div>
@@ -400,7 +400,7 @@ export default function ConfiguracoesPage() {
               value={editBarbearia.dias_trabalho_mes}
               onChange={e => setEditBarbearia(p => ({ ...p, dias_trabalho_mes: e.target.value }))}
               min="1" max="31"
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-verde transition-colors"
             />
           </div>
           <div>
@@ -409,7 +409,7 @@ export default function ConfiguracoesPage() {
               type="time"
               value={editBarbearia.hora_abertura}
               onChange={e => setEditBarbearia(p => ({ ...p, hora_abertura: e.target.value }))}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-verde transition-colors"
             />
           </div>
           <div>
@@ -418,7 +418,7 @@ export default function ConfiguracoesPage() {
               type="time"
               value={editBarbearia.hora_fecho}
               onChange={e => setEditBarbearia(p => ({ ...p, hora_fecho: e.target.value }))}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-verde transition-colors"
             />
           </div>
         </div>
@@ -426,7 +426,7 @@ export default function ConfiguracoesPage() {
           <button
             onClick={guardarBarbearia}
             disabled={saving === 'barbearia'}
-            className="text-sm bg-[#0e4324] text-white px-4 py-2 rounded-xl font-medium hover:bg-[#0a3019] disabled:opacity-50 transition-colors"
+            className="text-sm bg-verde text-white px-4 py-2 rounded-xl font-medium hover:bg-verde-escuro disabled:opacity-50 transition-colors"
           >
             {saving === 'barbearia' ? 'A guardar...' : 'Guardar alterações'}
           </button>
@@ -446,7 +446,7 @@ export default function ConfiguracoesPage() {
                   type="text"
                   defaultValue={s.nome}
                   onBlur={e => { if (e.target.value !== s.nome) atualizarServico(s.id, 'nome', e.target.value) }}
-                  className="flex-1 text-sm font-medium text-gray-800 border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#0e4324] transition-colors"
+                  className="flex-1 text-sm font-medium text-gray-800 border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-verde transition-colors"
                 />
                 <button
                   onClick={() => removerServico(s.id)}
@@ -463,7 +463,7 @@ export default function ConfiguracoesPage() {
                     type="number"
                     defaultValue={s.preco}
                     onBlur={e => { const v = parseFloat(e.target.value); if (v !== s.preco) atualizarServico(s.id, 'preco', v) }}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-verde transition-colors"
                     min="0" step="0.01"
                   />
                 </div>
@@ -473,7 +473,7 @@ export default function ConfiguracoesPage() {
                     type="number"
                     defaultValue={s.tempo_minutos}
                     onBlur={e => { const v = parseInt(e.target.value); if (v !== s.tempo_minutos) atualizarServico(s.id, 'tempo_minutos', v) }}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-verde transition-colors"
                     min="1"
                   />
                 </div>
@@ -483,7 +483,7 @@ export default function ConfiguracoesPage() {
                     type="number"
                     defaultValue={s.custo_material}
                     onBlur={e => { const v = parseFloat(e.target.value); if (v !== s.custo_material) atualizarServico(s.id, 'custo_material', v) }}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-verde transition-colors"
                     min="0" step="0.01"
                   />
                 </div>
@@ -501,14 +501,14 @@ export default function ConfiguracoesPage() {
               placeholder="Nome do serviço"
               value={novoServico.nome}
               onChange={e => setNovoServico(p => ({ ...p, nome: e.target.value }))}
-              className="col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+              className="col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-verde transition-colors"
             />
             <input
               type="number"
               placeholder="Preço (€)"
               value={novoServico.preco}
               onChange={e => setNovoServico(p => ({ ...p, preco: e.target.value }))}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-verde transition-colors"
               min="0" step="0.01"
             />
             <input
@@ -516,7 +516,7 @@ export default function ConfiguracoesPage() {
               placeholder="Tempo (min)"
               value={novoServico.tempo_minutos}
               onChange={e => setNovoServico(p => ({ ...p, tempo_minutos: e.target.value }))}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-verde transition-colors"
               min="1"
             />
             <input
@@ -524,14 +524,14 @@ export default function ConfiguracoesPage() {
               placeholder="Custo material (€)"
               value={novoServico.custo_material}
               onChange={e => setNovoServico(p => ({ ...p, custo_material: e.target.value }))}
-              className="col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+              className="col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-verde transition-colors"
               min="0" step="0.01"
             />
           </div>
           <button
             onClick={adicionarServico}
             disabled={adicionandoServico || !novoServico.nome.trim()}
-            className="w-full text-sm bg-[#0e4324]/10 text-[#0e4324] hover:bg-[#0e4324]/20 px-3 py-2 rounded-lg font-medium disabled:opacity-40 transition-colors flex items-center justify-center gap-1.5"
+            className="w-full text-sm bg-verde/10 text-verde hover:bg-verde/20 px-3 py-2 rounded-lg font-medium disabled:opacity-40 transition-colors flex items-center justify-center gap-1.5"
           >
             <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>add</span>
             {adicionandoServico ? 'A adicionar...' : 'Adicionar serviço'}
@@ -564,7 +564,7 @@ export default function ConfiguracoesPage() {
                       min="0" step="0.01"
                     />/mês
                   </span>
-                  <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${c.tipo === 'fixo' ? 'bg-[#0e4324]/10 text-[#0e4324]' : 'bg-amber-50 text-amber-700'}`}>
+                  <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${c.tipo === 'fixo' ? 'bg-verde/10 text-verde' : 'bg-amber-50 text-amber-700'}`}>
                     {c.tipo}
                   </span>
                   <span className="text-xs text-gray-400">{c.categoria}</span>
@@ -590,20 +590,20 @@ export default function ConfiguracoesPage() {
               placeholder="Descrição"
               value={novoCusto.descricao}
               onChange={e => setNovoCusto(p => ({ ...p, descricao: e.target.value }))}
-              className="col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+              className="col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-verde transition-colors"
             />
             <input
               type="number"
               placeholder="Valor (€/mês)"
               value={novoCusto.valor}
               onChange={e => setNovoCusto(p => ({ ...p, valor: e.target.value }))}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-verde transition-colors"
               min="0" step="0.01"
             />
             <select
               value={novoCusto.tipo}
               onChange={e => setNovoCusto(p => ({ ...p, tipo: e.target.value as 'fixo' | 'variavel' }))}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-verde transition-colors"
             >
               <option value="fixo">Fixo</option>
               <option value="variavel">Variável</option>
@@ -611,7 +611,7 @@ export default function ConfiguracoesPage() {
             <select
               value={novoCusto.categoria}
               onChange={e => setNovoCusto(p => ({ ...p, categoria: e.target.value }))}
-              className="col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+              className="col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-verde transition-colors"
             >
               {CATEGORIAS_CUSTO.map(cat => <option key={cat} value={cat}>{cat}</option>)}
             </select>
@@ -619,7 +619,7 @@ export default function ConfiguracoesPage() {
           <button
             onClick={adicionarCusto}
             disabled={adicionandoCusto || !novoCusto.descricao.trim()}
-            className="w-full text-sm bg-[#0e4324]/10 text-[#0e4324] hover:bg-[#0e4324]/20 px-3 py-2 rounded-lg font-medium disabled:opacity-40 transition-colors flex items-center justify-center gap-1.5"
+            className="w-full text-sm bg-verde/10 text-verde hover:bg-verde/20 px-3 py-2 rounded-lg font-medium disabled:opacity-40 transition-colors flex items-center justify-center gap-1.5"
           >
             <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>add</span>
             {adicionandoCusto ? 'A adicionar...' : 'Adicionar custo'}
@@ -639,7 +639,7 @@ export default function ConfiguracoesPage() {
                 type="text"
                 defaultValue={p.nome}
                 onBlur={e => { if (e.target.value !== p.nome) atualizarProduto(p.id, 'nome', e.target.value) }}
-                className="flex-1 text-sm font-medium text-gray-800 border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#0e4324] transition-colors"
+                className="flex-1 text-sm font-medium text-gray-800 border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-verde transition-colors"
               />
               <div>
                 <label className="block text-[10px] font-medium text-gray-400 uppercase tracking-wide mb-1">Preço (€)</label>
@@ -647,7 +647,7 @@ export default function ConfiguracoesPage() {
                   type="number"
                   defaultValue={p.preco}
                   onBlur={e => { const v = parseFloat(e.target.value); if (v !== p.preco) atualizarProduto(p.id, 'preco', v) }}
-                  className="w-24 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+                  className="w-24 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-verde transition-colors"
                   min="0" step="0.01"
                 />
               </div>
@@ -671,21 +671,21 @@ export default function ConfiguracoesPage() {
               placeholder="Nome do produto"
               value={novoProduto.nome}
               onChange={e => setNovoProduto(p => ({ ...p, nome: e.target.value }))}
-              className="col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+              className="col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-verde transition-colors"
             />
             <input
               type="number"
               placeholder="Preço (€)"
               value={novoProduto.preco}
               onChange={e => setNovoProduto(p => ({ ...p, preco: e.target.value }))}
-              className="col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+              className="col-span-2 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-verde transition-colors"
               min="0" step="0.01"
             />
           </div>
           <button
             onClick={adicionarProduto}
             disabled={adicionandoProduto || !novoProduto.nome.trim()}
-            className="w-full text-sm bg-[#0e4324]/10 text-[#0e4324] hover:bg-[#0e4324]/20 px-3 py-2 rounded-lg font-medium disabled:opacity-40 transition-colors flex items-center justify-center gap-1.5"
+            className="w-full text-sm bg-verde/10 text-verde hover:bg-verde/20 px-3 py-2 rounded-lg font-medium disabled:opacity-40 transition-colors flex items-center justify-center gap-1.5"
           >
             <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>add</span>
             {adicionandoProduto ? 'A adicionar...' : 'Adicionar produto'}
@@ -708,7 +708,7 @@ export default function ConfiguracoesPage() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-medium text-gray-800">Mensagem personalizada</p>
-                <button onClick={() => setSmsMensagem(SMS_TEMPLATE_PADRAO)} className="text-xs text-gray-400 hover:text-[#977c30] transition-colors">
+                <button onClick={() => setSmsMensagem(SMS_TEMPLATE_PADRAO)} className="text-xs text-gray-400 hover:text-dourado transition-colors">
                   Repor padrão
                 </button>
               </div>
@@ -717,7 +717,7 @@ export default function ConfiguracoesPage() {
                   <button
                     key={v}
                     onClick={() => setSmsMensagem(prev => prev + v)}
-                    className="text-[10px] bg-gray-100 hover:bg-[#0e4324]/10 text-gray-600 hover:text-[#0e4324] px-2 py-0.5 rounded font-mono transition-colors"
+                    className="text-[10px] bg-gray-100 hover:bg-verde/10 text-gray-600 hover:text-verde px-2 py-0.5 rounded font-mono transition-colors"
                   >
                     {v}
                   </button>
@@ -728,14 +728,14 @@ export default function ConfiguracoesPage() {
                 onChange={e => setSmsMensagem(e.target.value)}
                 rows={3}
                 maxLength={320}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#0e4324] resize-none transition-colors"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-verde resize-none transition-colors"
               />
               <div className="flex items-center justify-between mt-1">
                 <p className="text-xs text-gray-400">{smsMensagem.length}/320 caracteres</p>
                 <button
                   onClick={handleMensagemGuardar}
                   disabled={saving === 'sms_mensagem'}
-                  className="text-xs bg-[#0e4324] text-white px-3 py-1.5 rounded-lg font-medium hover:bg-[#0a3019] disabled:opacity-50 transition-colors"
+                  className="text-xs bg-verde text-white px-3 py-1.5 rounded-lg font-medium hover:bg-verde-escuro disabled:opacity-50 transition-colors"
                 >
                   {saving === 'sms_mensagem' ? 'A guardar...' : 'Guardar mensagem'}
                 </button>
@@ -756,12 +756,12 @@ export default function ConfiguracoesPage() {
                   value={testeNumero}
                   onChange={e => setTesteNumero(e.target.value)}
                   placeholder="+351 912 345 678"
-                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-verde transition-colors"
                 />
                 <button
                   onClick={handleEnviarSmsTeste}
                   disabled={!testeNumero.trim() || enviandoTeste}
-                  className="bg-[#977c30] text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-[#7a6327] disabled:opacity-40 transition-colors whitespace-nowrap"
+                  className="bg-dourado text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-dourado-escuro disabled:opacity-40 transition-colors whitespace-nowrap"
                 >
                   {enviandoTeste ? 'A enviar...' : 'Enviar teste'}
                 </button>
@@ -783,7 +783,7 @@ export default function ConfiguracoesPage() {
             <div key={tipo}>
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-medium text-gray-800">{labels[tipo]}</p>
-                <button onClick={() => setters[tipo](defaults[tipo])} className="text-xs text-gray-400 hover:text-[#977c30] transition-colors">
+                <button onClick={() => setters[tipo](defaults[tipo])} className="text-xs text-gray-400 hover:text-dourado transition-colors">
                   Repor padrão
                 </button>
               </div>
@@ -792,7 +792,7 @@ export default function ConfiguracoesPage() {
                   <button
                     key={v}
                     onClick={() => setters[tipo](prev => prev + v)}
-                    className="text-[10px] bg-gray-100 hover:bg-[#0e4324]/10 text-gray-600 hover:text-[#0e4324] px-2 py-0.5 rounded font-mono transition-colors"
+                    className="text-[10px] bg-gray-100 hover:bg-verde/10 text-gray-600 hover:text-verde px-2 py-0.5 rounded font-mono transition-colors"
                   >
                     {v}
                   </button>
@@ -803,7 +803,7 @@ export default function ConfiguracoesPage() {
                 onChange={e => setters[tipo](e.target.value)}
                 rows={3}
                 maxLength={320}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#0e4324] resize-none transition-colors"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-verde resize-none transition-colors"
               />
               <p className="text-xs text-gray-400 mt-1">{values[tipo].length}/320 caracteres</p>
             </div>
@@ -812,7 +812,7 @@ export default function ConfiguracoesPage() {
         <button
           onClick={handleSmsOnlineGuardar}
           disabled={saving === 'sms_online'}
-          className="w-full text-sm bg-[#0e4324] text-white px-4 py-2.5 rounded-xl font-medium hover:bg-[#0a3019] disabled:opacity-50 transition-colors"
+          className="w-full text-sm bg-verde text-white px-4 py-2.5 rounded-xl font-medium hover:bg-verde-escuro disabled:opacity-50 transition-colors"
         >
           {saving === 'sms_online' ? 'A guardar...' : 'Guardar templates'}
         </button>
@@ -833,10 +833,10 @@ export default function ConfiguracoesPage() {
           <div className="bg-[#f0f7f3] rounded-xl p-4">
             <p className="text-xs text-gray-500 font-medium mb-2">LINK PÚBLICO</p>
             <div className="flex items-center gap-2">
-              <p className="text-sm text-[#0e4324] font-mono flex-1 truncate">fatura-mais.pt/agendar/{barbearia.slug}</p>
+              <p className="text-sm text-verde font-mono flex-1 truncate">fatura-mais.pt/agendar/{barbearia.slug}</p>
               <button
                 onClick={() => { navigator.clipboard.writeText(`https://fatura-mais.pt/agendar/${barbearia.slug}`); showToast('Link copiado ✓') }}
-                className="text-xs bg-[#0e4324] text-white px-3 py-1.5 rounded-lg font-medium hover:bg-[#0a3019] transition-colors whitespace-nowrap"
+                className="text-xs bg-verde text-white px-3 py-1.5 rounded-lg font-medium hover:bg-verde-escuro transition-colors whitespace-nowrap"
               >
                 Copiar
               </button>
@@ -847,3 +847,4 @@ export default function ConfiguracoesPage() {
     </div>
   )
 }
+

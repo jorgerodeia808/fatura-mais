@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -35,7 +35,7 @@ function HealthRing({ score }: { score: number }) {
   const raio = 28
   const circunferencia = 2 * Math.PI * raio
   const progresso = (score / 100) * circunferencia
-  const cor = score >= 70 ? '#0e4324' : score >= 40 ? '#977c30' : '#dc2626'
+  const cor = score >= 70 ? 'rgb(var(--verde))' : score >= 40 ? 'rgb(var(--dourado))' : '#dc2626'
 
   return (
     <div className="relative w-16 h-16 flex items-center justify-center">
@@ -59,13 +59,13 @@ function BolhaMensagem({ msg }: { msg: Mensagem }) {
   return (
     <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'} mb-4`}>
       {!isUser && (
-        <div className="w-8 h-8 rounded-xl bg-[#0e4324] flex items-center justify-center flex-shrink-0 mt-1">
+        <div className="w-8 h-8 rounded-xl bg-verde flex items-center justify-center flex-shrink-0 mt-1">
           <span className="material-symbols-outlined text-white" style={{fontSize:'16px'}}>psychology</span>
         </div>
       )}
       <div className={`max-w-[80%] px-4 py-3 text-sm leading-relaxed ${
         isUser
-          ? 'bg-[#0e4324] text-white rounded-2xl rounded-tr-sm'
+          ? 'bg-verde text-white rounded-2xl rounded-tr-sm'
           : 'bg-white border border-black/5 shadow-sm text-ink rounded-2xl rounded-tl-sm'
       }`}>
         <p className="whitespace-pre-wrap">{msg.content}</p>
@@ -74,7 +74,7 @@ function BolhaMensagem({ msg }: { msg: Mensagem }) {
         </p>
       </div>
       {isUser && (
-        <div className="w-8 h-8 rounded-xl bg-[#977c30] flex items-center justify-center flex-shrink-0 mt-1">
+        <div className="w-8 h-8 rounded-xl bg-dourado flex items-center justify-center flex-shrink-0 mt-1">
           <span className="material-symbols-outlined text-white" style={{fontSize:'16px'}}>person</span>
         </div>
       )}
@@ -85,7 +85,7 @@ function BolhaMensagem({ msg }: { msg: Mensagem }) {
 function IndicadorDigitacao() {
   return (
     <div className="flex gap-3 mb-4">
-      <div className="w-8 h-8 rounded-xl bg-[#0e4324] flex items-center justify-center flex-shrink-0">
+      <div className="w-8 h-8 rounded-xl bg-verde flex items-center justify-center flex-shrink-0">
         <span className="material-symbols-outlined text-white" style={{fontSize:'16px'}}>psychology</span>
       </div>
       <div className="bg-white px-4 py-3 rounded-2xl rounded-tl-sm border border-black/5 shadow-sm">
@@ -300,7 +300,7 @@ export default function ConselheiroIAPage() {
     <div className="flex flex-col h-[calc(100vh-2rem)] max-h-[900px]">
 
       {/* Header */}
-      <div className="rounded-2xl p-6 mb-5" style={{background:'linear-gradient(135deg, #0e4324 0%, #155c33 100%)'}}>
+      <div className="rounded-2xl p-6 mb-5" style={{background:'linear-gradient(135deg, rgb(var(--verde)) 0%, rgb(var(--verde-claro)) 100%)'}}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
@@ -332,7 +332,7 @@ export default function ConselheiroIAPage() {
             {mensagens.length === 0 && !carregando && (
               <div className="text-center py-8">
                 <div className="w-16 h-16 rounded-2xl bg-[#f0eee8] flex items-center justify-center mx-auto mb-4">
-                  <span className="material-symbols-outlined text-[#0e4324]" style={{fontSize:'32px'}}>forum</span>
+                  <span className="material-symbols-outlined text-verde" style={{fontSize:'32px'}}>forum</span>
                 </div>
                 <h3 className="font-serif text-lg font-bold text-ink mb-1">Como posso ajudar?</h3>
                 <p className="text-ink-secondary text-sm mb-6 max-w-sm mx-auto">
@@ -355,7 +355,7 @@ export default function ConselheiroIAPage() {
                       key={s}
                       onClick={() => enviarMensagem(s)}
                       disabled={carregando || limiteAtingido}
-                      className="text-xs font-medium px-3 py-2 rounded-full bg-[#f0eee8] text-ink-secondary hover:bg-[#0e4324] hover:text-white transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="text-xs font-medium px-3 py-2 rounded-full bg-[#f0eee8] text-ink-secondary hover:bg-verde hover:text-white transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       {s}
                     </button>
@@ -372,12 +372,12 @@ export default function ConselheiroIAPage() {
 
             {streamingText && (
               <div className="flex gap-3 mb-4">
-                <div className="w-8 h-8 rounded-xl bg-[#0e4324] flex items-center justify-center flex-shrink-0 mt-1">
+                <div className="w-8 h-8 rounded-xl bg-verde flex items-center justify-center flex-shrink-0 mt-1">
                   <span className="material-symbols-outlined text-white" style={{fontSize:'16px'}}>psychology</span>
                 </div>
                 <div className="max-w-[80%] bg-white px-4 py-3 rounded-2xl rounded-tl-sm border border-black/5 shadow-sm">
                   <p className="text-sm leading-relaxed whitespace-pre-wrap text-ink">{streamingText}</p>
-                  <span className="inline-block w-0.5 h-4 bg-[#0e4324] ml-0.5 animate-pulse" />
+                  <span className="inline-block w-0.5 h-4 bg-verde ml-0.5 animate-pulse" />
                 </div>
               </div>
             )}
@@ -392,7 +392,7 @@ export default function ConselheiroIAPage() {
                 <button
                   key={s}
                   onClick={() => enviarMensagem(s)}
-                  className="flex-shrink-0 text-xs font-medium px-3 py-1.5 rounded-full bg-[#f0eee8] text-ink-secondary hover:bg-[#0e4324] hover:text-white transition-all duration-150 whitespace-nowrap"
+                  className="flex-shrink-0 text-xs font-medium px-3 py-1.5 rounded-full bg-[#f0eee8] text-ink-secondary hover:bg-verde hover:text-white transition-all duration-150 whitespace-nowrap"
                 >
                   {s}
                 </button>
@@ -466,7 +466,7 @@ export default function ConselheiroIAPage() {
                   <div>
                     <p className="text-xs text-ink-secondary">Score</p>
                     <p className={`text-sm font-bold font-serif ${
-                      metricas.healthScore >= 70 ? 'text-[#0e4324]' : metricas.healthScore >= 40 ? 'text-[#977c30]' : 'text-red-600'
+                      metricas.healthScore >= 70 ? 'text-verde' : metricas.healthScore >= 40 ? 'text-dourado' : 'text-red-600'
                     }`}>
                       {metricas.healthScore >= 70 ? 'Bom' : metricas.healthScore >= 40 ? 'Médio' : 'Crítico'}
                     </p>
@@ -479,13 +479,13 @@ export default function ConselheiroIAPage() {
                 <p className="text-[10px] text-ink-secondary uppercase tracking-widest font-medium">Métricas do mês</p>
                 <div>
                   <p className="text-xs text-ink-secondary">Receita</p>
-                  <p className="text-base font-bold font-serif text-[#0e4324]">
+                  <p className="text-base font-bold font-serif text-verde">
                     €{metricas.receitaMes.toFixed(2)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-ink-secondary">Lucro</p>
-                  <p className={`text-base font-bold font-serif ${metricas.lucroLiquido >= 0 ? 'text-[#0e4324]' : 'text-red-600'}`}>
+                  <p className={`text-base font-bold font-serif ${metricas.lucroLiquido >= 0 ? 'text-verde' : 'text-red-600'}`}>
                     €{metricas.lucroLiquido.toFixed(2)}
                   </p>
                 </div>
@@ -497,7 +497,7 @@ export default function ConselheiroIAPage() {
                   <p className="text-xs text-ink-secondary mb-1.5">Break-even</p>
                   <div className="h-1.5 bg-[#f0eee8] rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all ${metricas.receitaMes >= metricas.breakEven ? 'bg-[#0e4324]' : 'bg-[#977c30]'}`}
+                      className={`h-full rounded-full transition-all ${metricas.receitaMes >= metricas.breakEven ? 'bg-verde' : 'bg-dourado'}`}
                       style={{ width: `${Math.min(100, metricas.breakEven > 0 ? (metricas.receitaMes / metricas.breakEven) * 100 : 0)}%` }}
                     />
                   </div>
@@ -514,20 +514,20 @@ export default function ConselheiroIAPage() {
               {/* Today bookings */}
               <div className="card">
                 <p className="text-[10px] text-ink-secondary uppercase tracking-widest font-medium mb-2">Marcações hoje</p>
-                <p className="text-2xl font-bold font-serif text-[#0e4324]">{metricas.marcacoesHoje}</p>
+                <p className="text-2xl font-bold font-serif text-verde">{metricas.marcacoesHoje}</p>
                 <p className="text-xs text-ink-secondary mt-0.5">agendadas</p>
               </div>
 
               {/* AI message limit */}
-              <div className="card bg-[#f0eee8] border-[#0e4324]/10">
-                <p className="text-[10px] text-[#0e4324] uppercase tracking-widest font-medium mb-2">Mensagens IA</p>
-                <div className="h-1.5 bg-[#0e4324]/15 rounded-full overflow-hidden mb-2">
+              <div className="card bg-[#f0eee8] border-verde/10">
+                <p className="text-[10px] text-verde uppercase tracking-widest font-medium mb-2">Mensagens IA</p>
+                <div className="h-1.5 bg-verde/[0.15] rounded-full overflow-hidden mb-2">
                   <div
-                    className="h-full bg-[#0e4324] rounded-full transition-all"
+                    className="h-full bg-verde rounded-full transition-all"
                     style={{ width: `${(metricas.restantesMensagens / 20) * 100}%` }}
                   />
                 </div>
-                <p className="text-xs text-[#0e4324] font-medium">{metricas.restantesMensagens}/20 restantes</p>
+                <p className="text-xs text-verde font-medium">{metricas.restantesMensagens}/20 restantes</p>
               </div>
             </>
           ) : null}
@@ -536,3 +536,4 @@ export default function ConselheiroIAPage() {
     </div>
   )
 }
+

@@ -408,7 +408,7 @@ export default function DashboardPage() {
     healthScore >= 80
       ? '#16a34a'
       : healthScore >= 60
-      ? '#977c30'
+      ? 'rgb(var(--dourado))'
       : healthScore >= 40
       ? '#f97316'
       : '#dc2626'
@@ -481,7 +481,7 @@ export default function DashboardPage() {
               <p className="text-xs text-ink-secondary mt-2 flex items-center gap-1">
                 <span
                   className="material-symbols-outlined icon-filled"
-                  style={{ fontSize: '14px', color: '#0e4324' }}
+                  style={{ fontSize: '14px', color: 'rgb(var(--verde))' }}
                 >
                   check_circle
                 </span>
@@ -527,12 +527,12 @@ export default function DashboardPage() {
             <>
               <p
                 className="metric-value mt-2"
-                style={{ color: resultadoLiquido >= 0 ? '#0e4324' : '#dc2626' }}
+                style={{ color: resultadoLiquido >= 0 ? 'rgb(var(--verde))' : '#dc2626' }}
               >
                 {fmt(resultadoLiquido)}
               </p>
               <p className="text-xs mt-2 flex items-center gap-1"
-                style={{ color: resultadoLiquido >= 0 ? '#0e4324' : '#dc2626' }}>
+                style={{ color: resultadoLiquido >= 0 ? 'rgb(var(--verde))' : '#dc2626' }}>
                 <span
                   className="material-symbols-outlined icon-filled"
                   style={{ fontSize: '14px' }}
@@ -559,7 +559,7 @@ export default function DashboardPage() {
               <p className="text-xs text-ink-secondary mt-2 flex items-center gap-1">
                 <span
                   className="material-symbols-outlined"
-                  style={{ fontSize: '14px', color: '#977c30' }}
+                  style={{ fontSize: '14px', color: 'rgb(var(--dourado))' }}
                 >
                   payments
                 </span>
@@ -612,13 +612,13 @@ export default function DashboardPage() {
                 <Bar
                   dataKey="faturacao"
                   name="Faturação"
-                  fill="#0e4324"
+                  fill={nicho.cor}
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
                   dataKey="despesas"
                   name="Despesas"
-                  fill="#977c30"
+                  fill={nicho.corDestaque}
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
@@ -753,7 +753,7 @@ export default function DashboardPage() {
               <div key={s.nome} className="flex items-center gap-4">
                 <span
                   className="font-serif font-bold text-sm w-5 text-center flex-shrink-0"
-                  style={{ color: i === 0 ? '#977c30' : '#a8a89f' }}
+                  style={{ color: i === 0 ? 'rgb(var(--dourado))' : '#a8a89f' }}
                 >
                   {i + 1}
                 </span>
@@ -775,7 +775,7 @@ export default function DashboardPage() {
                       className="h-1 rounded-full transition-all duration-700"
                       style={{
                         width: `${(s.total / maxTotal) * 100}%`,
-                        background: i === 0 ? '#977c30' : '#0e4324',
+                        background: i === 0 ? 'rgb(var(--dourado))' : 'rgb(var(--verde))',
                       }}
                     />
                   </div>
@@ -830,7 +830,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2 mb-4">
             <span
               className="material-symbols-outlined icon-filled"
-              style={{ fontSize: '20px', color: '#977c30' }}
+              style={{ fontSize: '20px', color: 'rgb(var(--dourado))' }}
             >
               lightbulb
             </span>
@@ -844,7 +844,7 @@ export default function DashboardPage() {
               >
                 <span
                   className="material-symbols-outlined flex-shrink-0 mt-0.5"
-                  style={{ fontSize: '18px', color: '#0e4324' }}
+                  style={{ fontSize: '18px', color: 'rgb(var(--verde))' }}
                 >
                   schedule
                 </span>
@@ -862,7 +862,7 @@ export default function DashboardPage() {
               >
                 <span
                   className="material-symbols-outlined flex-shrink-0 mt-0.5"
-                  style={{ fontSize: '18px', color: '#977c30' }}
+                  style={{ fontSize: '18px', color: 'rgb(var(--dourado))' }}
                 >
                   trending_up
                 </span>

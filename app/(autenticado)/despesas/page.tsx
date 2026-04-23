@@ -371,7 +371,7 @@ export default function DespesasPage() {
                     onClick={() => setTipo('fixo')}
                     className={`flex-1 py-2.5 text-sm font-medium transition-all duration-150 inline-flex items-center justify-center gap-1.5 btn-inline ${
                       tipo === 'fixo'
-                        ? 'bg-[#977c30] text-white'
+                        ? 'bg-dourado text-white'
                         : 'bg-white text-ink-secondary hover:bg-[#f0eee8]'
                     }`}
                   >

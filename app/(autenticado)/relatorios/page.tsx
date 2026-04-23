@@ -19,6 +19,7 @@ import {
 } from 'recharts'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
+import { getNichoConfig } from '@/lib/nicho'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -188,6 +189,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function RelatoriosPage() {
   const supabase = createClient()
+  const nicho = getNichoConfig()
 
   // ── State ──────────────────────────────────────────────────────────
   const [barbearia, setBarbearia] = useState<Barbearia | null>(null)
@@ -385,7 +387,7 @@ export default function RelatoriosPage() {
   const pctFixas = totalDespesas > 0 ? (despFixas / totalDespesas) * 100 : 0
   const pctVariaveis = totalDespesas > 0 ? (despVariaveis / totalDespesas) * 100 : 0
 
-  const PIE_COLORS = ['#0e4324', '#977c30', '#d4d0c8', '#16a34a', '#ef4444', '#3b82f6', '#a855f7', '#f97316']
+  const PIE_COLORS = ['rgb(var(--verde))', 'rgb(var(--dourado))', '#d4d0c8', '#16a34a', '#ef4444', '#3b82f6', '#a855f7', '#f97316']
 
   // ── Period label ───────────────────────────────────────────────────
 
@@ -627,8 +629,8 @@ export default function RelatoriosPage() {
                       <YAxis tick={axisStyle} tickFormatter={(v) => `${v}€`} width={54} />
                       <Tooltip {...tooltipStyle} />
                       <Legend wrapperStyle={{ fontSize: 12 }} />
-                      <Bar dataKey="faturacao" name="Faturação" fill="#0e4324" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="despesas" name="Despesas" fill="#977c30" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="faturacao" name="Faturação" fill={nicho.cor} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="despesas" name="Despesas" fill={nicho.corDestaque} radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -641,12 +643,12 @@ export default function RelatoriosPage() {
                       <YAxis tick={axisStyle} tickFormatter={(v) => `${v}€`} width={54} />
                       <Tooltip {...tooltipStyle} />
                       <Legend wrapperStyle={{ fontSize: 12 }} />
-                      <Bar dataKey="resultado" name="Resultado" fill="#0e4324" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="resultado" name="Resultado" fill={nicho.cor} radius={[4, 4, 0, 0]} />
                       <Line
                         type="monotone"
                         dataKey="resultado"
                         name="Tendência"
-                        stroke="#977c30"
+                        stroke={nicho.corDestaque}
                         strokeWidth={2}
                         dot={false}
                       />
@@ -726,7 +728,7 @@ export default function RelatoriosPage() {
                       <XAxis type="number" tick={axisStyle} tickFormatter={(v) => `${v}€`} />
                       <YAxis type="category" dataKey="nome" tick={axisStyle} width={110} />
                       <Tooltip {...tooltipStyle} />
-                      <Bar dataKey="faturacaoTotal" name="Faturação" fill="#0e4324" radius={[0, 4, 4, 0]} />
+                      <Bar dataKey="faturacaoTotal" name="Faturação" fill={nicho.cor} radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -791,8 +793,8 @@ export default function RelatoriosPage() {
                       dataKey="value"
                       paddingAngle={3}
                     >
-                      <Cell fill="#0e4324" />
-                      <Cell fill="#977c30" />
+                      <Cell fill={nicho.cor} />
+                      <Cell fill={nicho.corDestaque} />
                       <Cell fill="#d4d0c8" />
                     </Pie>
                     <Tooltip formatter={(v) => [`${v}`, '']} contentStyle={{ background: 'white', border: '0.5px solid rgba(0,0,0,0.08)', borderRadius: '8px', fontSize: '12px' }} />
@@ -862,7 +864,7 @@ export default function RelatoriosPage() {
                             <div className="flex-1 bg-surface-secondary rounded-full h-2">
                               <div
                                 className="h-2 rounded-full"
-                                style={{ width: `${pct}%`, background: '#977c30' }}
+                                style={{ width: `${pct}%`, background: 'rgb(var(--dourado))' }}
                               />
                             </div>
                             <span className="text-xs font-medium text-dourado w-14 text-right font-sans">{fmt(r.gorjeta)}</span>
