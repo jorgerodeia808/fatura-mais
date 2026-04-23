@@ -74,11 +74,11 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
-  // ── Plan / trial guard for protected app routes ──────────────────────────
+  // ── Plan guard for protected app routes ──────────────────────────────────
   if (user && isProtected) {
     const { data: barbearia } = await supabase
       .from('barbearias')
-      .select('plano, trial_termina_em')
+      .select('plano')
       .eq('user_id', user.id)
       .maybeSingle()
 
@@ -86,38 +86,12 @@ export async function middleware(request: NextRequest) {
       return supabaseResponse
     }
 
-    const { plano, trial_termina_em } = barbearia
-
-    if (plano === 'vitalicio' || plano === 'mensal') {
+    if (barbearia.plano === 'vitalicio' || barbearia.plano === 'mensal') {
       return supabaseResponse
     }
 
-    if (plano === 'trial') {
-      if (trial_termina_em) {
-        const expiresAt = new Date(trial_termina_em)
-        const now = new Date()
-
-        if (expiresAt > now) {
-          const msRemaining = expiresAt.getTime() - now.getTime()
-          const daysRemaining = Math.ceil(msRemaining / (1000 * 60 * 60 * 24))
-          supabaseResponse.headers.set('x-trial-days', String(daysRemaining))
-          return supabaseResponse
-        }
-      }
-
-      const url = request.nextUrl.clone()
-      url.pathname = '/acesso-expirado'
-      return NextResponse.redirect(url)
-    }
-
-    if (plano === 'suspenso') {
-      const url = request.nextUrl.clone()
-      url.pathname = '/acesso-suspenso'
-      return NextResponse.redirect(url)
-    }
-
     const url = request.nextUrl.clone()
-    url.pathname = '/acesso-expirado'
+    url.pathname = '/acesso-suspenso'
     return NextResponse.redirect(url)
   }
 

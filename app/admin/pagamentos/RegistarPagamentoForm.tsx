@@ -139,7 +139,6 @@ export default function RegistarPagamentoForm({ onSuccess }: { onSuccess: () => 
           >
             <option value="mensal">Mensal</option>
             <option value="vitalicio">Vitalício</option>
-            <option value="trial_ext">Extensão de Trial</option>
           </select>
         </div>
 

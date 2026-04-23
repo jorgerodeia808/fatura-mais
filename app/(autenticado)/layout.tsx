@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
 
@@ -25,22 +24,10 @@ export default async function AuthenticadoLayout({
     user.user_metadata?.nome_completo ?? user.email ?? 'Utilizador'
   const barbeariaName = barbearia?.nome ?? 'A minha barbearia'
 
-  const headersList = await headers()
-  const trialDays = headersList.get('x-trial-days')
-
   return (
     <div className="flex min-h-screen bg-[#f7f5f0]">
       <Sidebar userName={userName} barbeariaName={barbeariaName} />
       <main className="flex-1 min-w-0 lg:ml-0">
-        {trialDays && (
-          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2.5 text-center text-sm text-amber-800">
-            <strong>Trial:</strong> O teu período de teste termina em{' '}
-            <strong>{trialDays} {Number(trialDays) === 1 ? 'dia' : 'dias'}</strong>.{' '}
-            <a href="https://wa.me/351934089768" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-amber-900">
-              Contacta-nos para subscrever →
-            </a>
-          </div>
-        )}
         <div className="p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 max-w-[1400px] mx-auto">{children}</div>
       </main>
     </div>

@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Dados em falta' }, { status: 400 })
   }
 
-  const planosValidos = ['trial', 'mensal', 'vitalicio', 'suspenso']
+  const planosValidos = ['mensal', 'vitalicio', 'suspenso']
   if (!planosValidos.includes(plano)) {
     return NextResponse.json({ error: 'Plano inválido' }, { status: 400 })
   }

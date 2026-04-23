@@ -15,7 +15,6 @@ function TipoBadge({ tipo }: { tipo: string | null }) {
   const map: Record<string, { label: string; cls: string }> = {
     mensal: { label: 'Mensal', cls: 'badge badge-green' },
     vitalicio: { label: 'Vitalício', cls: 'badge badge-gold' },
-    trial_ext: { label: 'Extensão Trial', cls: 'badge badge-amber' },
   }
   const key = tipo ?? ''
   const style = map[key] ?? { label: tipo ?? 'Outro', cls: 'badge badge-gray' }

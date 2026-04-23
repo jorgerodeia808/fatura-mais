@@ -446,8 +446,7 @@ export default function OnboardingPage() {
           hora_abertura: barbearia.hora_abertura,
           hora_fecho: barbearia.hora_fecho,
           dias_trabalho_mes: parseInt(barbearia.dias_trabalho_mes) || 22,
-          plano: 'trial',
-          trial_termina_em: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+          plano: 'suspenso',
         })
         .select()
         .single()

@@ -8,7 +8,6 @@ interface Barbearia {
   id: string
   nome: string
   plano: string | null
-  trial_termina_em: string | null
   criado_em: string
   valor_pago_total: number | null
   metodo_pagamento: string | null
@@ -32,10 +31,9 @@ interface Pagamento {
   criado_em: string
 }
 
-const PLANOS = ['trial', 'mensal', 'vitalicio', 'suspenso']
+const PLANOS = ['mensal', 'vitalicio', 'suspenso']
 
 const planoBadge: Record<string, string> = {
-  trial: 'bg-[#977c30]/10 text-[#977c30] border border-[#977c30]/20',
   mensal: 'bg-[#0e4324]/10 text-[#0e4324] border border-[#0e4324]/20',
   vitalicio: 'bg-[#977c30]/15 text-[#7a6228] border border-[#977c30]/30',
   suspenso: 'bg-red-50 text-red-700 border border-red-200',
@@ -43,9 +41,8 @@ const planoBadge: Record<string, string> = {
 
 export default function ClienteDetalhe({ barbearia, email, pagamentos }: { barbearia: Barbearia; email: string; pagamentos: Pagamento[] }) {
   const router = useRouter()
-  const [planoSelecionado, setPlanoSelecionado] = useState(barbearia.plano ?? 'trial')
+  const [planoSelecionado, setPlanoSelecionado] = useState(barbearia.plano ?? 'suspenso')
   const [notas, setNotas] = useState(barbearia.notas ?? '')
-  const [diasExtensao, setDiasExtensao] = useState('7')
   const [loading, setLoading] = useState<string | null>(null)
   const [toast, setToast] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
@@ -95,35 +92,10 @@ export default function ClienteDetalhe({ barbearia, email, pagamentos }: { barbe
     }
   }
 
-  const handleEstenderTrial = async () => {
-    const dias = parseInt(diasExtensao)
-    if (!dias || dias < 1) { showToast('Introduz um número de dias válido', 'error'); return }
-    setLoading('trial')
-    const res = await fetch('/api/admin/estender-trial', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ barbearia_id: barbearia.id, dias }),
-    })
-    setLoading(null)
-    if (res.ok) {
-      const data = await res.json()
-      const novaData = new Date(data.nova_data).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })
-      showToast(`Trial estendido até ${novaData} ✓`)
-      router.refresh()
-    } else {
-      const data = await res.json()
-      showToast(data.error ?? 'Erro ao estender trial', 'error')
-    }
-  }
-
   const formatDate = (iso: string | null) => {
     if (!iso) return '—'
     return new Date(iso).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })
   }
-
-  const trialDias = barbearia.trial_termina_em
-    ? Math.ceil((new Date(barbearia.trial_termina_em).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-    : null
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -157,11 +129,6 @@ export default function ClienteDetalhe({ barbearia, email, pagamentos }: { barbe
           <div><p className="text-xs text-ink-secondary mb-0.5">Horário</p><p className="font-medium">{barbearia.hora_abertura ?? '—'} – {barbearia.hora_fecho ?? '—'}</p></div>
           <div><p className="text-xs text-ink-secondary mb-0.5">Dias trabalho/mês</p><p className="font-medium">{barbearia.dias_trabalho_mes ?? '—'}</p></div>
           <div><p className="text-xs text-ink-secondary mb-0.5">Total pago</p><p className="font-medium text-verde">{barbearia.valor_pago_total != null ? new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(barbearia.valor_pago_total) : '—'}</p></div>
-          <div><p className="text-xs text-ink-secondary mb-0.5">Trial termina</p>
-            <p className={`font-medium ${trialDias !== null && trialDias <= 0 ? 'text-red-600' : trialDias !== null && trialDias <= 3 ? 'text-[#977c30]' : ''}`}>
-              {formatDate(barbearia.trial_termina_em)}{trialDias !== null && ` (${trialDias}d)`}
-            </p>
-          </div>
           <div><p className="text-xs text-ink-secondary mb-0.5">Indicado por</p><p className="font-medium">{barbearia.indicado_por ?? '—'}</p></div>
           {barbearia.subscricao_inicio && (
             <div><p className="text-xs text-ink-secondary mb-0.5">Subscrição desde</p><p className="font-medium">{formatDate(barbearia.subscricao_inicio)}</p></div>
@@ -249,32 +216,6 @@ export default function ClienteDetalhe({ barbearia, email, pagamentos }: { barbe
           <button onClick={handleRenovarSubscricao} disabled={loading === 'renovar'}
             className="btn-primary disabled:opacity-50">
             {loading === 'renovar' ? 'A renovar...' : 'Confirmar pagamento e renovar'}
-          </button>
-        </div>
-      </div>
-
-      {/* Extensão de trial */}
-      <div className="card space-y-4">
-        <h2 className="section-title">Extensão de trial</h2>
-        <p className="text-sm text-ink-secondary">Adiciona dias ao trial deste cliente. Se o trial já expirou, a extensão começa a partir de hoje.</p>
-        <div className="flex gap-3 items-end">
-          <div className="flex-1">
-            <label className="block text-xs font-medium text-ink-secondary mb-1">Dias a adicionar</label>
-            <input
-              type="number"
-              value={diasExtensao}
-              onChange={e => setDiasExtensao(e.target.value)}
-              min="1"
-              max="365"
-              className="w-full border border-[#e8e4dc] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
-            />
-          </div>
-          <button
-            onClick={handleEstenderTrial}
-            disabled={loading === 'trial'}
-            className="btn-secondary disabled:opacity-50 whitespace-nowrap"
-          >
-            {loading === 'trial' ? 'A estender...' : 'Estender trial'}
           </button>
         </div>
       </div>

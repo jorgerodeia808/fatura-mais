@@ -7,7 +7,6 @@ interface Barbearia {
   id: string
   nome: string
   plano: string | null
-  trial_termina_em: string | null
   criado_em: string
   valor_pago_total: number | null
   metodo_pagamento: string | null
@@ -17,7 +16,6 @@ interface Barbearia {
 
 function PlanoBadge({ plano }: { plano: string | null }) {
   const map: Record<string, { label: string; cls: string }> = {
-    trial: { label: 'Trial', cls: 'badge badge-amber' },
     mensal: { label: 'Mensal', cls: 'badge badge-green' },
     vitalicio: { label: 'Vitalício', cls: 'badge badge-gold' },
     suspenso: { label: 'Suspenso', cls: 'badge badge-red' },
@@ -32,21 +30,7 @@ function formatDate(iso: string | null) {
   return new Date(iso).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-function formatTrialDate(iso: string | null, plano: string | null) {
-  if (plano !== 'trial') return <span className="text-ink-secondary/30">—</span>
-  if (!iso) return <span className="text-ink-secondary">Sem data</span>
-  const now = new Date()
-  const d = new Date(iso)
-  const diff = Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-  const dateStr = new Date(iso).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })
-  if (diff > 0) {
-    return <span className="text-[#977c30]">{dateStr} <span className="text-xs">({diff}d)</span></span>
-  }
-  return <span className="text-red-600">{dateStr} <span className="text-xs">(exp.)</span></span>
-}
-
 const planoPillColors: Record<string, string> = {
-  trial: 'bg-[#977c30]/10 text-[#977c30] border border-[#977c30]/20',
   mensal: 'bg-[#0e4324]/10 text-[#0e4324] border border-[#0e4324]/20',
   vitalicio: 'bg-[#977c30]/15 text-[#7a6228] border border-[#977c30]/30',
   suspenso: 'bg-red-50 text-red-700 border border-red-200',
@@ -81,7 +65,7 @@ export default function ClientesAdmin({ barbearias }: { barbearias: Barbearia[] 
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {['trial', 'mensal', 'vitalicio', 'suspenso'].map((plano) => {
+        {['mensal', 'vitalicio', 'suspenso'].map((plano) => {
           const count = barbearias.filter((b) => b.plano === plano).length
           return (
             <span
@@ -102,7 +86,6 @@ export default function ClientesAdmin({ barbearias }: { barbearias: Barbearia[] 
               <tr className="bg-[#f7f4ee] border-b border-[#e8e4dc]">
                 <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">Nome</th>
                 <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">Plano</th>
-                <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">Trial termina</th>
                 <th className="text-right px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">Total pago (€)</th>
                 <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">Registado em</th>
                 <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">Ações</th>
@@ -111,7 +94,7 @@ export default function ClientesAdmin({ barbearias }: { barbearias: Barbearia[] 
             <tbody className="divide-y divide-[#f0ece4]">
               {filtradas.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-16 text-center">
+                  <td colSpan={5} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <span className="material-symbols-outlined text-[40px] text-ink-secondary/40 leading-none" style={{ fontVariationSettings: "'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 40" }}>store</span>
                       <p className="text-ink-secondary text-sm">{search ? 'Nenhum resultado para a pesquisa.' : 'Nenhuma barbearia registada.'}</p>
@@ -128,7 +111,6 @@ export default function ClientesAdmin({ barbearias }: { barbearias: Barbearia[] 
                       </div>
                     </td>
                     <td className="px-6 py-3.5"><PlanoBadge plano={b.plano} /></td>
-                    <td className="px-6 py-3.5">{formatTrialDate(b.trial_termina_em, b.plano)}</td>
                     <td className="px-6 py-3.5 text-right">
                       {b.valor_pago_total != null ? (
                         <span className="font-semibold text-verde">{new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(b.valor_pago_total)}</span>

@@ -4,14 +4,12 @@ interface Barbearia {
   id: string
   nome: string
   plano: string | null
-  trial_termina_em: string | null
   criado_em: string
   user_id: string
 }
 
 function PlanoBadge({ plano }: { plano: string | null }) {
   const map: Record<string, { label: string; cls: string }> = {
-    trial: { label: 'Trial', cls: 'badge badge-amber' },
     mensal: { label: 'Mensal', cls: 'badge badge-green' },
     vitalicio: { label: 'Vitalício', cls: 'badge badge-gold' },
     suspenso: { label: 'Suspenso', cls: 'badge badge-red' },
@@ -56,20 +54,12 @@ export default async function AdminPage() {
 
   const { data: barbearias } = await supabase
     .from('barbearias')
-    .select('id, nome, plano, trial_termina_em, criado_em, user_id')
+    .select('id, nome, plano, criado_em, user_id')
     .order('criado_em', { ascending: false })
 
   const list = (barbearias as unknown as Barbearia[]) ?? []
 
-  const now = new Date()
-
   const total = list.length
-  const emTrial = list.filter(
-    (b) =>
-      b.plano === 'trial' &&
-      b.trial_termina_em &&
-      new Date(b.trial_termina_em) > now
-  ).length
   const assinantes = list.filter(
     (b) => b.plano === 'mensal' || b.plano === 'vitalicio'
   ).length
@@ -84,15 +74,6 @@ export default async function AdminPage() {
       month: '2-digit',
       year: 'numeric',
     })
-  }
-
-  function trialLabel(iso: string | null, plano: string | null) {
-    if (plano !== 'trial') return '—'
-    if (!iso) return 'Sem data'
-    const d = new Date(iso)
-    const diff = Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-    if (diff > 0) return `em ${diff} dias`
-    return `expirou há ${Math.abs(diff)} dias`
   }
 
   return (
@@ -113,18 +94,12 @@ export default async function AdminPage() {
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <MetricCard
           label="Total Barbearias"
           value={total}
           icon="store"
           sub="total"
-        />
-        <MetricCard
-          label="Em Trial"
-          value={emTrial}
-          icon="hourglass_empty"
-          sub="ativo"
         />
         <MetricCard
           label="Assinantes Ativos"
@@ -158,15 +133,12 @@ export default async function AdminPage() {
                 <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
                   Registo
                 </th>
-                <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">
-                  Trial termina
-                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f0ece4]">
               {recentSignups.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-ink-secondary text-sm">
+                  <td colSpan={3} className="px-6 py-12 text-center text-ink-secondary text-sm">
                     Nenhuma barbearia registada ainda.
                   </td>
                 </tr>
@@ -178,21 +150,6 @@ export default async function AdminPage() {
                       <PlanoBadge plano={b.plano} />
                     </td>
                     <td className="px-6 py-3.5 text-ink-secondary">{formatDate(b.criado_em)}</td>
-                    <td className="px-6 py-3.5">
-                      {b.plano === 'trial' ? (
-                        <span
-                          className={
-                            b.trial_termina_em && new Date(b.trial_termina_em) > now
-                              ? 'text-[#977c30] text-sm'
-                              : 'text-red-600 text-sm'
-                          }
-                        >
-                          {trialLabel(b.trial_termina_em, b.plano)}
-                        </span>
-                      ) : (
-                        <span className="text-ink-secondary/30">—</span>
-                      )}
-                    </td>
                   </tr>
                 ))
               )}

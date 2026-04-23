@@ -7,7 +7,7 @@ export default async function ClienteDetalhePage({ params }: { params: { id: str
 
   const { data: barb } = await supabase
     .from('barbearias')
-    .select('id, nome, plano, trial_termina_em, criado_em, valor_pago_total, metodo_pagamento, indicado_por, notas, num_barbeiros, hora_abertura, hora_fecho, dias_trabalho_mes, user_id, subscricao_inicio, subscricao_renovacao')
+    .select('id, nome, plano, criado_em, valor_pago_total, metodo_pagamento, indicado_por, notas, num_barbeiros, hora_abertura, hora_fecho, dias_trabalho_mes, user_id, subscricao_inicio, subscricao_renovacao')
     .eq('id', params.id)
     .single()
 
