@@ -129,7 +129,7 @@ function EmptyState() {
     <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
       <div
         className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
-        style={{ background: 'rgba(14,67,36,0.06)' }}
+        style={{ background: 'rgb(var(--verde) / 0.06)' }}
       >
         <span
           className="material-symbols-outlined text-verde"
@@ -791,13 +791,13 @@ export default function DashboardPage() {
         <div
           className="rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4"
           style={{
-            background: 'rgba(14,67,36,0.04)',
-            border: '0.5px solid rgba(14,67,36,0.12)',
+            background: 'rgb(var(--verde) / 0.04)',
+            border: '0.5px solid rgb(var(--verde) / 0.12)',
           }}
         >
           <div
             className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(14,67,36,0.08)' }}
+            style={{ background: 'rgb(var(--verde) / 0.08)' }}
           >
             <span
               className="material-symbols-outlined text-verde"
@@ -840,7 +840,7 @@ export default function DashboardPage() {
             {taxaOcupacao < 70 && (
               <div
                 className="flex items-start gap-3 p-3 rounded-lg"
-                style={{ background: '#f9f7f2' }}
+                style={{ background: 'rgb(var(--verde) / 0.04)' }}
               >
                 <span
                   className="material-symbols-outlined flex-shrink-0 mt-0.5"
@@ -858,7 +858,7 @@ export default function DashboardPage() {
             {margemMedia < 60 && servicos.length > 0 && (
               <div
                 className="flex items-start gap-3 p-3 rounded-lg"
-                style={{ background: '#f9f7f2' }}
+                style={{ background: 'rgb(var(--verde) / 0.04)' }}
               >
                 <span
                   className="material-symbols-outlined flex-shrink-0 mt-0.5"
@@ -876,7 +876,7 @@ export default function DashboardPage() {
             {resultadoLiquido > 0 && taxaOcupacao >= 70 && margemMedia >= 60 && (
               <div
                 className="flex items-start gap-3 p-3 rounded-lg"
-                style={{ background: 'rgba(14,67,36,0.04)' }}
+                style={{ background: 'rgb(var(--verde) / 0.04)' }}
               >
                 <span
                   className="material-symbols-outlined icon-filled flex-shrink-0 mt-0.5"

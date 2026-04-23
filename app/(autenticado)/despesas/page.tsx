@@ -212,8 +212,8 @@ export default function DespesasPage() {
     return (
       <div className="space-y-6">
         <Sk className="h-9 w-52" />
-        <div className="grid grid-cols-3 gap-4">
-          <Sk className="h-28" /><Sk className="h-28" /><Sk className="h-28" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <Sk className="h-28 col-span-2 sm:col-span-1" /><Sk className="h-28" /><Sk className="h-28" />
         </div>
         <div className="flex flex-col lg:flex-row gap-5">
           <Sk className="w-full lg:w-[340px] h-[480px] lg:flex-shrink-0" />
@@ -252,9 +252,9 @@ export default function DespesasPage() {
       </div>
 
       {/* ── Metric cards ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {/* Total do mês */}
-        <div className="metric-card metric-card-accent">
+        <div className="metric-card metric-card-accent col-span-2 sm:col-span-1">
           <p className="metric-label mb-3">Total do mês</p>
           {loadingDespesas ? <Sk className="h-9 w-28 mb-1" /> : (
             <p className="metric-value text-red-800">{fmt(totalMes)}</p>

@@ -311,12 +311,12 @@ export default function FaturacaoPage() {
     return (
       <div className="space-y-6">
         <Sk className="h-9 w-52" />
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <Sk className="h-28" /><Sk className="h-28" /><Sk className="h-28" />
         </div>
-        <div className="flex gap-4">
-          <Sk className="w-[360px] h-[580px] flex-shrink-0" />
-          <Sk className="flex-1 h-[580px]" />
+        <div className="flex flex-col lg:flex-row gap-4">
+          <Sk className="w-full lg:w-[360px] h-[160px] lg:h-[580px] lg:flex-shrink-0" />
+          <Sk className="flex-1 h-[400px] lg:h-[580px]" />
         </div>
       </div>
     )
@@ -359,8 +359,8 @@ export default function FaturacaoPage() {
       </div>
 
       {/* ── Metric cards ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="metric-card metric-card-accent">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="metric-card metric-card-accent col-span-2 sm:col-span-1">
           <p className="metric-label mb-3">{isToday ? 'Receita do dia' : 'Receita faturada'}</p>
           {loadingRegistos ? <Sk className="h-9 w-28 mb-1" /> : (
             <p className="metric-value text-verde">{fmt(faturadoTotal)}</p>
