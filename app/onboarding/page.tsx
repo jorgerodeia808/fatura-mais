@@ -27,7 +27,7 @@ interface CustoFixo {
 
 // Cor escura por nicho (para botões, destaques, barra de progresso)
 const primaryColor: Record<string, string> = {
-  barbeiro: '#0e4324',
+  barbeiro: '#2d2d2d',
   nails:    '#8B1A4A',
   lash:     '#3b0764',
   tatuador: '#111827',

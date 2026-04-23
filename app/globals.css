@@ -4,14 +4,41 @@
 
 /* ── CSS Variables — defaults (barbeiro). Overridden per nicho in layout.tsx ── */
 :root {
-  --verde:         14 67 36;     /* #0e4324 */
-  --verde-escuro:  10 48 25;     /* #0a3019 */
-  --verde-claro:   21 92 51;     /* #155c33 */
+  --verde:         45 45 45;     /* #2d2d2d barbeiro gray */
+  --verde-escuro:  20 20 20;
+  --verde-claro:   70 70 70;
   --dourado:       151 124 48;   /* #977c30 */
-  --dourado-claro: 184 154 69;   /* #b89a45 */
-  --dourado-escuro:122 99 37;    /* #7a6325 */
+  --dourado-claro: 184 154 69;
+  --dourado-escuro:122 99 37;
   --fundo:         252 249 243;  /* #fcf9f3 */
 }
+
+/* ── Force CSS variables onto compiled Tailwind utilities ── */
+/* Necessário porque o build pode ter o valor antigo compilado como hex */
+.bg-verde         { background-color: rgb(var(--verde) / 1) !important; }
+.bg-verde-escuro  { background-color: rgb(var(--verde-escuro) / 1) !important; }
+.bg-verde-claro   { background-color: rgb(var(--verde-claro) / 1) !important; }
+.text-verde       { color: rgb(var(--verde) / 1) !important; }
+.text-verde-escuro{ color: rgb(var(--verde-escuro) / 1) !important; }
+.border-verde     { border-color: rgb(var(--verde) / 1) !important; }
+.bg-dourado       { background-color: rgb(var(--dourado) / 1) !important; }
+.bg-dourado-escuro{ background-color: rgb(var(--dourado-escuro) / 1) !important; }
+.text-dourado     { color: rgb(var(--dourado) / 1) !important; }
+.text-dourado-escuro { color: rgb(var(--dourado-escuro) / 1) !important; }
+.bg-fundo         { background-color: rgb(var(--fundo) / 1) !important; }
+
+.hover\:bg-verde:hover         { background-color: rgb(var(--verde) / 1) !important; }
+.hover\:bg-verde-escuro:hover  { background-color: rgb(var(--verde-escuro) / 1) !important; }
+.hover\:bg-verde\/5:hover      { background-color: rgb(var(--verde) / 0.05) !important; }
+.hover\:bg-verde\/10:hover     { background-color: rgb(var(--verde) / 0.1) !important; }
+.hover\:text-verde:hover       { color: rgb(var(--verde) / 1) !important; }
+.hover\:bg-dourado-escuro:hover{ background-color: rgb(var(--dourado-escuro) / 1) !important; }
+
+.bg-verde\/5  { background-color: rgb(var(--verde) / 0.05) !important; }
+.bg-verde\/10 { background-color: rgb(var(--verde) / 0.1) !important; }
+.bg-verde\/20 { background-color: rgb(var(--verde) / 0.2) !important; }
+.bg-dourado\/10{ background-color: rgb(var(--dourado) / 0.1) !important; }
+.bg-dourado\/12{ background-color: rgb(var(--dourado) / 0.12) !important; }
 
 /* ── Base ─────────────────────────────────────────────────────────── */
 *, *::before, *::after {

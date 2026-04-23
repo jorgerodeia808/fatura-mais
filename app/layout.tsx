@@ -20,9 +20,9 @@ const notoSerif = Noto_Serif({
 // Espaços RGB para CSS variables (suporte a opacidade no Tailwind)
 const nichoCssVars: Record<string, string> = {
   barbeiro: `
-    --verde: 14 67 36;
-    --verde-escuro: 10 48 25;
-    --verde-claro: 21 92 51;
+    --verde: 45 45 45;
+    --verde-escuro: 20 20 20;
+    --verde-claro: 70 70 70;
     --dourado: 151 124 48;
     --dourado-claro: 184 154 69;
     --dourado-escuro: 122 99 37;

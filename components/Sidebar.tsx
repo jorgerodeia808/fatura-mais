@@ -13,7 +13,7 @@ interface SidebarProps {
 
 // Cores escuras para o fundo da sidebar por nicho
 const sidebarBg: Record<string, string> = {
-  barbeiro: '#0e4324',
+  barbeiro: '#2d2d2d',
   nails:    '#8B1A4A',
   lash:     '#3b0764',
   tatuador: '#111827',
