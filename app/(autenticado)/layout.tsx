@@ -16,9 +16,15 @@ export default async function AuthenticadoLayout({
 
   const { data: barbearia } = await supabase
     .from('barbearias')
-    .select('nome')
+    .select('nome, nicho')
     .eq('user_id', user.id)
     .single()
+
+  // Bloquear acesso se o nicho da barbearia não coincide com esta plataforma
+  const plataformaNicho = process.env.NEXT_PUBLIC_NICHO
+  if (plataformaNicho && barbearia?.nicho && barbearia.nicho !== plataformaNicho) {
+    redirect('/login?erro=plataforma_errada')
+  }
 
   const userName =
     user.user_metadata?.nome_completo ?? user.email ?? 'Utilizador'

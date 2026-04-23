@@ -23,6 +23,7 @@ export default function LoginPage() {
     const erro = params.get('erro')
     if (erro === 'link_expirado') setNotice('O link de acesso expirou. Pede ao administrador que reenvie o convite.')
     else if (erro === 'link_invalido') setNotice('O link de acesso é inválido. Pede ao administrador que reenvie o convite.')
+    else if (erro === 'plataforma_errada') setNotice('A tua conta não pertence a esta plataforma. Acede pela plataforma correta.')
   }, [])
 
   const handleLogin = async (e: React.FormEvent) => {

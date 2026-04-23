@@ -4,74 +4,41 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import Image from 'next/image'
+import { getNichoConfig } from '@/lib/nicho'
 
 interface SidebarProps {
   userName: string
   barbeariaName: string
 }
 
+// Cores escuras para o fundo da sidebar por nicho
+const sidebarBg: Record<string, string> = {
+  barbeiro: '#0e4324',
+  nails:    '#8B1A4A',
+  lash:     '#3b0764',
+  tatuador: '#111827',
+}
+
 const navItems = [
-  {
-    label: 'Dashboard',
-    href: '/dashboard',
-    icon: 'dashboard',
-    section: null,
-  },
-  {
-    label: 'Faturação',
-    href: '/faturacao',
-    icon: 'payments',
-    section: null,
-  },
-  {
-    label: 'Despesas',
-    href: '/despesas',
-    icon: 'receipt_long',
-    section: null,
-  },
-  {
-    label: 'Marcações',
-    href: '/marcacoes',
-    icon: 'calendar_month',
-    section: null,
-  },
-  {
-    label: 'Clientes',
-    href: '/clientes',
-    icon: 'group',
-    section: null,
-  },
-  {
-    label: 'Relatórios',
-    href: '/relatorios',
-    icon: 'bar_chart',
-    section: 'Análise',
-  },
-  {
-    label: 'Conselheiro IA',
-    href: '/conselheiro-ia',
-    icon: 'psychology',
-    section: null,
-  },
-  {
-    label: 'Configurações',
-    href: '/configuracoes',
-    icon: 'settings',
-    section: 'Sistema',
-  },
-  {
-    label: 'Perfil',
-    href: '/perfil',
-    icon: 'manage_accounts',
-    section: null,
-  },
+  { label: 'Dashboard',    href: '/dashboard',     icon: 'dashboard',       section: null },
+  { label: 'Faturação',    href: '/faturacao',      icon: 'payments',        section: null },
+  { label: 'Despesas',     href: '/despesas',       icon: 'receipt_long',    section: null },
+  { label: 'Marcações',    href: '/marcacoes',      icon: 'calendar_month',  section: null },
+  { label: 'Clientes',     href: '/clientes',       icon: 'group',           section: null },
+  { label: 'Relatórios',   href: '/relatorios',     icon: 'bar_chart',       section: 'Análise' },
+  { label: 'Conselheiro IA', href: '/conselheiro-ia', icon: 'psychology',    section: null },
+  { label: 'Configurações', href: '/configuracoes', icon: 'settings',        section: 'Sistema' },
+  { label: 'Perfil',       href: '/perfil',         icon: 'manage_accounts', section: null },
 ]
 
 export default function Sidebar({ userName, barbeariaName }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  const nicho = getNichoConfig()
+  const bg = sidebarBg[nicho.id] ?? '#0e4324'
+  const accent = nicho.corDestaque === '#ffffff' ? nicho.cor : nicho.corDestaque
 
   const handleSignOut = async () => {
     const supabase = createClient()
@@ -91,15 +58,14 @@ export default function Sidebar({ userName, barbeariaName }: SidebarProps) {
     <div className="flex flex-col h-full">
       {/* Logo / Brand */}
       <div className="flex items-center gap-2.5 px-4 py-5 border-b border-white/10">
-        <Image
-          src="/images/Logo_F_.png"
-          alt="Fatura+"
-          width={36}
-          height={36}
-          className="rounded-lg flex-shrink-0"
-        />
+        <div
+          className="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center font-bold text-sm"
+          style={{ backgroundColor: accent, color: bg }}
+        >
+          {nicho.letraLogo}+
+        </div>
         <span className="font-serif italic font-bold text-white text-lg leading-none">
-          Fatura<span className="text-[#977c30]">+</span>
+          {nicho.nome}
         </span>
         {/* Close button — mobile only */}
         <button
@@ -121,26 +87,22 @@ export default function Sidebar({ userName, barbeariaName }: SidebarProps) {
 
           return (
             <div key={item.href}>
-              {/* Section label */}
               {item.section && (
                 <p className="px-4 pt-4 pb-1 text-[10px] font-medium uppercase tracking-widest text-white/30">
                   {item.section}
                 </p>
               )}
-
               <Link
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
                 className={`flex items-center gap-2.5 py-2 pr-3 rounded-r-md mx-0 transition-all duration-150 text-sm font-medium font-sans ${
                   isActive
-                    ? 'border-l-2 border-[#977c30] bg-white/10 text-white pl-[14px]'
+                    ? 'bg-white/10 text-white pl-[14px]'
                     : 'text-white/60 hover:text-white hover:bg-white/[0.08] pl-4'
                 }`}
+                style={isActive ? { borderLeft: `2px solid ${accent}` } : undefined}
               >
-                <span
-                  className="material-symbols-outlined flex-shrink-0"
-                  style={{ fontSize: '20px' }}
-                >
+                <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '20px' }}>
                   {item.icon}
                 </span>
                 {item.label}
@@ -155,7 +117,7 @@ export default function Sidebar({ userName, barbeariaName }: SidebarProps) {
         <div className="flex items-center gap-2.5 mb-3">
           <div
             className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white"
-            style={{ backgroundColor: '#977c30' }}
+            style={{ backgroundColor: accent, color: bg }}
           >
             {initials || '?'}
           </div>
@@ -169,10 +131,7 @@ export default function Sidebar({ userName, barbeariaName }: SidebarProps) {
           className="flex items-center gap-1.5 text-white/40 hover:text-white/80 transition-colors p-1.5 rounded-md w-full"
           aria-label="Terminar sessão"
         >
-          <span
-            className="material-symbols-outlined flex-shrink-0"
-            style={{ fontSize: '18px' }}
-          >
+          <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: '18px' }}>
             logout
           </span>
           <span className="text-xs">Terminar sessão</span>
@@ -183,10 +142,11 @@ export default function Sidebar({ userName, barbeariaName }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile hamburger — fixed top-left */}
+      {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-40 w-9 h-9 bg-[#0e4324] text-white rounded-lg flex items-center justify-center shadow-md"
+        className="lg:hidden fixed top-4 left-4 z-40 w-9 h-9 text-white rounded-lg flex items-center justify-center shadow-md"
+        style={{ backgroundColor: bg }}
         aria-label="Abrir menu"
       >
         <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
@@ -203,15 +163,19 @@ export default function Sidebar({ userName, barbeariaName }: SidebarProps) {
       )}
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col w-[220px] flex-shrink-0 bg-[#0e4324] min-h-screen">
+      <aside
+        className="hidden lg:flex flex-col w-[220px] flex-shrink-0 min-h-screen"
+        style={{ backgroundColor: bg }}
+      >
         <SidebarContent />
       </aside>
 
       {/* Mobile sidebar — slide-in */}
       <aside
-        className={`lg:hidden fixed inset-y-0 left-0 z-50 w-[220px] bg-[#0e4324] flex flex-col transform transition-transform duration-300 ${
+        className={`lg:hidden fixed inset-y-0 left-0 z-50 w-[220px] flex flex-col transform transition-transform duration-300 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
+        style={{ backgroundColor: bg }}
       >
         <SidebarContent />
       </aside>
