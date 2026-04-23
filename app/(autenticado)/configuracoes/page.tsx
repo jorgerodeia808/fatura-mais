@@ -770,6 +770,7 @@ export default function ConfiguracoesPage() {
       </Section>
 
       {/* ─── SMS Marcações Online ───────────────────────────────── */}
+      {/* TODO: reativar quando migrar para WhatsApp
       <Section title="SMS de Marcações Online" description="Mensagens automáticas enviadas quando um cliente agenda pelo link público">
         {(['recebida', 'confirmada', 'cancelada'] as const).map((tipo) => {
           const labels = { recebida: 'Reserva recebida', confirmada: 'Reserva confirmada', cancelada: 'Reserva cancelada' }
@@ -814,6 +815,7 @@ export default function ConfiguracoesPage() {
           {saving === 'sms_online' ? 'A guardar...' : 'Guardar templates'}
         </button>
       </Section>
+      */}
 
       {/* ─── Marcações online ───────────────────────────────────── */}
       <Section title="Marcações online" description="Permite que os clientes agendem pelo link público">
