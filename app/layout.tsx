@@ -48,7 +48,7 @@ export function generateMetadata(): Metadata {
   const nicho = process.env.NEXT_PUBLIC_NICHO
   const meta = nicho ? nichoMeta[nicho] : null
 
-  const title = meta ? `Fatura+ | ${meta.nome}` : 'Fatura+ | Gestão para profissionais'
+  const title = meta ? meta.nome : 'Fatura+'
   const description = meta?.descricao ?? 'A plataforma de gestão para profissionais de beleza e estilo.'
   const url = meta?.url ?? 'https://fatura-mais.pt'
 

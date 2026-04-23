@@ -81,6 +81,8 @@ export default function LoginPage() {
           <div className="flex items-center gap-3">
             <NichoLogo size="md" />
             <span className="font-serif italic font-bold text-2xl text-white">
+              Fatura<span style={{ color: nicho.corDestaque }}>+</span>
+              <span className="font-sans not-italic font-light text-white/40 mx-2">|</span>
               {nicho.nome.slice(0, -1)}<span style={{ color: nicho.corDestaque }}>+</span>
             </span>
           </div>
@@ -125,6 +127,8 @@ export default function LoginPage() {
                 <NichoLogo size="lg" />
               </div>
               <span className="font-serif italic font-bold text-2xl" style={{ color: nicho.cor }}>
+                Fatura<span style={{ color: nicho.corDestaque === '#ffffff' ? nicho.cor : nicho.corDestaque }}>+</span>
+                <span className="font-sans not-italic font-light mx-2" style={{ color: `${nicho.cor}60` }}>|</span>
                 {nicho.nome.slice(0, -1)}<span style={{ color: nicho.corDestaque === '#ffffff' ? nicho.cor : nicho.corDestaque }}>+</span>
               </span>
             </div>
