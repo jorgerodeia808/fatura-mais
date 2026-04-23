@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getNichoConfig } from '@/lib/nicho'
 
 const SMS_TEMPLATE_PADRAO =
   'Olá [nome_cliente]! Lembrete da tua marcação em [nome_barbearia] amanhã, [data] às [hora] para [nome_servico]. Até amanhã!'
@@ -80,6 +81,7 @@ function Section({ title, description, children }: { title: string; description?
 
 export default function ConfiguracoesPage() {
   const supabase = createClient()
+  const nicho = getNichoConfig()
   const [barbearia, setBarbearia] = useState<Barbearia | null>(null)
   const [servicos, setServicos] = useState<Servico[]>([])
   const [custos, setCustos] = useState<CustoFixo[]>([])
@@ -360,7 +362,7 @@ export default function ConfiguracoesPage() {
     <div className="space-y-6 max-w-2xl">
       <div>
         <h1 className="text-2xl font-bold text-[#0e4324]">Configurações</h1>
-        <p className="text-gray-500 text-sm mt-0.5">Gere as preferências da tua barbearia</p>
+        <p className="text-gray-500 text-sm mt-0.5">Gere as preferências do teu {nicho.nomeNegocio}</p>
       </div>
 
       {toast && (
@@ -370,9 +372,9 @@ export default function ConfiguracoesPage() {
       )}
 
       {/* ─── Dados da barbearia ─────────────────────────────────── */}
-      <Section title="Dados da barbearia" description="Informações gerais do teu negócio">
+      <Section title={`Dados do ${nicho.nomeNegocio}`} description="Informações gerais do teu negócio">
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Nome da barbearia</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Nome do {nicho.nomeNegocio}</label>
           <input
             type="text"
             value={editBarbearia.nome}
@@ -382,7 +384,7 @@ export default function ConfiguracoesPage() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Nº de barbeiros</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Nº de {nicho.nomePlural}</label>
             <input
               type="number"
               value={editBarbearia.num_barbeiros}
@@ -432,7 +434,7 @@ export default function ConfiguracoesPage() {
       </Section>
 
       {/* ─── Serviços ────────────────────────────────────────────── */}
-      <Section title="Serviços" description="Gere os serviços disponíveis na tua barbearia">
+      <Section title="Serviços" description={`Gere os serviços disponíveis no teu ${nicho.nomeNegocio}`}>
         <div className="space-y-2">
           {servicos.length === 0 && (
             <p className="text-sm text-gray-400 text-center py-4">Nenhum serviço adicionado ainda.</p>
@@ -538,7 +540,7 @@ export default function ConfiguracoesPage() {
       </Section>
 
       {/* ─── Custos fixos ───────────────────────────────────────── */}
-      <Section title="Custos mensais" description="Gere os custos fixos e variáveis da tua barbearia">
+      <Section title="Custos mensais" description={`Gere os custos fixos e variáveis do teu ${nicho.nomeNegocio}`}>
         <div className="space-y-2">
           {custos.length === 0 && (
             <p className="text-sm text-gray-400 text-center py-4">Nenhum custo adicionado ainda.</p>
@@ -626,7 +628,7 @@ export default function ConfiguracoesPage() {
       </Section>
 
       {/* ─── Produtos ───────────────────────────────────────────── */}
-      <Section title="Produtos" description="Artigos à venda na tua barbearia (ceras, after shaves, etc.)">
+      <Section title="Produtos" description={`Artigos à venda no teu ${nicho.nomeNegocio}`}>
         <div className="space-y-2">
           {produtos.length === 0 && (
             <p className="text-sm text-gray-400 text-center py-4">Nenhum produto adicionado ainda.</p>

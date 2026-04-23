@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
+import { nichoConfigs } from '@/lib/nicho'
+import type { NichoId } from '@/lib/nicho'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -110,7 +112,10 @@ export async function POST(req: NextRequest) {
     if (totalMarcacoes > 0) scores.push(Math.min(100, (marcacoesConfirmadas / totalMarcacoes) * 100))
     const healthScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 50
 
-    const systemPrompt = `És o Conselheiro IA da plataforma Fatura+, um assistente financeiro especialista em barbearias portuguesas. O teu nome é "Conselheiro" e o teu objetivo é ajudar ${barbearia.nome} a crescer e otimizar o negócio.
+    const nichoId = (barbearia.nicho as NichoId) ?? 'barbeiro'
+    const nicho = nichoConfigs[nichoId] ?? nichoConfigs.barbeiro
+
+    const systemPrompt = `És o Conselheiro IA da plataforma ${nicho.nome}, um assistente financeiro especialista em ${nicho.nomeNegocio}s portugueses. O teu nome é "Conselheiro" e o teu objetivo é ajudar ${barbearia.nome} a crescer e otimizar o negócio.
 
 DADOS ATUAIS DA BARBEARIA (${barbearia.nome}):
 
@@ -138,7 +143,7 @@ INSTRUÇÕES:
 - Sê direto, prático e usa linguagem simples
 - Quando deres sugestões, dá valores concretos baseados nos dados reais
 - Usa emojis com moderação para tornar as respostas mais legíveis
-- Foca-te em ações concretas que o dono da barbearia pode tomar HOJE
+- Foca-te em ações concretas que o dono do ${nicho.nomeNegocio} pode tomar HOJE
 - Se o negócio estiver bem, reconhece isso mas sempre sugere melhorias
 - Se houver problemas, identifica-os claramente e propõe soluções específicas
 - Não inventes dados — usa apenas os dados fornecidos acima`

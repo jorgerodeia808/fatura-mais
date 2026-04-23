@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getNichoConfig } from '@/lib/nicho'
 
 interface Mensagem {
   role: 'user' | 'assistant'
@@ -99,6 +100,7 @@ function IndicadorDigitacao() {
 }
 
 export default function ConselheiroIAPage() {
+  const nicho = getNichoConfig()
   const [mensagens, setMensagens] = useState<Mensagem[]>([])
   const [input, setInput] = useState('')
   const [carregando, setCarregando] = useState(false)
@@ -284,7 +286,7 @@ export default function ConselheiroIAPage() {
   const iniciarAnalise = async () => {
     if (analiseInicial) return
     setAnaliseInicial(true)
-    await enviarMensagem('Faz uma análise completa da minha barbearia com base nos dados atuais e dá-me as tuas principais recomendações.')
+    await enviarMensagem(`Faz uma análise completa do meu ${nicho.nomeNegocio} com base nos dados atuais e dá-me as tuas principais recomendações.`)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -307,7 +309,7 @@ export default function ConselheiroIAPage() {
             <div>
               <h1 className="font-serif font-bold text-xl text-white">Conselheiro IA</h1>
               <p className="text-white/60 text-xs">
-                {carregandoMetricas ? 'A carregar dados...' : `Especialista em ${metricas?.nome || 'Barbearia'}`}
+                {carregandoMetricas ? 'A carregar dados...' : `Especialista em ${metricas?.nome || nicho.nomeNegocio}`}
               </p>
             </div>
           </div>
@@ -343,7 +345,7 @@ export default function ConselheiroIAPage() {
                     className="btn-primary mx-auto mb-6 flex items-center gap-2"
                   >
                     <span className="material-symbols-outlined" style={{fontSize:'18px'}}>search</span>
-                    Analisar a minha barbearia agora
+                    Analisar o meu {nicho.nomeNegocio} agora
                   </button>
                 )}
 

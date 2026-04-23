@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { getNichoConfig } from '@/lib/nicho'
 import {
   BarChart,
   Bar,
@@ -152,6 +153,7 @@ function EmptyState() {
 // ── Main Dashboard ──────────────────────────────────────────────────
 export default function DashboardPage() {
   const supabase = createClient()
+  const nicho = getNichoConfig()
   const [loading, setLoading] = useState(true)
   const [barbearia, setBarbearia] = useState<Barbearia | null>(null)
   const [faturacaoMes, setFaturacaoMes] = useState<FaturacaoRow[]>([])
@@ -381,7 +383,7 @@ export default function DashboardPage() {
   if (hasData && resultadoLiquido < 0) {
     alerts.push({
       type: 'critical',
-      message: `Resultado líquido negativo de ${fmt(resultadoLiquido)} este mês — a barbearia está a operar com prejuízo. Ação imediata recomendada.`,
+      message: `Resultado líquido negativo de ${fmt(resultadoLiquido)} este mês — o teu ${nicho.nomeNegocio} está a operar com prejuízo. Ação imediata recomendada.`,
     })
   }
 
@@ -883,7 +885,7 @@ export default function DashboardPage() {
                   check_circle
                 </span>
                 <p className="text-sm text-ink-secondary">
-                  A barbearia está a operar de forma saudável. Mantém o ritmo e considera
+                  O teu {nicho.nomeNegocio} está a operar de forma saudável. Mantém o ritmo e considera
                   reinvestir os lucros para continuar a crescer.
                 </p>
               </div>
