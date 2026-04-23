@@ -29,12 +29,12 @@ const nichoCssVars: Record<string, string> = {
     --fundo: 252 249 243;
   `,
   nails: `
-    --verde: 139 26 74;
-    --verde-escuro: 107 18 56;
-    --verde-claro: 168 34 94;
-    --dourado: 244 143 177;
-    --dourado-claro: 249 168 196;
-    --dourado-escuro: 190 100 130;
+    --verde: 219 39 119;
+    --verde-escuro: 190 24 93;
+    --verde-claro: 236 72 153;
+    --dourado: 244 114 182;
+    --dourado-claro: 249 168 212;
+    --dourado-escuro: 190 24 93;
     --fundo: 255 245 248;
   `,
   lash: `
