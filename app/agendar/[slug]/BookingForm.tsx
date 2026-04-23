@@ -153,14 +153,14 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
     const dataObj = new Date(`${dataSelecionada}T${horaSelecionada}:00`)
     return (
       <div className="bg-white rounded-2xl p-8 text-center shadow-sm" style={{ border: '0.5px solid rgba(0,0,0,0.08)' }}>
-        <div className="w-16 h-16 bg-[#0e4324]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span className="material-symbols-outlined text-[#0e4324]" style={{ fontSize: '32px' }}>check_circle</span>
+        <div className="w-16 h-16 bg-verde/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span className="material-symbols-outlined text-verde" style={{ fontSize: '32px' }}>check_circle</span>
         </div>
-        <h2 className="text-xl font-serif font-bold text-[#0e4324] mb-2">Marcação confirmada!</h2>
+        <h2 className="text-xl font-serif font-bold text-verde mb-2">Marcação confirmada!</h2>
         <p className="text-gray-600 mb-4">
           A tua marcação foi registada com sucesso.
         </p>
-        <div className="bg-[#f0f7f3] rounded-xl p-4 text-left space-y-2 mb-6">
+        <div className="bg-verde/5 rounded-xl p-4 text-left space-y-2 mb-6">
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Serviço</span>
             <span className="font-medium text-gray-800">{servicoSelecionado?.nome}</span>
@@ -178,7 +178,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
             <span className="font-medium text-gray-800">{nome}</span>
           </div>
         </div>
-        <p className="text-xs text-gray-400">Aguarda a confirmação da barbearia.</p>
+        <p className="text-xs text-gray-400">Aguarda a confirmação.</p>
       </div>
     )
   }
@@ -190,12 +190,12 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
         {([1, 2, 3] as const).map(s => (
           <div key={s} className="flex items-center gap-2 flex-1">
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-              step >= s ? 'bg-[#0e4324] text-white' : 'bg-gray-200 text-gray-400'
+              step >= s ? 'bg-verde text-white' : 'bg-gray-200 text-gray-400'
             }`}>{s}</div>
-            <div className={`text-xs font-medium transition-colors ${step >= s ? 'text-[#0e4324]' : 'text-gray-400'}`}>
+            <div className={`text-xs font-medium transition-colors ${step >= s ? 'text-verde' : 'text-gray-400'}`}>
               {s === 1 ? 'Serviço' : s === 2 ? 'Data & Hora' : 'Os teus dados'}
             </div>
-            {s < 3 && <div className={`flex-1 h-px ${step > s ? 'bg-[#0e4324]' : 'bg-gray-200'}`} />}
+            {s < 3 && <div className={`flex-1 h-px ${step > s ? 'bg-verde' : 'bg-gray-200'}`} />}
           </div>
         ))}
       </div>
@@ -216,7 +216,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
                     onClick={() => setServicoSelecionado(active ? null : s)}
                     className={`w-full flex items-center justify-between p-4 rounded-xl transition-all text-left ${
                       active
-                        ? 'bg-[#0e4324] text-white'
+                        ? 'bg-verde text-white'
                         : 'bg-gray-50 hover:bg-gray-100 text-gray-800 border border-gray-200'
                     }`}
                   >
@@ -224,7 +224,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
                       <p className="font-medium">{s.nome}</p>
                       <p className={`text-sm mt-0.5 ${active ? 'text-white/70' : 'text-gray-500'}`}>{s.tempo_minutos} min</p>
                     </div>
-                    <p className={`font-serif font-semibold text-lg ${active ? 'text-white' : 'text-[#0e4324]'}`}>{fmt(s.preco)}</p>
+                    <p className={`font-serif font-semibold text-lg ${active ? 'text-white' : 'text-verde'}`}>{fmt(s.preco)}</p>
                   </button>
                 )
               })}
@@ -233,7 +233,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
           <button
             onClick={() => setStep(2)}
             disabled={!servicoSelecionado}
-            className="mt-6 w-full bg-[#0e4324] text-white py-3 rounded-xl font-medium disabled:opacity-40 transition-colors hover:bg-[#0a3019]"
+            className="btn-primary w-full mt-6 py-3 disabled:opacity-40"
           >
             Continuar
           </button>
@@ -248,7 +248,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
           {/* Datas */}
           <div>
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Data</p>
-            <div className="flex gap-2 overflow-x-auto pb-2">
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
               {datasDisponiveis.map(d => {
                 const iso = d.toISOString().split('T')[0]
                 const active = dataSelecionada === iso
@@ -257,7 +257,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
                     key={iso}
                     onClick={() => { setDataSelecionada(iso); setHoraSelecionada('') }}
                     className={`flex-shrink-0 flex flex-col items-center px-3 py-2 rounded-xl transition-all text-sm ${
-                      active ? 'bg-[#0e4324] text-white' : 'bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100'
+                      active ? 'bg-verde text-white' : 'bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100'
                     }`}
                   >
                     <span className={`text-xs font-medium uppercase ${active ? 'text-white/70' : 'text-gray-400'}`}>
@@ -297,7 +297,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
                         className={`py-2 rounded-lg text-sm font-medium transition-all ${
                           bloqueado ? 'bg-orange-50 text-orange-300 cursor-not-allowed' :
                           ocupado   ? 'bg-gray-100 text-gray-300 cursor-not-allowed line-through' :
-                          active    ? 'bg-[#0e4324] text-white' :
+                          active    ? 'bg-verde text-white' :
                           'bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100'
                         }`}
                       >
@@ -320,7 +320,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
             <button
               onClick={() => setStep(3)}
               disabled={!dataSelecionada || !horaSelecionada}
-              className="flex-1 bg-[#0e4324] text-white py-3 rounded-xl font-medium disabled:opacity-40 transition-colors hover:bg-[#0a3019]"
+              className="btn-primary flex-1 py-3 disabled:opacity-40"
             >
               Continuar
             </button>
@@ -335,7 +335,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
           <p className="text-sm text-gray-400 mb-5">Para confirmar a tua marcação.</p>
 
           {/* Resumo */}
-          <div className="bg-[#f0f7f3] rounded-xl p-4 mb-5 space-y-1.5">
+          <div className="bg-verde/5 rounded-xl p-4 mb-5 space-y-1.5">
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Serviço</span>
               <span className="font-medium text-gray-800">{servicoSelecionado?.nome} · {fmt(servicoSelecionado?.preco ?? 0)}</span>
@@ -360,7 +360,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
                 value={nome}
                 onChange={e => setNome(e.target.value)}
                 placeholder="O teu nome"
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+                className="input-field"
               />
             </div>
             <div>
@@ -370,7 +370,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
                 value={telemovel}
                 onChange={e => setTelemovel(e.target.value)}
                 placeholder="+351 912 345 678"
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
+                className="input-field"
               />
             </div>
           </div>
@@ -392,7 +392,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="flex-1 bg-[#0e4324] text-white py-3 rounded-xl font-medium disabled:opacity-50 transition-colors hover:bg-[#0a3019] flex items-center justify-center gap-2"
+              className="btn-primary flex-1 py-3 disabled:opacity-50"
             >
               {submitting ? (
                 <>

@@ -34,11 +34,11 @@ export default function RecuperarPasswordPage() {
   return (
     <div className="flex min-h-screen">
       <div className="hidden lg:flex lg:w-1/2">
-        <div className="flex flex-col justify-between bg-[#0e4324] text-white p-12 min-h-screen w-full">
+        <div className="flex flex-col justify-between bg-verde text-white p-12 min-h-screen w-full">
           <div>
             <Image src="/images/Logo_F_.png" alt="Fatura+" width={44} height={44} />
             <h1 className="font-serif italic font-bold text-3xl text-white mt-4">
-              Fatura<span className="text-[#977c30]">+</span>
+              Fatura<span className="text-dourado">+</span>
             </h1>
           </div>
           <div>
@@ -51,18 +51,18 @@ export default function RecuperarPasswordPage() {
           </div>
           <div className="relative h-24">
             <div className="absolute bottom-0 right-0 w-32 h-32 bg-white/5 rounded-full" />
-            <div className="absolute bottom-4 right-8 w-16 h-16 bg-[#977c30]/20 rounded-full" />
+            <div className="absolute bottom-4 right-8 w-16 h-16 bg-dourado/20 rounded-full" />
           </div>
         </div>
       </div>
 
       <div className="w-full lg:w-1/2">
-        <div className="flex items-center justify-center px-6 py-12 min-h-screen bg-[#fcf9f3]">
+        <div className="flex items-center justify-center px-6 py-12 min-h-screen bg-fundo">
           <div className="w-full max-w-sm">
             <div className="lg:hidden text-center mb-8">
               <Image src="/images/Logo_F_.png" alt="Fatura+" width={56} height={56} className="mx-auto mb-3" />
-              <h1 className="font-serif italic font-bold text-2xl text-[#0e4324]">
-                Fatura<span className="text-[#977c30]">+</span>
+              <h1 className="font-serif italic font-bold text-2xl text-verde">
+                Fatura<span className="text-dourado">+</span>
               </h1>
             </div>
 
@@ -71,25 +71,25 @@ export default function RecuperarPasswordPage() {
                 <div className="w-16 h-16 rounded-2xl bg-green-50 flex items-center justify-center mx-auto mb-5">
                   <span className="material-symbols-outlined text-green-600" style={{ fontSize: '32px' }}>mark_email_read</span>
                 </div>
-                <h2 className="font-serif font-bold text-2xl text-[#1c1c18] mb-2">Email enviado</h2>
-                <p className="text-sm text-[#717971] mb-6">
+                <h2 className="font-serif font-bold text-2xl text-ink mb-2">Email enviado</h2>
+                <p className="text-sm text-ink-secondary mb-6">
                   Se o email <strong>{email}</strong> estiver registado, recebes um link para redefinir a password.
                   Verifica a caixa de entrada e a pasta de spam.
                 </p>
-                <Link href="/login" className="text-sm text-[#977c30] font-semibold hover:opacity-80 transition-opacity">
+                <Link href="/login" className="text-sm text-dourado font-semibold hover:opacity-80 transition-opacity">
                   ← Voltar ao login
                 </Link>
               </div>
             ) : (
               <>
-                <h2 className="font-serif font-bold text-2xl text-[#1c1c18] mb-1">Esqueceste a password?</h2>
-                <p className="text-sm text-[#717971] mb-8">
+                <h2 className="font-serif font-bold text-2xl text-ink mb-1">Esqueceste a password?</h2>
+                <p className="text-sm text-ink-secondary mb-8">
                   Introduz o teu email e enviamos um link para definires uma nova password.
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#1c1c18] mb-1.5">Email</label>
+                    <label className="block text-sm font-medium text-ink mb-1.5">Email</label>
                     <input
                       type="email"
                       value={email}
@@ -126,8 +126,8 @@ export default function RecuperarPasswordPage() {
                   </button>
                 </form>
 
-                <p className="text-center text-sm text-[#717971] mt-6">
-                  <Link href="/login" className="text-[#977c30] font-semibold hover:opacity-80 transition-opacity">
+                <p className="text-center text-sm text-ink-secondary mt-6">
+                  <Link href="/login" className="text-dourado font-semibold hover:opacity-80 transition-opacity">
                     ← Voltar ao login
                   </Link>
                 </p>

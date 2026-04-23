@@ -26,9 +26,9 @@ export default async function AgendarPage({ params }: PageProps) {
     .order('nome')
 
   return (
-    <div className="min-h-screen bg-[#fcf9f3]">
+    <div className="min-h-screen bg-fundo">
       {/* Header */}
-      <div className="bg-[#0e4324] text-white py-8 px-4 text-center">
+      <div className="bg-verde text-white py-8 px-4 text-center">
         <p className="text-white/60 text-sm mb-1">Marcação online</p>
         <h1 className="text-2xl font-serif font-bold">{barbearia.nome}</h1>
       </div>

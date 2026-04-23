@@ -48,18 +48,18 @@ export default function PedirAcessoPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#fcf9f3] flex items-center justify-center px-4 py-16">
+      <div className="min-h-screen bg-fundo flex items-center justify-center px-4 py-16">
         <div className="w-full max-w-md text-center">
           <Image src="/images/Logo_F_.png" alt="Fatura+" width={56} height={56} className="mx-auto mb-3" />
-          <p className="font-serif italic font-bold text-xl text-[#0e4324] mb-8">
-            Fatura<span className="text-[#977c30]">+</span>
+          <p className="font-serif italic font-bold text-xl text-verde mb-8">
+            Fatura<span className="text-dourado">+</span>
           </p>
-          <div className="bg-white rounded-2xl p-8" style={{ border: '0.5px solid rgba(0,0,0,0.08)', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
-            <div className="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center mx-auto mb-5">
-              <span className="material-symbols-outlined text-[#0e4324]" style={{ fontSize: '28px' }}>check_circle</span>
+          <div className="card p-8">
+            <div className="w-14 h-14 rounded-2xl bg-verde/10 flex items-center justify-center mx-auto mb-5">
+              <span className="material-symbols-outlined text-verde" style={{ fontSize: '28px' }}>check_circle</span>
             </div>
-            <h1 className="font-serif font-bold text-2xl text-[#1c1c18] mb-2">Pedido enviado!</h1>
-            <p className="text-sm text-[#717971] leading-relaxed">
+            <h1 className="font-serif font-bold text-2xl text-ink mb-2">Pedido enviado!</h1>
+            <p className="text-sm text-ink-secondary leading-relaxed">
               Recebemos o teu pedido. Entraremos em contacto brevemente para configurar o teu acesso.
             </p>
           </div>
@@ -73,24 +73,24 @@ export default function PedirAcessoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fcf9f3] flex items-center justify-center px-4 py-16">
+    <div className="min-h-screen bg-fundo flex items-center justify-center px-4 py-16">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Image src="/images/Logo_F_.png" alt="Fatura+" width={56} height={56} className="mx-auto mb-3" />
-          <p className="font-serif italic font-bold text-xl text-[#0e4324]">
-            Fatura<span className="text-[#977c30]">+</span>
+          <p className="font-serif italic font-bold text-xl text-verde">
+            Fatura<span className="text-dourado">+</span>
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl p-8" style={{ border: '0.5px solid rgba(0,0,0,0.08)', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
-          <h1 className="font-serif font-bold text-2xl text-[#1c1c18] mb-1">Pedir acesso</h1>
-          <p className="text-sm text-[#717971] leading-relaxed mb-6">
+        <div className="card p-8">
+          <h1 className="font-serif font-bold text-2xl text-ink mb-1">Pedir acesso</h1>
+          <p className="text-sm text-ink-secondary leading-relaxed mb-6">
             Preenche os teus dados e entraremos em contacto para configurar tudo.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#1c1c18] mb-1.5">Nome</label>
+              <label className="block text-sm font-medium text-ink mb-1.5">Nome</label>
               <input
                 type="text"
                 value={nome}
@@ -102,7 +102,7 @@ export default function PedirAcessoPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#1c1c18] mb-1.5">Email</label>
+              <label className="block text-sm font-medium text-ink mb-1.5">Email</label>
               <input
                 type="email"
                 value={email}
@@ -115,7 +115,7 @@ export default function PedirAcessoPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#1c1c18] mb-1.5">Telefone</label>
+              <label className="block text-sm font-medium text-ink mb-1.5">Telefone</label>
               <input
                 type="tel"
                 value={telefone}
@@ -127,7 +127,7 @@ export default function PedirAcessoPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#1c1c18] mb-1.5">Área de negócio</label>
+              <label className="block text-sm font-medium text-ink mb-1.5">Área de negócio</label>
               <div className="grid grid-cols-2 gap-2">
                 {nichos.map((n) => (
                   <button
@@ -136,8 +136,8 @@ export default function PedirAcessoPage() {
                     onClick={() => setNicho(n.id)}
                     className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm transition-all text-left ${
                       nicho === n.id
-                        ? 'border-[#0e4324] bg-[#0e4324]/5 text-[#0e4324] font-medium'
-                        : 'border-black/10 text-[#717971] hover:border-black/20'
+                        ? 'border-verde bg-verde/5 text-verde font-medium'
+                        : 'border-black/10 text-ink-secondary hover:border-black/20'
                     }`}
                   >
                     <span>{n.emoji}</span>
