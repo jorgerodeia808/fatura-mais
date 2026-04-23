@@ -76,9 +76,17 @@ export default function LandingPage() {
         <h1 className="font-serif font-bold text-5xl lg:text-6xl text-verde leading-tight mb-5">
           A gestão do teu negócio,<br />simplificada.
         </h1>
-        <p className="text-ink-secondary text-lg leading-relaxed max-w-xl mx-auto">
+        <p className="text-ink-secondary text-lg leading-relaxed max-w-xl mx-auto mb-10">
           Escolhe a plataforma do teu nicho. Faturação, marcações, relatórios e IA num único lugar.
         </p>
+        <Link
+          href="/pedir-acesso"
+          className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl font-semibold text-base text-white transition-all hover:opacity-90 hover:shadow-lg hover:-translate-y-0.5"
+          style={{ backgroundColor: '#0e4324' }}
+        >
+          <span className="material-symbols-outlined icon-filled" style={{ fontSize: '20px' }}>arrow_forward</span>
+          Pedir acesso
+        </Link>
       </section>
 
       {/* ── NICHO CARDS ────────────────────────────────────────────────── */}

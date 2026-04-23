@@ -4,10 +4,18 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 
+const nichos = [
+  { id: 'barbeiro', label: 'Barbearia', emoji: '✂️' },
+  { id: 'nails', label: 'Estúdio de Unhas', emoji: '💅' },
+  { id: 'lash', label: 'Estúdio de Pestanas', emoji: '👁️' },
+  { id: 'tatuador', label: 'Estúdio de Tatuagem', emoji: '🎨' },
+]
+
 export default function PedirAcessoPage() {
-  const [nomeBarbearia, setNomeBarbearia] = useState('')
+  const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
-  const [instagram, setInstagram] = useState('')
+  const [telefone, setTelefone] = useState('')
+  const [nicho, setNicho] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
@@ -21,11 +29,7 @@ export default function PedirAcessoPage() {
       const res = await fetch('/api/pedido-acesso', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nome_barbearia: nomeBarbearia,
-          email,
-          instagram: instagram || null,
-        }),
+        body: JSON.stringify({ nome, email, telefone, nicho }),
       })
 
       if (!res.ok) {
@@ -45,30 +49,20 @@ export default function PedirAcessoPage() {
   if (success) {
     return (
       <div className="min-h-screen bg-[#fcf9f3] flex items-center justify-center px-4 py-16">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <Image src="/images/Logo_F_.png" alt="Fatura+" width={64} height={64} className="mx-auto mb-4" />
-            <p className="font-serif italic font-bold text-xl text-[#0e4324]">
-              Fatura<span className="text-[#977c30]">+</span>
-            </p>
-          </div>
-
-          <div
-            className="bg-white rounded-2xl p-8 text-center"
-            style={{ border: '0.5px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
-          >
-            <div className="w-16 h-16 rounded-2xl bg-green-50 flex items-center justify-center mx-auto mb-5">
-              <span className="material-symbols-outlined text-[#0e4324]" style={{ fontSize: '32px' }}>check_circle</span>
+        <div className="w-full max-w-md text-center">
+          <Image src="/images/Logo_F_.png" alt="Fatura+" width={56} height={56} className="mx-auto mb-3" />
+          <p className="font-serif italic font-bold text-xl text-[#0e4324] mb-8">
+            Fatura<span className="text-[#977c30]">+</span>
+          </p>
+          <div className="bg-white rounded-2xl p-8" style={{ border: '0.5px solid rgba(0,0,0,0.08)', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
+            <div className="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center mx-auto mb-5">
+              <span className="material-symbols-outlined text-[#0e4324]" style={{ fontSize: '28px' }}>check_circle</span>
             </div>
             <h1 className="font-serif font-bold text-2xl text-[#1c1c18] mb-2">Pedido enviado!</h1>
-            <p className="text-sm text-[#717971] leading-relaxed mb-6">
-              Recebemos o teu pedido. Vamos entrar em contacto brevemente para configurar o teu acesso ao Fatura+.
+            <p className="text-sm text-[#717971] leading-relaxed">
+              Recebemos o teu pedido. Entraremos em contacto brevemente para configurar o teu acesso.
             </p>
-            <Link href="/login" className="text-sm text-[#977c30] font-semibold hover:opacity-80 transition-opacity">
-              ← Voltar ao login
-            </Link>
           </div>
-
           <p className="text-center text-2xs text-[#717971]/50 mt-6">
             © 2026 Fatura+ ·{' '}
             <Link href="/privacidade" className="hover:text-[#717971]/70">Privacidade</Link>
@@ -82,30 +76,27 @@ export default function PedirAcessoPage() {
     <div className="min-h-screen bg-[#fcf9f3] flex items-center justify-center px-4 py-16">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Image src="/images/Logo_F_.png" alt="Fatura+" width={64} height={64} className="mx-auto mb-4" />
+          <Image src="/images/Logo_F_.png" alt="Fatura+" width={56} height={56} className="mx-auto mb-3" />
           <p className="font-serif italic font-bold text-xl text-[#0e4324]">
             Fatura<span className="text-[#977c30]">+</span>
           </p>
         </div>
 
-        <div
-          className="bg-white rounded-2xl p-8"
-          style={{ border: '0.5px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
-        >
+        <div className="bg-white rounded-2xl p-8" style={{ border: '0.5px solid rgba(0,0,0,0.08)', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
           <h1 className="font-serif font-bold text-2xl text-[#1c1c18] mb-1">Pedir acesso</h1>
           <p className="text-sm text-[#717971] leading-relaxed mb-6">
-            Preenche os teus dados e entraremos em contacto para configurar o teu acesso ao Fatura+.
+            Preenche os teus dados e entraremos em contacto para configurar tudo.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#1c1c18] mb-1.5">Nome da barbearia</label>
+              <label className="block text-sm font-medium text-[#1c1c18] mb-1.5">Nome</label>
               <input
                 type="text"
-                value={nomeBarbearia}
-                onChange={(e) => setNomeBarbearia(e.target.value)}
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
                 className="input-field"
-                placeholder="Ex: Barbearia do João"
+                placeholder="O teu nome"
                 required
               />
             </div>
@@ -124,18 +115,35 @@ export default function PedirAcessoPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#1c1c18] mb-1.5">
-                Instagram <span className="text-[#717971] font-normal">(opcional)</span>
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#717971] text-sm select-none">@</span>
-                <input
-                  type="text"
-                  value={instagram}
-                  onChange={(e) => setInstagram(e.target.value.replace('@', ''))}
-                  className="input-field pl-7"
-                  placeholder="barbeariadojoao"
-                />
+              <label className="block text-sm font-medium text-[#1c1c18] mb-1.5">Telefone</label>
+              <input
+                type="tel"
+                value={telefone}
+                onChange={(e) => setTelefone(e.target.value)}
+                className="input-field"
+                placeholder="+351 9XX XXX XXX"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[#1c1c18] mb-1.5">Área de negócio</label>
+              <div className="grid grid-cols-2 gap-2">
+                {nichos.map((n) => (
+                  <button
+                    key={n.id}
+                    type="button"
+                    onClick={() => setNicho(n.id)}
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm transition-all text-left ${
+                      nicho === n.id
+                        ? 'border-[#0e4324] bg-[#0e4324]/5 text-[#0e4324] font-medium'
+                        : 'border-black/10 text-[#717971] hover:border-black/20'
+                    }`}
+                  >
+                    <span>{n.emoji}</span>
+                    {n.label}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -147,7 +155,7 @@ export default function PedirAcessoPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !nicho}
               className="btn-primary w-full py-3 mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? (
@@ -158,18 +166,9 @@ export default function PedirAcessoPage() {
                   </svg>
                   A enviar...
                 </span>
-              ) : (
-                'Enviar pedido'
-              )}
+              ) : 'Enviar pedido'}
             </button>
           </form>
-
-          <p className="text-center text-sm text-[#717971] mt-6">
-            Já tens conta?{' '}
-            <Link href="/login" className="text-[#977c30] font-semibold hover:opacity-80 transition-opacity">
-              Entrar
-            </Link>
-          </p>
         </div>
 
         <p className="text-center text-2xs text-[#717971]/50 mt-6">

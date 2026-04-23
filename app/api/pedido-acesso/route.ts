@@ -3,9 +3,9 @@ import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 
 export async function POST(req: NextRequest) {
-  const { nome_barbearia, email, instagram } = await req.json()
+  const { nome, email, telefone, nicho } = await req.json()
 
-  if (!nome_barbearia?.trim() || !email?.trim()) {
+  if (!nome?.trim() || !email?.trim() || !telefone?.trim()) {
     return NextResponse.json({ error: 'Campos obrigatórios em falta' }, { status: 400 })
   }
 
@@ -17,9 +17,11 @@ export async function POST(req: NextRequest) {
   const { error: dbError } = await supabase
     .from('pedidos_acesso')
     .insert({
-      nome_barbearia: nome_barbearia.trim(),
+      nome: nome.trim(),
       email: email.trim().toLowerCase(),
-      instagram: instagram?.trim() || null,
+      telefone: telefone.trim(),
+      nicho: nicho || null,
+      estado: 'pendente',
     })
 
   if (dbError) {
@@ -29,33 +31,32 @@ export async function POST(req: NextRequest) {
 
   if (process.env.RESEND_API_KEY) {
     const resend = new Resend(process.env.RESEND_API_KEY)
+    const nichoLabel: Record<string, string> = {
+      barbeiro: 'Barbearia',
+      nails: 'Estúdio de Unhas',
+      lash: 'Estúdio de Pestanas',
+      tatuador: 'Estúdio de Tatuagem',
+    }
     await resend.emails.send({
       from: 'Fatura+ <noreply@fatura-mais.pt>',
       replyTo: email.trim(),
       to: 'faturamais30@gmail.com',
-      subject: `Novo pedido de acesso — ${nome_barbearia.trim()}`,
+      subject: `Novo pedido de acesso — ${nome.trim()}`,
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
           <h2 style="color: #0e4324; margin-bottom: 16px;">Novo pedido de acesso ao Fatura+</h2>
           <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 8px 0; color: #717971; font-size: 14px; width: 120px;">Barbearia</td>
-              <td style="padding: 8px 0; font-weight: 600; font-size: 14px;">${nome_barbearia.trim()}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; color: #717971; font-size: 14px;">Email</td>
-              <td style="padding: 8px 0; font-size: 14px;">${email.trim()}</td>
-            </tr>
-            ${instagram?.trim() ? `
-            <tr>
-              <td style="padding: 8px 0; color: #717971; font-size: 14px;">Instagram</td>
-              <td style="padding: 8px 0; font-size: 14px;">@${instagram.trim()}</td>
-            </tr>` : ''}
+            <tr><td style="padding: 8px 0; color: #717971; font-size: 14px; width: 120px;">Nome</td>
+                <td style="padding: 8px 0; font-weight: 600; font-size: 14px;">${nome.trim()}</td></tr>
+            <tr><td style="padding: 8px 0; color: #717971; font-size: 14px;">Email</td>
+                <td style="padding: 8px 0; font-size: 14px;">${email.trim()}</td></tr>
+            <tr><td style="padding: 8px 0; color: #717971; font-size: 14px;">Telefone</td>
+                <td style="padding: 8px 0; font-size: 14px;">${telefone.trim()}</td></tr>
+            ${nicho ? `<tr><td style="padding: 8px 0; color: #717971; font-size: 14px;">Área</td>
+                <td style="padding: 8px 0; font-size: 14px;">${nichoLabel[nicho] ?? nicho}</td></tr>` : ''}
           </table>
-          <a
-            href="${process.env.NEXT_PUBLIC_APP_URL}/admin/pedidos"
-            style="display: inline-block; margin-top: 24px; padding: 12px 24px; background: #0e4324; color: white; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;"
-          >
+          <a href="https://fatura-mais.pt/admin/pedidos"
+             style="display: inline-block; margin-top: 24px; padding: 12px 24px; background: #0e4324; color: white; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">
             Ver no painel admin →
           </a>
         </div>

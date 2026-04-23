@@ -5,12 +5,40 @@ import ReenviarButton from './ReenviarButton'
 
 interface Pedido {
   id: string
-  nome_barbearia: string
+  nome: string | null
+  nome_barbearia: string | null
   email: string
-  instagram: string | null
+  telefone: string | null
+  nicho: string | null
   estado: string
   criado_em: string
   convidado_em: string | null
+}
+
+const nichoLabel: Record<string, string> = {
+  barbeiro: 'Barbearia',
+  nails: 'Unhas',
+  lash: 'Pestanas',
+  tatuador: 'Tatuagem',
+}
+
+const nichoBg: Record<string, string> = {
+  barbeiro: '#2d2d2d',
+  nails: '#e8779a',
+  lash: '#4a148c',
+  tatuador: '#111111',
+}
+
+function NichoBadge({ nicho }: { nicho: string | null }) {
+  if (!nicho) return <span className="text-gray-300">—</span>
+  return (
+    <span
+      className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full text-white"
+      style={{ backgroundColor: nichoBg[nicho] ?? '#717971' }}
+    >
+      {nichoLabel[nicho] ?? nicho}
+    </span>
+  )
 }
 
 function formatDate(iso: string) {
@@ -74,9 +102,9 @@ export default async function PedidosPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Barbearia</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Email</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Instagram</th>
+                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Nome</th>
+                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Contacto</th>
+                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Área</th>
                 <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Data</th>
                 <th className="px-6 py-3" />
               </tr>
@@ -91,9 +119,12 @@ export default async function PedidosPage() {
               ) : (
                 pendentes.map((p: Pedido) => (
                   <tr key={p.id} className="hover:bg-gray-50/50">
-                    <td className="px-6 py-4 font-medium text-gray-900">{p.nome_barbearia}</td>
-                    <td className="px-6 py-4 text-gray-600">{p.email}</td>
-                    <td className="px-6 py-4 text-gray-400">{p.instagram ? `@${p.instagram}` : '—'}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900">{p.nome ?? p.nome_barbearia ?? '—'}</td>
+                    <td className="px-6 py-4">
+                      <div className="text-gray-600">{p.email}</div>
+                      {p.telefone && <div className="text-xs text-gray-400 mt-0.5">{p.telefone}</div>}
+                    </td>
+                    <td className="px-6 py-4"><NichoBadge nicho={p.nicho} /></td>
                     <td className="px-6 py-4 text-gray-500 text-xs">{formatDate(p.criado_em)}</td>
                     <td className="px-6 py-4 text-right">
                       <ConvidarButton pedidoId={p.id} email={p.email} />
@@ -111,9 +142,9 @@ export default async function PedidosPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Barbearia</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Email</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Instagram</th>
+                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Nome</th>
+                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Contacto</th>
+                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Área</th>
                 <th className="text-left px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Convidado em</th>
                 <th className="px-6 py-3" />
               </tr>
@@ -128,14 +159,17 @@ export default async function PedidosPage() {
               ) : (
                 convidados.map((p: Pedido) => (
                   <tr key={p.id} className="hover:bg-gray-50/50">
-                    <td className="px-6 py-4 font-medium text-gray-900">{p.nome_barbearia}</td>
-                    <td className="px-6 py-4 text-gray-600">{p.email}</td>
-                    <td className="px-6 py-4 text-gray-400">{p.instagram ? `@${p.instagram}` : '—'}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900">{p.nome ?? p.nome_barbearia ?? '—'}</td>
+                    <td className="px-6 py-4">
+                      <div className="text-gray-600">{p.email}</div>
+                      {p.telefone && <div className="text-xs text-gray-400 mt-0.5">{p.telefone}</div>}
+                    </td>
+                    <td className="px-6 py-4"><NichoBadge nicho={p.nicho} /></td>
                     <td className="px-6 py-4 text-gray-500 text-xs">
                       {p.convidado_em ? formatDate(p.convidado_em) : '—'}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <ReenviarButton email={p.email} nomeBarbearia={p.nome_barbearia} />
+                      <ReenviarButton email={p.email} nomeBarbearia={p.nome ?? p.nome_barbearia ?? ''} />
                     </td>
                   </tr>
                 ))
