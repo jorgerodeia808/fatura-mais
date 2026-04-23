@@ -447,6 +447,7 @@ export default function OnboardingPage() {
           hora_fecho: barbearia.hora_fecho,
           dias_trabalho_mes: parseInt(barbearia.dias_trabalho_mes) || 22,
           plano: 'suspenso',
+          nicho: process.env.NEXT_PUBLIC_NICHO ?? 'barbeiro',
         })
         .select()
         .single()

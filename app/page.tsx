@@ -1,9 +1,13 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import AuthErrorRedirect from './components/AuthErrorRedirect'
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function LandingPage() {
+  // Nos subdomínios de nicho não há landing page — vai direto para login
+  if (process.env.NEXT_PUBLIC_NICHO) redirect('/login')
+
   return (
     <div className="min-h-screen bg-fundo font-sans">
       <AuthErrorRedirect />

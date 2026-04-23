@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import Image from 'next/image'
+import { getNichoConfig } from '@/lib/nicho'
+import NichoLogo from '@/components/NichoLogo'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -14,6 +15,8 @@ export default function LoginPage() {
   const [notice, setNotice] = useState('')
   const router = useRouter()
   const supabase = createClient()
+  const nicho = getNichoConfig()
+  const isSubdominio = !!process.env.NEXT_PUBLIC_NICHO
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -45,58 +48,85 @@ export default function LoginPage() {
     router.refresh()
   }
 
+  const taglines: Record<string, { titulo: string; sub: string }> = {
+    barbeiro: {
+      titulo: 'A gestão financeira da tua barbearia, simplificada.',
+      sub: 'Controla faturação, despesas e marcações num único lugar.',
+    },
+    nails: {
+      titulo: 'A gestão do teu estúdio de unhas, simplificada.',
+      sub: 'Faturação, marcações e relatórios num único lugar.',
+    },
+    lash: {
+      titulo: 'A gestão do teu estúdio de pestanas, simplificada.',
+      sub: 'Faturação, marcações e relatórios num único lugar.',
+    },
+    tatuador: {
+      titulo: 'A gestão do teu estúdio de tatuagem, simplificada.',
+      sub: 'Faturação, marcações e relatórios num único lugar.',
+    },
+  }
+
+  const tag = taglines[nicho.id] ?? taglines.barbeiro
+
   return (
     <div className="flex min-h-screen">
       {/* Left panel — brand, desktop only */}
       <div className="hidden lg:flex lg:w-1/2">
-        <div className="flex flex-col justify-between bg-[#0e4324] text-white p-12 min-h-screen w-full">
-          {/* Top: Logo + brand */}
-          <div>
-            <Image src="/images/Logo_F_.png" alt="Fatura+" width={44} height={44} />
-            <h1 className="font-serif italic font-bold text-3xl text-white mt-4">
-              Fatura<span className="text-[#977c30]">+</span>
-            </h1>
+        <div
+          className="flex flex-col justify-between text-white p-12 min-h-screen w-full"
+          style={{ backgroundColor: nicho.cor }}
+        >
+          {/* Top: Logo */}
+          <div className="flex items-center gap-3">
+            <NichoLogo size="md" />
+            <span className="font-serif italic font-bold text-2xl text-white">
+              {nicho.nome.slice(0, -1)}<span style={{ color: nicho.corDestaque }}>+</span>
+            </span>
           </div>
 
           {/* Middle: Tagline */}
           <div>
             <p className="font-serif font-bold text-4xl text-white leading-snug mb-4">
-              A gestão financeira da tua barbearia, simplificada.
+              {tag.titulo}
             </p>
-            <p className="text-white/60 text-sm leading-relaxed">
-              Controla faturação, despesas e marcações num único lugar.
-              Com conselheiro financeiro IA incluído.
-            </p>
+            <p className="text-white/60 text-sm leading-relaxed">{tag.sub}</p>
 
-            {/* Feature list */}
             <ul className="mt-8 space-y-3">
               {['Faturação em tempo real', 'Relatórios automáticos', 'Conselheiro IA', 'Marcações online'].map(f => (
                 <li key={f} className="flex items-center gap-2.5 text-sm text-white/80">
-                  <span className="material-symbols-outlined icon-filled text-[#977c30] text-[16px]">check_circle</span>
+                  <span
+                    className="material-symbols-outlined icon-filled text-[16px]"
+                    style={{ color: nicho.corDestaque === '#ffffff' ? 'rgba(255,255,255,0.9)' : nicho.corDestaque }}
+                  >
+                    check_circle
+                  </span>
                   {f}
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Bottom: decoration circles */}
+          {/* Bottom: decoration */}
           <div className="relative h-24">
             <div className="absolute bottom-0 right-0 w-32 h-32 bg-white/5 rounded-full" />
-            <div className="absolute bottom-4 right-8 w-16 h-16 bg-[#977c30]/20 rounded-full" />
+            <div className="absolute bottom-4 right-8 w-16 h-16 rounded-full" style={{ backgroundColor: `${nicho.corDestaque}20` }} />
           </div>
         </div>
       </div>
 
       {/* Right panel — form */}
       <div className="w-full lg:w-1/2">
-        <div className="flex items-center justify-center px-6 py-12 min-h-screen bg-[#fcf9f3]">
+        <div className="flex items-center justify-center px-6 py-12 min-h-screen" style={{ backgroundColor: nicho.corFundo }}>
           <div className="w-full max-w-sm">
             {/* Mobile only: logo */}
             <div className="lg:hidden text-center mb-8">
-              <Image src="/images/Logo_F_.png" alt="Fatura+" width={56} height={56} className="mx-auto mb-3" />
-              <h1 className="font-serif italic font-bold text-2xl text-[#0e4324]">
-                Fatura<span className="text-[#977c30]">+</span>
-              </h1>
+              <div className="flex justify-center mb-3">
+                <NichoLogo size="lg" />
+              </div>
+              <span className="font-serif italic font-bold text-2xl" style={{ color: nicho.cor }}>
+                {nicho.nome.slice(0, -1)}<span style={{ color: nicho.corDestaque === '#ffffff' ? nicho.cor : nicho.corDestaque }}>+</span>
+              </span>
             </div>
 
             <h2 className="font-serif font-bold text-2xl text-[#1c1c18] mb-1">Bem-vindo de volta</h2>
@@ -108,7 +138,6 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Form */}
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-[#1c1c18] mb-1.5">Email</label>
@@ -126,7 +155,9 @@ export default function LoginPage() {
               <div>
                 <div className="flex justify-between mb-1.5">
                   <label className="text-sm font-medium text-[#1c1c18]">Password</label>
-                  <Link href="/recuperar-password" className="text-xs text-[#977c30] hover:opacity-80 transition-opacity">Esqueceste?</Link>
+                  <Link href="/recuperar-password" className="text-xs hover:opacity-80 transition-opacity" style={{ color: nicho.corDestaque === '#ffffff' ? nicho.cor : nicho.corDestaque }}>
+                    Esqueceste?
+                  </Link>
                 </div>
                 <input
                   type="password"
@@ -148,7 +179,8 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-primary w-full py-3 mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full py-3 mt-2 rounded-lg font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                style={{ backgroundColor: nicho.cor, color: 'white' }}
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
@@ -158,22 +190,22 @@ export default function LoginPage() {
                     </svg>
                     A entrar...
                   </span>
-                ) : (
-                  'Entrar'
-                )}
+                ) : 'Entrar'}
               </button>
             </form>
 
-            <p className="text-center text-sm text-[#717971] mt-6">
-              Ainda não tens conta?{' '}
-              <Link href="/pedir-acesso" className="text-[#977c30] font-semibold hover:opacity-80 transition-opacity">
-                Pedir acesso
-              </Link>
-            </p>
+            {/* Só mostra "pedir acesso" na landing geral, não nos subdomínios */}
+            {!isSubdominio && (
+              <p className="text-center text-sm text-[#717971] mt-6">
+                Ainda não tens conta?{' '}
+                <Link href="/pedir-acesso" className="font-semibold hover:opacity-80 transition-opacity" style={{ color: nicho.corDestaque === '#ffffff' ? nicho.cor : nicho.corDestaque }}>
+                  Pedir acesso
+                </Link>
+              </p>
+            )}
 
-            {/* Footer */}
             <p className="text-center text-2xs text-[#717971]/60 mt-8">
-              © 2026 Fatura+ ·{' '}
+              © 2026 {nicho.nome} ·{' '}
               <Link href="/privacidade" className="hover:text-[#717971] transition-colors">Privacidade</Link>
               {' '}·{' '}
               <Link href="/termos" className="hover:text-[#717971] transition-colors">Termos</Link>
