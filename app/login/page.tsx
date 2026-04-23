@@ -79,7 +79,6 @@ export default function LoginPage() {
         >
           {/* Top: Logo */}
           <div className="flex items-center gap-3">
-            <NichoLogo size="md" />
             <span className="font-serif italic font-bold text-2xl text-white">
               Fatura<span style={{ color: nicho.corDestaque }}>+</span>
               <span className="font-sans not-italic font-light text-white/40 mx-2">|</span>
