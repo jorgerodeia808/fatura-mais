@@ -9,17 +9,18 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // CSS variable-based — overridden per nicho via <style> in layout
         verde: {
-          DEFAULT: '#0e4324',
-          escuro: '#0a3019',
-          claro: '#155c33',
+          DEFAULT: 'rgb(var(--verde) / <alpha-value>)',
+          escuro:  'rgb(var(--verde-escuro) / <alpha-value>)',
+          claro:   'rgb(var(--verde-claro) / <alpha-value>)',
         },
         dourado: {
-          DEFAULT: '#977c30',
-          claro: '#b89a45',
-          escuro: '#7a6325',
+          DEFAULT: 'rgb(var(--dourado) / <alpha-value>)',
+          claro:   'rgb(var(--dourado-claro) / <alpha-value>)',
+          escuro:  'rgb(var(--dourado-escuro) / <alpha-value>)',
         },
-        fundo: '#fcf9f3',
+        fundo: 'rgb(var(--fundo) / <alpha-value>)',
         surface: {
           DEFAULT: '#fcf9f3',
           card: '#ffffff',

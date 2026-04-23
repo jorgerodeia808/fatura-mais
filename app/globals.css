@@ -2,13 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── CSS Variables — defaults (barbeiro). Overridden per nicho in layout.tsx ── */
+:root {
+  --verde:         14 67 36;     /* #0e4324 */
+  --verde-escuro:  10 48 25;     /* #0a3019 */
+  --verde-claro:   21 92 51;     /* #155c33 */
+  --dourado:       151 124 48;   /* #977c30 */
+  --dourado-claro: 184 154 69;   /* #b89a45 */
+  --dourado-escuro:122 99 37;    /* #7a6325 */
+  --fundo:         252 249 243;  /* #fcf9f3 */
+}
+
 /* ── Base ─────────────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
 body {
-  background-color: #fcf9f3;
+  background-color: rgb(var(--fundo));
   font-family: var(--font-inter), Inter, system-ui, sans-serif;
   color: #1c1c18;
   -webkit-text-size-adjust: 100%;
@@ -53,7 +64,7 @@ button, a {
            hover:bg-verde/5 active:scale-[0.99] transition-all duration-200
            inline-flex items-center justify-center gap-2;
     min-height: unset;
-    border: 0.5px solid #0e4324;
+    border: 0.5px solid rgb(var(--verde));
   }
   .btn-dourado {
     @apply bg-dourado text-white px-5 py-2.5 rounded-md font-medium text-sm
@@ -82,8 +93,8 @@ button, a {
     border: 0.5px solid #d4d4cc;
   }
   .input-field:focus {
-    border-color: #0e4324;
-    box-shadow: 0 0 0 3px rgba(14, 67, 36, 0.08);
+    border-color: rgb(var(--verde));
+    box-shadow: 0 0 0 3px rgb(var(--verde) / 0.08);
   }
 
   /* Cards */
@@ -106,7 +117,7 @@ button, a {
     box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
   }
   .metric-card-accent {
-    border-top: 2px solid #977c30;
+    border-top: 2px solid rgb(var(--dourado));
   }
   .metric-label {
     @apply text-2xs font-medium uppercase tracking-widest text-ink-secondary;
@@ -141,8 +152,8 @@ button, a {
   }
   .badge-gold {
     @apply badge;
-    background: rgba(151,124,48,0.12);
-    color: #7a6325;
+    background: rgb(var(--dourado) / 0.12);
+    color: rgb(var(--dourado-escuro));
   }
   .badge-gray {
     @apply badge bg-gray-100 text-gray-600;

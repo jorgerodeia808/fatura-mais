@@ -31,7 +31,7 @@ export default async function AuthenticadoLayout({
   const barbeariaName = barbearia?.nome ?? 'A minha barbearia'
 
   return (
-    <div className="flex min-h-screen bg-[#f7f5f0]">
+    <div className="flex min-h-screen bg-fundo">
       <Sidebar userName={userName} barbeariaName={barbeariaName} />
       <main className="flex-1 min-w-0 lg:ml-0">
         <div className="p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 max-w-[1400px] mx-auto">{children}</div>

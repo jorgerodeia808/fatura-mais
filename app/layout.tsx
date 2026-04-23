@@ -17,6 +17,46 @@ const notoSerif = Noto_Serif({
   display: 'swap',
 })
 
+// Espaços RGB para CSS variables (suporte a opacidade no Tailwind)
+const nichoCssVars: Record<string, string> = {
+  barbeiro: `
+    --verde: 14 67 36;
+    --verde-escuro: 10 48 25;
+    --verde-claro: 21 92 51;
+    --dourado: 151 124 48;
+    --dourado-claro: 184 154 69;
+    --dourado-escuro: 122 99 37;
+    --fundo: 252 249 243;
+  `,
+  nails: `
+    --verde: 139 26 74;
+    --verde-escuro: 107 18 56;
+    --verde-claro: 168 34 94;
+    --dourado: 244 143 177;
+    --dourado-claro: 249 168 196;
+    --dourado-escuro: 190 100 130;
+    --fundo: 255 245 248;
+  `,
+  lash: `
+    --verde: 59 7 100;
+    --verde-escuro: 46 5 79;
+    --verde-claro: 74 20 140;
+    --dourado: 216 180 254;
+    --dourado-claro: 233 213 255;
+    --dourado-escuro: 167 139 250;
+    --fundo: 250 245 255;
+  `,
+  tatuador: `
+    --verde: 17 24 39;
+    --verde-escuro: 9 14 26;
+    --verde-claro: 31 41 55;
+    --dourado: 156 163 175;
+    --dourado-claro: 209 213 219;
+    --dourado-escuro: 107 114 128;
+    --fundo: 249 250 251;
+  `,
+}
+
 const nichoMeta: Record<string, { nome: string; descricao: string; cor: string; url: string }> = {
   barbeiro: {
     nome: 'Barber+',
@@ -96,6 +136,9 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const nicho = process.env.NEXT_PUBLIC_NICHO
+  const cssVars = nicho ? nichoCssVars[nicho] : nichoCssVars.barbeiro
+
   return (
     <html lang="pt" className={`${inter.variable} ${notoSerif.variable}`}>
       <head>
@@ -103,8 +146,11 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         />
+        {cssVars && (
+          <style dangerouslySetInnerHTML={{ __html: `:root { ${cssVars} }` }} />
+        )}
       </head>
-      <body className="min-h-screen bg-surface antialiased">
+      <body className="min-h-screen bg-fundo antialiased">
         {children}
         <Analytics />
         <CookieBanner />
