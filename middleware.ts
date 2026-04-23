@@ -79,7 +79,7 @@ export async function middleware(request: NextRequest) {
   if (user && isProtected) {
     const { data: barbearia } = await supabase
       .from('barbearias')
-      .select('plano')
+      .select('plano, subscricao_renovacao')
       .eq('user_id', user.id)
       .maybeSingle()
 
@@ -90,12 +90,25 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    if (barbearia.plano === 'vitalicio' || barbearia.plano === 'mensal') {
+    if (barbearia.plano === 'vitalicio') {
       return supabaseResponse
+    }
+
+    if (barbearia.plano === 'mensal') {
+      const renovacao = barbearia.subscricao_renovacao as string | null
+      if (renovacao && new Date(renovacao) >= new Date()) {
+        return supabaseResponse
+      }
+      const url = request.nextUrl.clone()
+      url.pathname = '/acesso-suspenso'
+      url.searchParams.set('motivo', 'expirado')
+      if (renovacao) url.searchParams.set('renovacao', renovacao)
+      return NextResponse.redirect(url)
     }
 
     const url = request.nextUrl.clone()
     url.pathname = '/acesso-suspenso'
+    url.searchParams.set('motivo', 'suspenso')
     return NextResponse.redirect(url)
   }
 

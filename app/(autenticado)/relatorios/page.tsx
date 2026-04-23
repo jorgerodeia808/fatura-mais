@@ -781,8 +781,8 @@ export default function RelatoriosPage() {
           ) : (
             <div className="flex flex-col lg:flex-row gap-8 items-center">
               {/* Pie chart */}
-              <div className="flex-shrink-0">
-                <ResponsiveContainer width={220} height={220}>
+              <div className="w-full lg:w-[220px] lg:flex-shrink-0">
+                <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
                     <Pie
                       data={pieMarc}
@@ -924,9 +924,9 @@ export default function RelatoriosPage() {
               {/* Pie by categoria + table */}
               <div className="flex flex-col lg:flex-row gap-6">
                 {despCat.length > 0 && (
-                  <div className="flex-shrink-0">
+                  <div className="w-full lg:w-[260px] lg:flex-shrink-0">
                     <p className="text-xs font-semibold text-ink-secondary uppercase tracking-wide mb-3 font-sans">Por categoria</p>
-                    <ResponsiveContainer width={260} height={260}>
+                    <ResponsiveContainer width="100%" height={260}>
                       <PieChart>
                         <Pie
                           data={despCat}
