@@ -2,12 +2,16 @@ import type { NichoConfig } from '../types'
 
 const barbeiro: NichoConfig = {
   id: 'barbeiro',
-  nome: 'Fatura+',
+  nome: 'Barber+',
   nomeProfissional: 'barbeiro',
   nomeNegocio: 'barbearia',
   nomePlural: 'barbeiros',
-  cor: '#0e4324',
+  cor: '#2d2d2d',
+  corDestaque: '#977c30',
+  corTexto: '#2d2d2d',
+  corFundo: '#f7f5f0',
   subdominio: 'barbeiro',
+  letraLogo: 'B',
   features: {
     marcacoes: true,
     despesas: true,

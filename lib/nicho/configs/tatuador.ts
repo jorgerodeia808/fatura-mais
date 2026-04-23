@@ -7,8 +7,12 @@ const tatuador: NichoConfig = {
   nomeProfissional: 'tatuador',
   nomeNegocio: 'estúdio',
   nomePlural: 'tatuadores',
-  cor: '#1a1a2e',
+  cor: '#111111',
+  corDestaque: '#c62828',
+  corTexto: '#111111',
+  corFundo: '#f5f5f5',
   subdominio: 'tatuador',
+  letraLogo: 'T',
   features: {
     marcacoes: true,
     despesas: true,
