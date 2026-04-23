@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function ConvidarButton({ pedidoId, email }: { pedidoId: string; email: string }) {
+export default function ConvidarButton({ pedidoId, email, nicho }: { pedidoId: string; email: string; nicho?: string | null }) {
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
@@ -16,7 +16,7 @@ export default function ConvidarButton({ pedidoId, email }: { pedidoId: string; 
     const res = await fetch('/api/admin/convidar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pedido_id: pedidoId, email }),
+      body: JSON.stringify({ pedido_id: pedidoId, email, nicho }),
     })
 
     if (!res.ok) {

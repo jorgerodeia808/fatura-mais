@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+const nichoUrl: Record<string, string> = {
+  barbeiro: 'https://barbeiro.fatura-mais.pt',
+  nails:    'https://nails.fatura-mais.pt',
+  lash:     'https://lash.fatura-mais.pt',
+  tatuador: 'https://tatuador.fatura-mais.pt',
+}
+
 export async function POST(req: NextRequest) {
-  const { pedido_id, email } = await req.json()
+  const { pedido_id, email, nicho } = await req.json()
 
   if (!pedido_id || !email) {
     return NextResponse.json({ error: 'Dados em falta' }, { status: 400 })
@@ -10,8 +17,11 @@ export async function POST(req: NextRequest) {
 
   const supabase = createAdminClient()
 
+  const baseUrl = (nicho && nichoUrl[nicho]) ?? 'https://fatura-mais.pt'
+  const redirectTo = `${baseUrl}/auth/callback`
+
   const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+    redirectTo,
   })
 
   if (inviteError) {

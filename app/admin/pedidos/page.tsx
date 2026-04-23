@@ -129,7 +129,7 @@ export default async function PedidosPage() {
                     <td className="px-6 py-4"><NichoBadge nicho={p.nicho} /></td>
                     <td className="px-6 py-4 text-gray-500 text-xs">{formatDate(p.criado_em)}</td>
                     <td className="px-6 py-4 text-right">
-                      <ConvidarButton pedidoId={p.id} email={p.email} />
+                      <ConvidarButton pedidoId={p.id} email={p.email} nicho={p.nicho} />
                     </td>
                   </tr>
                 ))
