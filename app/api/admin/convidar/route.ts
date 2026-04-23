@@ -27,10 +27,35 @@ export async function POST(req: NextRequest) {
 
   const baseUrl = (nicho && nichoUrl[nicho]) ?? 'https://fatura-mais.pt'
   const redirectTo = `${baseUrl}/auth/callback`
+  const plataforma = (nicho && nichoLabel[nicho]) ?? 'Fatura+'
 
-  // Gera o link de convite sem enviar email (bypassa limite do Supabase)
+  // 1. Criar utilizador confirmado (sem enviar qualquer email pelo Supabase)
+  const { data: createData, error: createError } = await supabase.auth.admin.createUser({
+    email,
+    email_confirm: true,
+  })
+
+  // Se já existe, buscar o user existente
+  let userId: string | undefined
+  if (createError) {
+    if (createError.message.toLowerCase().includes('already')) {
+      const { data: existing } = await supabase.auth.admin.listUsers()
+      userId = existing?.users.find((u) => u.email === email)?.id
+    } else {
+      console.error('Create user error:', createError)
+      return NextResponse.json({ error: createError.message }, { status: 500 })
+    }
+  } else {
+    userId = createData.user.id
+  }
+
+  if (!userId) {
+    return NextResponse.json({ error: 'Não foi possível criar o utilizador' }, { status: 500 })
+  }
+
+  // 2. Gerar magic link (sem rate limit de email)
   const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-    type: 'invite',
+    type: 'magiclink',
     email,
     options: { redirectTo },
   })
@@ -42,14 +67,12 @@ export async function POST(req: NextRequest) {
 
   const inviteUrl = linkData.properties?.action_link
   if (!inviteUrl) {
-    return NextResponse.json({ error: 'Não foi possível gerar o link de convite' }, { status: 500 })
+    return NextResponse.json({ error: 'Não foi possível gerar o link' }, { status: 500 })
   }
 
-  // Envia via Resend (sem limite de rate)
+  // 3. Enviar via Resend (bypassa completamente o email do Supabase)
   if (process.env.RESEND_API_KEY) {
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const plataforma = (nicho && nichoLabel[nicho]) ?? 'Fatura+'
-
     const { error: emailError } = await resend.emails.send({
       from: 'Fatura+ <noreply@fatura-mais.pt>',
       to: email,
@@ -65,8 +88,8 @@ export async function POST(req: NextRequest) {
             Configurar conta →
           </a>
           <p style="color: #b0a898; font-size: 12px; margin-top: 24px; line-height: 1.5;">
-            Se não pediste acesso ao ${plataforma}, ignora este email.
-            <br>O link expira em 24 horas.
+            Se não pediste acesso ao ${plataforma}, ignora este email.<br>
+            O link expira em 24 horas.
           </p>
         </div>
       `,
@@ -76,8 +99,6 @@ export async function POST(req: NextRequest) {
       console.error('Resend error:', emailError)
       return NextResponse.json({ error: 'Erro ao enviar email' }, { status: 500 })
     }
-  } else {
-    console.warn('RESEND_API_KEY não configurado — link gerado mas email não enviado:', inviteUrl)
   }
 
   await supabase
