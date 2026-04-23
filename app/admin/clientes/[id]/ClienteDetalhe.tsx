@@ -19,6 +19,8 @@ interface Barbearia {
   hora_fecho: string | null
   dias_trabalho_mes: number | null
   user_id: string
+  subscricao_inicio: string | null
+  subscricao_renovacao: string | null
 }
 
 interface Pagamento {
@@ -47,6 +49,8 @@ export default function ClienteDetalhe({ barbearia, email, pagamentos }: { barbe
   const [loading, setLoading] = useState<string | null>(null)
   const [toast, setToast] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
+  const [metodoRenovacao, setMetodoRenovacao] = useState('transferencia')
+  const [notasRenovacao, setNotasRenovacao] = useState('')
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast(msg)
@@ -68,6 +72,26 @@ export default function ClienteDetalhe({ barbearia, email, pagamentos }: { barbe
     } else {
       const data = await res.json()
       showToast(data.error ?? 'Erro ao guardar', 'error')
+    }
+  }
+
+  const handleRenovarSubscricao = async () => {
+    setLoading('renovar')
+    const res = await fetch('/api/admin/renovar-subscricao', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ barbearia_id: barbearia.id, metodo: metodoRenovacao, notas: notasRenovacao || null }),
+    })
+    setLoading(null)
+    if (res.ok) {
+      const data = await res.json()
+      const nova = new Date(data.nova_renovacao).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      showToast(`Subscrição renovada até ${nova} ✓`)
+      setNotasRenovacao('')
+      router.refresh()
+    } else {
+      const data = await res.json()
+      showToast(data.error ?? 'Erro ao renovar', 'error')
     }
   }
 
@@ -139,6 +163,19 @@ export default function ClienteDetalhe({ barbearia, email, pagamentos }: { barbe
             </p>
           </div>
           <div><p className="text-xs text-ink-secondary mb-0.5">Indicado por</p><p className="font-medium">{barbearia.indicado_por ?? '—'}</p></div>
+          {barbearia.subscricao_inicio && (
+            <div><p className="text-xs text-ink-secondary mb-0.5">Subscrição desde</p><p className="font-medium">{formatDate(barbearia.subscricao_inicio)}</p></div>
+          )}
+          {barbearia.subscricao_renovacao && (() => {
+            const dias = Math.ceil((new Date(barbearia.subscricao_renovacao!).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+            return (
+              <div><p className="text-xs text-ink-secondary mb-0.5">Próxima renovação</p>
+                <p className={`font-medium ${dias <= 5 ? 'text-[#977c30]' : dias <= 0 ? 'text-red-600' : ''}`}>
+                  {formatDate(barbearia.subscricao_renovacao)} {dias >= 0 ? `(${dias}d)` : `(expirou há ${Math.abs(dias)}d)`}
+                </p>
+              </div>
+            )
+          })()}
         </div>
       </div>
 
@@ -176,6 +213,42 @@ export default function ClienteDetalhe({ barbearia, email, pagamentos }: { barbe
             className="btn-primary disabled:opacity-50"
           >
             {loading === 'plano' ? 'A guardar...' : 'Guardar alterações'}
+          </button>
+        </div>
+      </div>
+
+      {/* Renovação de subscrição */}
+      <div className="card space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="section-title">Renovar subscrição</h2>
+          <span className="text-xs font-semibold text-verde bg-verde/10 px-2.5 py-1 rounded-full">€12,99 / mês</span>
+        </div>
+        <p className="text-sm text-ink-secondary">
+          Regista o pagamento e renova automaticamente por +30 dias.
+          {barbearia.subscricao_renovacao && ` Renovação atual: ${formatDate(barbearia.subscricao_renovacao)}.`}
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-ink-secondary mb-1">Método de pagamento</label>
+            <select value={metodoRenovacao} onChange={e => setMetodoRenovacao(e.target.value)}
+              className="w-full border border-[#e8e4dc] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors">
+              <option value="transferencia">Transferência</option>
+              <option value="multibanco">Multibanco</option>
+              <option value="mbway">MBWay</option>
+              <option value="numerario">Numerário</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-ink-secondary mb-1">Notas (opcional)</label>
+            <input type="text" value={notasRenovacao} onChange={e => setNotasRenovacao(e.target.value)}
+              placeholder="ex: ref. MB, comprovativo..."
+              className="w-full border border-[#e8e4dc] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#0e4324] transition-colors" />
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <button onClick={handleRenovarSubscricao} disabled={loading === 'renovar'}
+            className="btn-primary disabled:opacity-50">
+            {loading === 'renovar' ? 'A renovar...' : 'Confirmar pagamento e renovar'}
           </button>
         </div>
       </div>

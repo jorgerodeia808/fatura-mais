@@ -39,3 +39,4 @@ public/workbox-*.js.map
 Thumbs.db
 
 .vercel
+.claude/
