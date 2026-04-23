@@ -48,6 +48,7 @@ export default function ClienteDetalhe({ barbearia, email, pagamentos }: { barbe
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
   const [metodoRenovacao, setMetodoRenovacao] = useState('transferencia')
   const [notasRenovacao, setNotasRenovacao] = useState('')
+  const [confirmarEliminar, setConfirmarEliminar] = useState(false)
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast(msg)
@@ -69,6 +70,24 @@ export default function ClienteDetalhe({ barbearia, email, pagamentos }: { barbe
     } else {
       const data = await res.json()
       showToast(data.error ?? 'Erro ao guardar', 'error')
+    }
+  }
+
+  const handleEliminar = async () => {
+    setLoading('eliminar')
+    const res = await fetch('/api/admin/eliminar-utilizador', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: barbearia.user_id, barbearia_id: barbearia.id }),
+    })
+    setLoading(null)
+    if (res.ok) {
+      router.push('/admin/clientes')
+      router.refresh()
+    } else {
+      const data = await res.json()
+      showToast(data.error ?? 'Erro ao eliminar', 'error')
+      setConfirmarEliminar(false)
     }
   }
 
@@ -218,6 +237,41 @@ export default function ClienteDetalhe({ barbearia, email, pagamentos }: { barbe
             {loading === 'renovar' ? 'A renovar...' : 'Confirmar pagamento e renovar'}
           </button>
         </div>
+      </div>
+
+      {/* Zona de perigo */}
+      <div className="card border border-red-100 space-y-3">
+        <h2 className="section-title text-red-700">Zona de perigo</h2>
+        {!confirmarEliminar ? (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-ink-secondary">Elimina permanentemente este utilizador e todos os seus dados.</p>
+            <button
+              onClick={() => setConfirmarEliminar(true)}
+              className="text-sm font-medium text-red-600 border border-red-200 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors"
+            >
+              Eliminar utilizador
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm text-red-700 font-medium">Tens a certeza? Esta ação é irreversível.</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmarEliminar(false)}
+                className="text-sm px-4 py-2 rounded-lg border border-[#e8e4dc] hover:bg-[#f7f4ee] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleEliminar}
+                disabled={loading === 'eliminar'}
+                className="text-sm font-medium px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
+              >
+                {loading === 'eliminar' ? 'A eliminar...' : 'Confirmar eliminação'}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Pagamentos */}
