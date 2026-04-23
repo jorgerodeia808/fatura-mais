@@ -569,8 +569,42 @@ export default function MarcacoesPage() {
         {/* LEFT: Calendar + Agenda */}
         <div className="flex-1 min-w-0 space-y-5">
 
-          {/* Weekly Calendar */}
-          <div className="card overflow-hidden !p-0">
+          {/* Mobile day selector — lg:hidden */}
+          <div className="lg:hidden card overflow-hidden !p-0">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-black/5">
+              <button onClick={() => changeWeek(-1)} className="btn-ghost !p-2">
+                <span className="material-symbols-outlined" style={{fontSize:'18px'}}>chevron_left</span>
+              </button>
+              <span className="text-sm font-medium text-ink">
+                {weekDays[0].getDate()} {MESES_PT[weekDays[0].getMonth()]} – {weekDays[6].getDate()} {MESES_PT[weekDays[6].getMonth()]} {weekDays[6].getFullYear()}
+              </span>
+              <button onClick={() => changeWeek(1)} className="btn-ghost !p-2">
+                <span className="material-symbols-outlined" style={{fontSize:'18px'}}>chevron_right</span>
+              </button>
+            </div>
+            <div className="flex overflow-x-auto px-3 py-3 gap-1.5 scrollbar-none">
+              {weekDays.map(d => {
+                const isToday = isSameDay(d, today)
+                const isSelected = isSameDay(d, selectedDay)
+                const hasMarcacoes = marcacoes.some(m => m.data_hora.startsWith(toDateStr(d)))
+                return (
+                  <button
+                    key={toDateStr(d)}
+                    onClick={() => setSelectedDay(new Date(d.getFullYear(), d.getMonth(), d.getDate()))}
+                    className="flex flex-col items-center flex-shrink-0 w-11 py-2 rounded-xl transition-all"
+                    style={isSelected ? { backgroundColor: 'rgb(var(--verde))' } : isToday ? { backgroundColor: 'rgb(var(--verde) / 0.08)' } : {}}
+                  >
+                    <span className={`text-[10px] font-medium uppercase tracking-wide ${isSelected ? 'text-white/70' : 'text-ink-secondary'}`}>{DIAS_PT[d.getDay()]}</span>
+                    <span className={`text-base font-bold mt-0.5 ${isSelected ? 'text-white' : isToday ? 'text-verde' : 'text-ink'}`}>{d.getDate()}</span>
+                    {hasMarcacoes && <span className={`w-1.5 h-1.5 rounded-full mt-1 ${isSelected ? 'bg-white/60' : 'bg-verde'}`} />}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Weekly Calendar — desktop only */}
+          <div className="hidden lg:block card overflow-hidden !p-0">
             {/* Calendar header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-black/5">
               <h2 className="section-title !mb-0">Calendário semanal</h2>

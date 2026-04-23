@@ -108,12 +108,14 @@ export async function POST(req: NextRequest) {
     const hora = dataHora.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })
     const data = formatarDataPT(dataHora)
     const template = barbearia?.sms_mensagem_personalizada || SMS_TEMPLATE_PADRAO
+    const nomeNegocio = barbearia?.nome || 'a barbearia'
     const mensagem = template
-      .replace('[nome_cliente]', marcacao.cliente_nome)
-      .replace('[nome_barbearia]', barbearia?.nome || 'a barbearia')
-      .replace('[data]', data)
-      .replace('[hora]', hora)
-      .replace('[nome_servico]', servico?.nome || 'o serviço')
+      .replace(/\[nome_cliente\]/g, marcacao.cliente_nome)
+      .replace(/\[nome_barbearia\]/g, nomeNegocio)
+      .replace(/\[nome_negocio\]/g, nomeNegocio)
+      .replace(/\[data\]/g, data)
+      .replace(/\[hora\]/g, hora)
+      .replace(/\[nome_servico\]/g, servico?.nome || 'o serviço')
 
     // Enviar SMS via Twilio
     const client = twilio(sid, token)

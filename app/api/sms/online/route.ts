@@ -82,9 +82,11 @@ export async function POST(req: NextRequest) {
       tipo === 'confirmada' ? (barbearia?.sms_reserva_confirmada || TEMPLATES_PADRAO.confirmada) :
                                (barbearia?.sms_reserva_cancelada  || TEMPLATES_PADRAO.cancelada)
 
+    const nomeNegocio = barbearia?.nome || 'a barbearia'
     const mensagem = templateBase
       .replace(/\[nome_cliente\]/g,   marcacao.cliente_nome)
-      .replace(/\[nome_barbearia\]/g, barbearia?.nome || 'a barbearia')
+      .replace(/\[nome_barbearia\]/g, nomeNegocio)
+      .replace(/\[nome_negocio\]/g,   nomeNegocio)
       .replace(/\[data\]/g,           data)
       .replace(/\[hora\]/g,           hora)
       .replace(/\[nome_servico\]/g,   servico?.nome || 'o serviço')

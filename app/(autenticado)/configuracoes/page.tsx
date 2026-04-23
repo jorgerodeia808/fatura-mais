@@ -5,15 +5,15 @@ import { createClient } from '@/lib/supabase/client'
 import { getNichoConfig } from '@/lib/nicho'
 
 const SMS_TEMPLATE_PADRAO =
-  'Olá [nome_cliente]! Lembrete da tua marcação em [nome_barbearia] amanhã, [data] às [hora] para [nome_servico]. Até amanhã!'
+  'Olá [nome_cliente]! Lembrete da tua marcação em [nome_negocio] amanhã, [data] às [hora] para [nome_servico]. Até amanhã!'
 
 const SMS_ONLINE_PADRAO = {
-  recebida:   'Olá [nome_cliente]! A tua marcação em [nome_barbearia] para [nome_servico] no dia [data] às [hora] foi recebida. Aguarda confirmação.',
-  confirmada: 'Olá [nome_cliente]! A tua marcação em [nome_barbearia] para [nome_servico] no dia [data] às [hora] está confirmada. Até já!',
-  cancelada:  'Olá [nome_cliente]! Infelizmente não te conseguimos atender no dia [data] às [hora] em [nome_barbearia]. Agenda outro horário: [link_marcacoes]',
+  recebida:   'Olá [nome_cliente]! A tua marcação em [nome_negocio] para [nome_servico] no dia [data] às [hora] foi recebida. Aguarda confirmação.',
+  confirmada: 'Olá [nome_cliente]! A tua marcação em [nome_negocio] para [nome_servico] no dia [data] às [hora] está confirmada. Até já!',
+  cancelada:  'Olá [nome_cliente]! Infelizmente não te conseguimos atender no dia [data] às [hora] em [nome_negocio]. Agenda outro horário: [link_marcacoes]',
 }
 
-const SMS_VARIAVEIS = ['[nome_cliente]', '[nome_barbearia]', '[data]', '[hora]', '[nome_servico]']
+const SMS_VARIAVEIS = ['[nome_cliente]', '[nome_negocio]', '[data]', '[hora]', '[nome_servico]']
 const SMS_VARIAVEIS_ONLINE = [...SMS_VARIAVEIS, '[link_marcacoes]']
 
 const CATEGORIAS_CUSTO = ['Rendas', 'Água/Luz/Gás', 'Internet/Telefone', 'Seguros', 'Contabilidade', 'Marketing', 'Software', 'Equipamento', 'Outro']
