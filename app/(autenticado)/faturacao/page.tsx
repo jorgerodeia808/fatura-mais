@@ -223,14 +223,27 @@ export default function FaturacaoPage() {
     let resolvedClienteId = clienteId
     const nomeCliente = clienteQuery.trim()
     if (nomeCliente && !resolvedClienteId) {
+      // Se ainda não iniciou o modo "novo cliente", ativa-o e pede telemóvel
+      if (!clienteNovo) {
+        iniciarClienteNovo()
+        setFormError('Adiciona o telemóvel para criar o cliente.')
+        setSubmitting(false)
+        return
+      }
+      // Telemóvel obrigatório
+      if (!clienteTelemovel.trim()) {
+        setFormError('O telemóvel é obrigatório para criar um novo cliente.')
+        setSubmitting(false)
+        return
+      }
       const { data: novoCliente, error: errCliente } = await supabase
         .from('clientes')
-        .insert({ barbearia_id: barbeariaId, nome: nomeCliente, telemovel: clienteTelemovel.trim() || null })
+        .insert({ barbearia_id: barbeariaId, nome: nomeCliente, telemovel: clienteTelemovel.trim() })
         .select('id')
         .single()
       if (!errCliente && novoCliente) {
         resolvedClienteId = novoCliente.id
-        setClientesCRM(prev => [...prev, { id: novoCliente.id, nome: nomeCliente, telemovel: clienteTelemovel.trim() || null }])
+        setClientesCRM(prev => [...prev, { id: novoCliente.id, nome: nomeCliente, telemovel: clienteTelemovel.trim() }])
       }
     }
 
@@ -534,15 +547,20 @@ export default function FaturacaoPage() {
                     )}
                   </div>
                 )}
-                {/* Campo telemóvel para novo cliente */}
+                {/* Campo telemóvel para novo cliente — obrigatório */}
                 {clienteNovo && !clienteId && (
                   <div className="mt-2">
+                    <label className="block text-xs font-medium text-ink-secondary mb-1 uppercase tracking-wide">
+                      Telemóvel <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="tel"
                       value={clienteTelemovel}
                       onChange={e => setClienteTelemovel(e.target.value)}
                       className="input-field"
-                      placeholder="Telemóvel (opcional)"
+                      placeholder="9XXXXXXXX"
+                      required
+                      autoFocus
                     />
                   </div>
                 )}
