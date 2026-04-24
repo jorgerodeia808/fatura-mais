@@ -8,9 +8,10 @@ interface Marcacao {
   id: string
   cliente_nome: string
   cliente_telemovel: string | null
+  cliente_id: string | null
   servico_id: string | null
   data_hora: string
-  estado: 'pendente' | 'confirmado' | 'desistencia'
+  estado: 'pendente' | 'confirmado' | 'concluido' | 'desistencia'
   sms_enviado: boolean
   servicos: { nome: string; preco: number; tempo_minutos: number } | null
 }
@@ -56,6 +57,7 @@ const MESES_PT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set',
 const STATUS = {
   confirmado: { bg: 'bg-green-100', border: 'border-green-300', text: 'text-green-800', badge: 'badge-green', label: 'Confirmado' },
   pendente:   { bg: 'bg-yellow-100', border: 'border-yellow-300', text: 'text-yellow-800', badge: 'badge-amber', label: 'Pendente' },
+  concluido:  { bg: 'bg-blue-50',   border: 'border-blue-200',   text: 'text-blue-700',  badge: 'badge-gray',  label: 'Concluído' },
   desistencia:{ bg: 'bg-red-100',    border: 'border-red-300',    text: 'text-red-700',   badge: 'badge-red',   label: 'Desistência' },
 }
 
@@ -211,7 +213,7 @@ export default function MarcacoesPage() {
     const [{ data: marcData }, { data: bloqData }] = await Promise.all([
       supabase
         .from('marcacoes')
-        .select('id, cliente_nome, cliente_telemovel, servico_id, data_hora, estado, sms_enviado, servicos(nome, preco, tempo_minutos)')
+        .select('id, cliente_nome, cliente_telemovel, cliente_id, servico_id, data_hora, estado, sms_enviado, servicos(nome, preco, tempo_minutos)')
         .eq('barbearia_id', bid)
         .gte('data_hora', `${start}T00:00:00`)
         .lt('data_hora',  `${end}T00:00:00`)
@@ -417,17 +419,6 @@ export default function MarcacoesPage() {
   const handleConfirmar = async (m: Marcacao) => {
     if (!barbearia) return
     await supabase.from('marcacoes').update({ estado: 'confirmado' }).eq('id', m.id)
-    if (m.servicos && m.servico_id) {
-      await supabase.from('faturacao').insert({
-        barbearia_id: barbearia.id,
-        cliente_nome: m.cliente_nome,
-        servico_id:   m.servico_id,
-        valor:        m.servicos.preco,
-        gorjeta:      0,
-        estado:       'pendente',
-        data_hora:    m.data_hora,
-      })
-    }
     // SMS de confirmação (fire-and-forget)
     if (m.cliente_telemovel) {
       fetch('/api/sms/online', {
@@ -435,6 +426,25 @@ export default function MarcacoesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ marcacao_id: m.id, tipo: 'confirmada' }),
       }).catch(() => {})
+    }
+    fetchMarcacoes(barbearia.id, weekStart)
+  }
+
+  // ── Concluir serviço → cria entrada em faturação ──────────────
+  const handleConcluir = async (m: Marcacao) => {
+    if (!barbearia) return
+    await supabase.from('marcacoes').update({ estado: 'concluido' }).eq('id', m.id)
+    if (m.servicos && m.servico_id) {
+      await supabase.from('faturacao').insert({
+        barbearia_id: barbearia.id,
+        cliente_nome: m.cliente_nome,
+        cliente_id:   m.cliente_id ?? null,
+        servico_id:   m.servico_id,
+        valor:        m.servicos.preco,
+        gorjeta:      0,
+        estado:       'concluido',
+        data_hora:    new Date().toISOString(),
+      })
     }
     fetchMarcacoes(barbearia.id, weekStart)
   }
@@ -773,7 +783,7 @@ export default function MarcacoesPage() {
                               <button
                                 onClick={() => handleConfirmar(m)}
                                 className="btn-ghost !p-2 text-verde"
-                                title="Confirmar"
+                                title="Confirmar marcação"
                               >
                                 <span className="material-symbols-outlined" style={{fontSize:'18px'}}>check</span>
                               </button>
@@ -786,7 +796,25 @@ export default function MarcacoesPage() {
                               </button>
                             </>
                           )}
-                          {m.cliente_telemovel && (
+                          {m.estado === 'confirmado' && (
+                            <>
+                              <button
+                                onClick={() => handleConcluir(m)}
+                                className="btn-ghost !p-2 text-verde"
+                                title="Concluir serviço — regista em faturação"
+                              >
+                                <span className="material-symbols-outlined" style={{fontSize:'18px'}}>task_alt</span>
+                              </button>
+                              <button
+                                onClick={() => handleDesistencia(m)}
+                                className="btn-ghost !p-2 text-red-600"
+                                title="Desistência"
+                              >
+                                <span className="material-symbols-outlined" style={{fontSize:'18px'}}>close</span>
+                              </button>
+                            </>
+                          )}
+                          {m.cliente_telemovel && m.estado !== 'concluido' && m.estado !== 'desistencia' && (
                             <button
                               onClick={() => handleReenviarSms(m)}
                               className="btn-ghost !p-2 text-ink-secondary"
