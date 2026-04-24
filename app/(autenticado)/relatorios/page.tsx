@@ -589,11 +589,18 @@ export default function RelatoriosPage() {
           {/* Resultado */}
           <div className="metric-card">
             <div className="flex items-center justify-between mb-2">
-              <span className="metric-label">Resultado líquido</span>
+              <span className="metric-label">
+                {comissaoAtiva ? 'Resultado real' : 'Resultado líquido'}
+              </span>
               <span className="material-symbols-outlined text-verde/60" style={{ fontSize: '18px' }}>bar_chart</span>
             </div>
             {loading ? <Sk className="h-8 w-32 mb-2" /> : (
-              <p className="metric-value">{fmt(resultado)}</p>
+              <>
+                <p className="metric-value">{fmt(comissaoAtiva ? resultadoRealComissao : resultado)}</p>
+                {comissaoAtiva && (
+                  <p className="text-xs text-ink-secondary mt-0.5">após comissão de {comissaoPct}%</p>
+                )}
+              </>
             )}
             {!loading && (
               <span className={`badge ${trendRes > 0 ? 'badge-green' : trendRes < 0 ? 'badge-red' : 'badge-gray'}`}>
@@ -619,31 +626,25 @@ export default function RelatoriosPage() {
           </div>
         </div>
 
-        {/* Comissão do espaço */}
+        {/* Comissão do espaço — detalhe do cálculo */}
         {comissaoAtiva && !loading && (
           <div className="card border-l-4 border-l-dourado">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <div className="flex items-center gap-2.5 flex-1">
-                <span className="material-symbols-outlined text-dourado-escuro flex-shrink-0" style={{ fontSize: '20px' }}>percent</span>
-                <div>
-                  <p className="text-xs font-medium text-ink-secondary uppercase tracking-wide">Comissão do espaço ({comissaoPct}%)</p>
-                  <p className="text-sm text-ink mt-0.5">
-                    De <strong>{fmt(totalFaturacao)}</strong> faturados, <strong className="text-red-600">{fmt(comissaoDevida)}</strong> vão para o espaço.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-6 sm:gap-8 flex-shrink-0">
-                <div className="text-center">
-                  <p className="text-xs text-ink-secondary mb-0.5">Comissão devida</p>
-                  <p className="font-serif font-bold text-xl text-red-600">−{fmt(comissaoDevida)}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xs text-ink-secondary mb-0.5">Resultado real</p>
-                  <p className={`font-serif font-bold text-xl ${resultadoRealComissao >= 0 ? 'text-verde' : 'text-red-600'}`}>
-                    {fmt(resultadoRealComissao)}
-                  </p>
-                </div>
-              </div>
+            <div className="flex items-center gap-2.5 mb-3">
+              <span className="material-symbols-outlined text-dourado-escuro flex-shrink-0" style={{ fontSize: '18px' }}>percent</span>
+              <p className="text-xs font-semibold text-ink-secondary uppercase tracking-wide">Detalhe da comissão do espaço ({comissaoPct}%)</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-sm text-ink">
+              <span className="font-semibold">{fmt(totalFaturacao)}</span>
+              <span className="text-ink-secondary">faturação bruta</span>
+              <span className="text-ink-secondary">−</span>
+              <span className="font-semibold text-ink-secondary">{fmt(totalDespesas)}</span>
+              <span className="text-ink-secondary">despesas</span>
+              <span className="text-ink-secondary">−</span>
+              <span className="font-semibold text-red-500">{fmt(comissaoDevida)}</span>
+              <span className="text-ink-secondary">comissão</span>
+              <span className="text-ink-secondary">=</span>
+              <span className={`font-bold text-base ${resultadoRealComissao >= 0 ? 'text-verde' : 'text-red-600'}`}>{fmt(resultadoRealComissao)}</span>
+              <span className="text-ink-secondary">para ti</span>
             </div>
           </div>
         )}
