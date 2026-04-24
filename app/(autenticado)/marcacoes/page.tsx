@@ -339,6 +339,32 @@ export default function MarcacoesPage() {
       }
     }
 
+    // Verificar sobreposição com marcações existentes
+    const novoInicio = new Date(dataHora).getTime()
+    const novoDurMs = selectedServico.tempo_minutos * 60000
+    const novoFim = novoInicio + novoDurMs
+
+    const { data: existentes } = await supabase
+      .from('marcacoes')
+      .select('data_hora, servicos(tempo_minutos)')
+      .eq('barbearia_id', barbearia.id)
+      .in('estado', ['pendente', 'confirmado'])
+      .gte('data_hora', `${dataForm}T00:00:00`)
+      .lte('data_hora', `${dataForm}T23:59:59`)
+
+    const conflito = (existentes ?? []).some(ex => {
+      const exInicio = new Date(ex.data_hora).getTime()
+      const exDur = ((ex.servicos as unknown as { tempo_minutos: number } | null)?.tempo_minutos ?? 30) * 60000
+      const exFim = exInicio + exDur
+      return novoInicio < exFim && novoFim > exInicio
+    })
+
+    if (conflito) {
+      setFormError('Já existe uma marcação nesse horário. Escolhe outro horário.')
+      setSubmitting(false)
+      return
+    }
+
     const { data: novaMarcacao, error } = await supabase.from('marcacoes').insert({
       barbearia_id: barbearia.id,
       cliente_nome: clienteNome.trim(),

@@ -284,7 +284,14 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
               ) : (
                 <div className="grid grid-cols-4 gap-2">
                   {slots.map(slot => {
-                    const ocupado   = horasOcupadas.includes(slot)
+                    // Verifica se o slot OU qualquer intervalo dentro da duração do novo serviço está ocupado
+                    const durNovoMin = servicoSelecionado?.tempo_minutos ?? 30
+                    const [slotH, slotM] = slot.split(':').map(Number)
+                    const slotTotalMin = slotH * 60 + slotM
+                    const ocupado = Array.from({ length: Math.ceil(durNovoMin / 30) }, (_, i) => {
+                      const total = slotTotalMin + i * 30
+                      return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
+                    }).some(s => horasOcupadas.includes(s))
                     const bloqueado = horasBloqueadas.includes(slot)
                     const indisponivel = ocupado || bloqueado
                     const active = horaSelecionada === slot
