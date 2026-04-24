@@ -26,6 +26,8 @@ export async function POST(req: NextRequest) {
   const supabase = createAdminClient()
   const updates: Record<string, unknown> = { plano }
   if (notas !== undefined) updates.notas = notas
+  // Limpar data expirada ao reativar manualmente — renovação volta a ser definida pelo pagamento
+  if (plano === 'mensal') updates.subscricao_renovacao = null
 
   const { error } = await supabase.from('barbearias').update(updates).eq('id', barbearia_id)
 
