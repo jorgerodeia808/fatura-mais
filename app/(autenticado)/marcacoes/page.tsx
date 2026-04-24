@@ -178,6 +178,7 @@ export default function MarcacoesPage() {
   const [smsMes, setSmsMes] = useState(0)
   const [loadingInit, setLoadingInit] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [processando, setProcessando] = useState<Set<string>>(new Set())
   const [successMsg, setSuccessMsg] = useState('')
   const [formError, setFormError] = useState('')
 
@@ -432,7 +433,10 @@ export default function MarcacoesPage() {
 
   // ── Concluir serviço → cria entrada em faturação ──────────────
   const handleConcluir = async (m: Marcacao) => {
-    if (!barbearia) return
+    if (!barbearia || processando.has(m.id)) return
+    setProcessando(prev => { const next = new Set(prev); next.add(m.id); return next })
+    // Atualiza estado localmente de imediato para o botão desaparecer
+    setMarcacoes(prev => prev.map(x => x.id === m.id ? { ...x, estado: 'concluido' as const } : x))
     await supabase.from('marcacoes').update({ estado: 'concluido' }).eq('id', m.id)
     if (m.servicos && m.servico_id) {
       await supabase.from('faturacao').insert({
@@ -446,6 +450,7 @@ export default function MarcacoesPage() {
         data_hora:    new Date().toISOString(),
       })
     }
+    setProcessando(prev => { const next = new Set(prev); next.delete(m.id); return next })
     fetchMarcacoes(barbearia.id, weekStart)
   }
 
@@ -800,7 +805,8 @@ export default function MarcacoesPage() {
                             <>
                               <button
                                 onClick={() => handleConcluir(m)}
-                                className="btn-ghost !p-2 text-verde"
+                                disabled={processando.has(m.id)}
+                                className="btn-ghost !p-2 text-verde disabled:opacity-40"
                                 title="Concluir serviço — regista em faturação"
                               >
                                 <span className="material-symbols-outlined" style={{fontSize:'18px'}}>task_alt</span>
