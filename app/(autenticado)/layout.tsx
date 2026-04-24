@@ -23,7 +23,7 @@ export default async function AuthenticadoLayout({
   // Bloquear acesso se o nicho da barbearia não coincide com esta plataforma
   const plataformaNicho = process.env.NEXT_PUBLIC_NICHO
   if (plataformaNicho && barbearia?.nicho && barbearia.nicho !== plataformaNicho) {
-    redirect('/login?erro=plataforma_errada')
+    redirect('/plataforma-errada')
   }
 
   const userName =
