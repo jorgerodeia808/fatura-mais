@@ -507,7 +507,7 @@ export default function MarcacoesPage() {
 
   const copyLink = () => {
     const slug = barbearia?.slug || ''
-    navigator.clipboard.writeText(`https://www.fatura-mais.pt/agendar/${slug}`)
+    navigator.clipboard.writeText(`${window.location.origin}/agendar/${slug}`)
     setLinkCopiado(true)
     setTimeout(() => setLinkCopiado(false), 2000)
   }
@@ -840,7 +840,7 @@ export default function MarcacoesPage() {
               <div className="mt-4 bg-[#f0eee8] rounded-xl p-3">
                 <p className="text-[10px] text-ink-secondary uppercase tracking-widest font-medium mb-1.5">Link público</p>
                 <p className="text-xs text-verde font-mono truncate mb-3">
-                  fatura-mais.pt/agendar/{barbearia.slug}
+                  {typeof window !== 'undefined' ? window.location.host : 'fatura-mais.pt'}/agendar/{barbearia.slug}
                 </p>
                 <button
                   onClick={copyLink}
