@@ -56,7 +56,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
   const [sucesso, setSucesso] = useState(false)
 
   // Gerar datas disponíveis (próximos 14 dias, excluindo domingo)
-  const datasDisponiveis = Array.from({ length: 14 }, (_, i) => {
+  const datasDisponiveis = Array.from({ length: 30 }, (_, i) => {
     const d = new Date()
     d.setDate(d.getDate() + i + 1)
     return d
@@ -248,7 +248,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
           {/* Datas */}
           <div>
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Data</p>
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+            <div className="grid grid-cols-5 sm:grid-cols-7 gap-2">
               {datasDisponiveis.map(d => {
                 const iso = d.toISOString().split('T')[0]
                 const active = dataSelecionada === iso
@@ -256,7 +256,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
                   <button
                     key={iso}
                     onClick={() => { setDataSelecionada(iso); setHoraSelecionada('') }}
-                    className={`flex-shrink-0 flex flex-col items-center px-3 py-2 rounded-xl transition-all text-sm ${
+                    className={`flex flex-col items-center px-1 py-2 rounded-xl transition-all text-sm ${
                       active ? 'bg-verde text-white' : 'bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100'
                     }`}
                   >
