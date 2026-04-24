@@ -629,22 +629,30 @@ export default function RelatoriosPage() {
         {/* Comissão do espaço — detalhe do cálculo */}
         {comissaoAtiva && !loading && (
           <div className="card border-l-4 border-l-dourado">
-            <div className="flex items-center gap-2.5 mb-3">
-              <span className="material-symbols-outlined text-dourado-escuro flex-shrink-0" style={{ fontSize: '18px' }}>percent</span>
-              <p className="text-xs font-semibold text-ink-secondary uppercase tracking-wide">Detalhe da comissão do espaço ({comissaoPct}%)</p>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="material-symbols-outlined text-dourado-escuro" style={{ fontSize: '16px' }}>percent</span>
+              <p className="text-xs font-semibold text-ink-secondary uppercase tracking-wide">Comissão do espaço ({comissaoPct}%)</p>
             </div>
-            <div className="flex flex-wrap items-center gap-2 text-sm text-ink">
-              <span className="font-semibold">{fmt(totalFaturacao)}</span>
-              <span className="text-ink-secondary">faturação bruta</span>
-              <span className="text-ink-secondary">−</span>
-              <span className="font-semibold text-ink-secondary">{fmt(totalDespesas)}</span>
-              <span className="text-ink-secondary">despesas</span>
-              <span className="text-ink-secondary">−</span>
-              <span className="font-semibold text-red-500">{fmt(comissaoDevida)}</span>
-              <span className="text-ink-secondary">comissão</span>
-              <span className="text-ink-secondary">=</span>
-              <span className={`font-bold text-base ${resultadoRealComissao >= 0 ? 'text-verde' : 'text-red-600'}`}>{fmt(resultadoRealComissao)}</span>
-              <span className="text-ink-secondary">para ti</span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              {/* Breakdown */}
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-ink-secondary">Faturação bruta</span>
+                  <span className="font-medium text-ink">{fmt(totalFaturacao)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-ink-secondary">Despesas</span>
+                  <span className="font-medium text-ink">− {fmt(totalDespesas)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-ink-secondary">Comissão do espaço ({comissaoPct}%)</span>
+                  <span className="font-medium text-red-500">− {fmt(comissaoDevida)}</span>
+                </div>
+                <div className="border-t border-black/8 pt-2 flex items-center justify-between text-sm font-semibold">
+                  <span className="text-ink">Fica para ti</span>
+                  <span className={resultadoRealComissao >= 0 ? 'text-verde' : 'text-red-600'}>{fmt(resultadoRealComissao)}</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
