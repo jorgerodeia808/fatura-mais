@@ -96,13 +96,16 @@ export async function middleware(request: NextRequest) {
 
     if (barbearia.plano === 'mensal') {
       const renovacao = barbearia.subscricao_renovacao as string | null
-      if (renovacao && new Date(renovacao) >= new Date()) {
+      // null = sem prazo definido (admin ainda não registou renovação) → acesso válido
+      // data no futuro → acesso válido
+      // data no passado → expirado
+      if (!renovacao || new Date(renovacao) >= new Date()) {
         return supabaseResponse
       }
       const url = request.nextUrl.clone()
       url.pathname = '/acesso-suspenso'
       url.searchParams.set('motivo', 'expirado')
-      if (renovacao) url.searchParams.set('renovacao', renovacao)
+      url.searchParams.set('renovacao', renovacao)
       return NextResponse.redirect(url)
     }
 
