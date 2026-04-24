@@ -36,6 +36,8 @@ interface Barbearia {
   sms_mensagem_personalizada: string | null
   marcacoes_online: boolean | null
   slug: string | null
+  comissao_ativa: boolean | null
+  comissao_percentagem: number | null
 }
 
 interface Servico {
@@ -102,6 +104,10 @@ export default function ConfiguracoesPage() {
   // Marcações online state
   const [marcacoesOnline, setMarcacoesOnline] = useState(false)
 
+  // Comissão state
+  const [comissaoAtiva, setComissaoAtiva] = useState(false)
+  const [comissaoPercentagem, setComissaoPercentagem] = useState('')
+
   // SMS marcações online templates
   const [smsOnlineRecebida, setSmsOnlineRecebida] = useState(SMS_ONLINE_PADRAO.recebida)
   const [smsOnlineConfirmada, setSmsOnlineConfirmada] = useState(SMS_ONLINE_PADRAO.confirmada)
@@ -131,7 +137,7 @@ export default function ConfiguracoesPage() {
     const { data: barbId } = await supabase.from('barbearias').select('id').eq('user_id', user.id).single()
     const bid = barbId?.id ?? ''
     const [{ data: barb }, { data: servs }, { data: custs }, { data: prods }] = await Promise.all([
-      supabase.from('barbearias').select('id, nome, num_barbeiros, hora_abertura, hora_fecho, dias_trabalho_mes, sms_ativo, sms_mensagem_personalizada, marcacoes_online, slug, sms_reserva_recebida, sms_reserva_confirmada, sms_reserva_cancelada').eq('user_id', user.id).single(),
+      supabase.from('barbearias').select('id, nome, num_barbeiros, hora_abertura, hora_fecho, dias_trabalho_mes, sms_ativo, sms_mensagem_personalizada, marcacoes_online, slug, sms_reserva_recebida, sms_reserva_confirmada, sms_reserva_cancelada, comissao_ativa, comissao_percentagem').eq('user_id', user.id).single(),
       supabase.from('servicos').select('id, nome, preco, tempo_minutos, custo_material, ativo').eq('barbearia_id', bid).order('criado_em'),
       supabase.from('custos_fixos').select('id, descricao, valor, tipo, categoria').eq('barbearia_id', bid).order('criado_em'),
       supabase.from('produtos').select('id, nome, preco, ativo').eq('barbearia_id', bid).order('criado_em'),
@@ -152,6 +158,8 @@ export default function ConfiguracoesPage() {
       setSmsOnlineRecebida(barb.sms_reserva_recebida || SMS_ONLINE_PADRAO.recebida)
       setSmsOnlineConfirmada(barb.sms_reserva_confirmada || SMS_ONLINE_PADRAO.confirmada)
       setSmsOnlineCancelada(barb.sms_reserva_cancelada || SMS_ONLINE_PADRAO.cancelada)
+      setComissaoAtiva(barb.comissao_ativa ?? false)
+      setComissaoPercentagem(String(barb.comissao_percentagem ?? ''))
     }
     if (servs) setServicos(servs as Servico[])
     if (custs) setCustos(custs as CustoFixo[])
@@ -175,6 +183,20 @@ export default function ConfiguracoesPage() {
     setSaving(null)
     if (error) showToast('Erro ao guardar. Tenta novamente.')
     else { showToast('Dados guardados ✓'); setBarbearia(b => b ? { ...b, ...editBarbearia, num_barbeiros: parseInt(editBarbearia.num_barbeiros) || 1, dias_trabalho_mes: parseInt(editBarbearia.dias_trabalho_mes) || 22 } : b) }
+  }
+
+  // ─── Comissão ───────────────────────────────────────────────────
+  const guardarComissao = async () => {
+    if (!barbearia) return
+    setSaving('comissao')
+    const pct = parseFloat(comissaoPercentagem.replace(',', '.')) || 0
+    const { error } = await supabase.from('barbearias').update({
+      comissao_ativa: comissaoAtiva,
+      comissao_percentagem: Math.min(Math.max(pct, 0), 100),
+    }).eq('id', barbearia.id)
+    setSaving(null)
+    if (error) showToast('Erro ao guardar. Tenta novamente.')
+    else showToast('Comissão guardada ✓')
   }
 
   // ─── Serviços ───────────────────────────────────────────────────
@@ -818,6 +840,53 @@ export default function ConfiguracoesPage() {
         </button>
       </Section>
       */}
+
+      {/* ─── Comissão do espaço ─────────────────────────────────── */}
+      <Section title="Comissão do espaço" description="Para trabalhadores independentes que pagam uma % ao dono do espaço">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-gray-800">Pago comissão ao espaço</p>
+            <p className="text-xs text-gray-400 mt-0.5">Ativa o cálculo de comissão nos relatórios</p>
+          </div>
+          <Toggle value={comissaoAtiva} onChange={setComissaoAtiva} />
+        </div>
+
+        {comissaoAtiva && (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">
+                Percentagem que pago ao espaço
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  value={comissaoPercentagem}
+                  onChange={e => setComissaoPercentagem(e.target.value)}
+                  placeholder="ex: 40"
+                  className="input-field w-32"
+                />
+                <span className="text-sm text-ink-secondary font-medium">%</span>
+              </div>
+              <p className="text-xs text-ink-tertiary mt-1.5">
+                Por cada 100€ faturados, {comissaoPercentagem ? `${comissaoPercentagem}€ vão para o espaço e ficam ${(100 - parseFloat(comissaoPercentagem.replace(',','.'))||0).toFixed(0)}€ para ti.` : 'indica a percentagem acima.'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-end pt-1">
+          <button
+            onClick={guardarComissao}
+            disabled={saving === 'comissao'}
+            className="btn-primary disabled:opacity-50"
+          >
+            {saving === 'comissao' ? 'A guardar...' : 'Guardar'}
+          </button>
+        </div>
+      </Section>
 
       {/* ─── Marcações online ───────────────────────────────────── */}
       <Section title="Marcações online" description="Permite que os clientes agendem pelo link público">

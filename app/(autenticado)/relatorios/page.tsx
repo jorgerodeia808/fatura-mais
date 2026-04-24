@@ -26,6 +26,8 @@ import { getNichoConfig } from '@/lib/nicho'
 interface Barbearia {
   id: string
   nome: string
+  comissao_ativa: boolean | null
+  comissao_percentagem: number | null
 }
 
 interface FaturacaoRow {
@@ -214,7 +216,7 @@ export default function RelatoriosPage() {
       if (!user) return
       const { data } = await supabase
         .from('barbearias')
-        .select('id, nome')
+        .select('id, nome, comissao_ativa, comissao_percentagem')
         .eq('user_id', user.id)
         .single()
       if (data) setBarbearia(data as unknown as Barbearia)
@@ -296,6 +298,12 @@ export default function RelatoriosPage() {
   const resultadoPrev = totalFaturacaoPrev - totalDespesasPrev
   const margem = totalFaturacao > 0 ? (resultado / totalFaturacao) * 100 : 0
   const margemPrev = totalFaturacaoPrev > 0 ? (resultadoPrev / totalFaturacaoPrev) * 100 : 0
+
+  // ── Comissão ───────────────────────────────────────────────────
+  const comissaoAtiva = barbearia?.comissao_ativa ?? false
+  const comissaoPct = barbearia?.comissao_percentagem ?? 0
+  const comissaoDevida = comissaoAtiva ? totalFaturacao * (comissaoPct / 100) : 0
+  const resultadoRealComissao = resultado - comissaoDevida
 
   const trendFat = totalFaturacaoPrev > 0 ? ((totalFaturacao - totalFaturacaoPrev) / totalFaturacaoPrev) * 100 : 0
   const trendDesp = totalDespesasPrev > 0 ? ((totalDespesas - totalDespesasPrev) / totalDespesasPrev) * 100 : 0
@@ -610,6 +618,35 @@ export default function RelatoriosPage() {
             )}
           </div>
         </div>
+
+        {/* Comissão do espaço */}
+        {comissaoAtiva && !loading && (
+          <div className="card border-l-4 border-l-dourado">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex items-center gap-2.5 flex-1">
+                <span className="material-symbols-outlined text-dourado-escuro flex-shrink-0" style={{ fontSize: '20px' }}>percent</span>
+                <div>
+                  <p className="text-xs font-medium text-ink-secondary uppercase tracking-wide">Comissão do espaço ({comissaoPct}%)</p>
+                  <p className="text-sm text-ink mt-0.5">
+                    De <strong>{fmt(totalFaturacao)}</strong> faturados, <strong className="text-red-600">{fmt(comissaoDevida)}</strong> vão para o espaço.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-6 sm:gap-8 flex-shrink-0">
+                <div className="text-center">
+                  <p className="text-xs text-ink-secondary mb-0.5">Comissão devida</p>
+                  <p className="font-serif font-bold text-xl text-red-600">−{fmt(comissaoDevida)}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-ink-secondary mb-0.5">Resultado real</p>
+                  <p className={`font-serif font-bold text-xl ${resultadoRealComissao >= 0 ? 'text-verde' : 'text-red-600'}`}>
+                    {fmt(resultadoRealComissao)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Evolução mensal */}
         <Section title="Evolução Mensal">
