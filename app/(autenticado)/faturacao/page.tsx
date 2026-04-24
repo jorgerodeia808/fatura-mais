@@ -94,6 +94,8 @@ export default function FaturacaoPage() {
   const [tipoRegisto, setTipoRegisto] = useState<'servico' | 'produto'>('servico')
   const [clienteQuery, setClienteQuery] = useState('')
   const [clienteId, setClienteId] = useState<string | null>(null)
+  const [clienteNovo, setClienteNovo] = useState(false)
+  const [clienteTelemovel, setClienteTelemovel] = useState('')
   const [showSugestoes, setShowSugestoes] = useState(false)
   const [selectedServico, setSelectedServico] = useState<Servico | null>(null)
   const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null)
@@ -187,12 +189,22 @@ export default function FaturacaoPage() {
   const selecionarClienteCRM = (c: ClienteCRM) => {
     setClienteQuery(c.nome)
     setClienteId(c.id)
+    setClienteNovo(false)
+    setClienteTelemovel('')
+    setShowSugestoes(false)
+  }
+
+  const iniciarClienteNovo = () => {
+    setClienteNovo(true)
+    setClienteId(null)
     setShowSugestoes(false)
   }
 
   const limparCliente = () => {
     setClienteQuery('')
     setClienteId(null)
+    setClienteNovo(false)
+    setClienteTelemovel('')
     setShowSugestoes(false)
     clienteInputRef.current?.focus()
   }
@@ -207,12 +219,27 @@ export default function FaturacaoPage() {
     setAvisoDuplicado('')
     setSubmitting(true)
 
+    // Criar cliente no CRM se for novo (nome escrito mas sem id CRM)
+    let resolvedClienteId = clienteId
+    const nomeCliente = clienteQuery.trim()
+    if (nomeCliente && !resolvedClienteId) {
+      const { data: novoCliente, error: errCliente } = await supabase
+        .from('clientes')
+        .insert({ barbearia_id: barbeariaId, nome: nomeCliente, telemovel: clienteTelemovel.trim() || null })
+        .select('id')
+        .single()
+      if (!errCliente && novoCliente) {
+        resolvedClienteId = novoCliente.id
+        setClientesCRM(prev => [...prev, { id: novoCliente.id, nome: nomeCliente, telemovel: clienteTelemovel.trim() || null }])
+      }
+    }
+
     // Verificar duplicado de serviço para o mesmo cliente no mesmo dia
-    if (tipoRegisto === 'servico' && clienteId) {
+    if (tipoRegisto === 'servico' && resolvedClienteId) {
       const { data: dups } = await supabase.from('faturacao')
         .select('id')
         .eq('barbearia_id', barbeariaId)
-        .eq('cliente_id', clienteId)
+        .eq('cliente_id', resolvedClienteId)
         .eq('tipo', 'servico')
         .gte('data_hora', startOfDay(selectedDate))
         .lte('data_hora', endOfDay(selectedDate))
@@ -223,8 +250,8 @@ export default function FaturacaoPage() {
 
     const payload: Record<string, unknown> = {
       barbearia_id: barbeariaId,
-      cliente_nome: clienteQuery.trim() || null,
-      cliente_id: clienteId,
+      cliente_nome: nomeCliente || null,
+      cliente_id: resolvedClienteId,
       tipo: tipoRegisto,
       valor: item.preco,
       gorjeta: 0,
@@ -240,6 +267,8 @@ export default function FaturacaoPage() {
     // Reset form
     setClienteQuery('')
     setClienteId(null)
+    setClienteNovo(false)
+    setClienteTelemovel('')
     setSelectedServico(null)
     setSelectedProduto(null)
     setEstado('concluido')
@@ -433,6 +462,11 @@ export default function FaturacaoPage() {
                       · ficha CRM
                     </span>
                   )}
+                  {clienteNovo && (
+                    <span className="ml-1.5 text-dourado normal-case tracking-normal font-semibold">
+                      · novo cliente
+                    </span>
+                  )}
                 </label>
                 <div className="relative">
                   <input
@@ -442,6 +476,7 @@ export default function FaturacaoPage() {
                     onChange={e => {
                       setClienteQuery(e.target.value)
                       setClienteId(null)
+                      setClienteNovo(false)
                       setShowSugestoes(true)
                     }}
                     onFocus={() => { if (clienteQuery.length > 0) setShowSugestoes(true) }}
@@ -458,7 +493,7 @@ export default function FaturacaoPage() {
                     </button>
                   )}
                 </div>
-                {showSugestoes && sugestoesFiltradas.length > 0 && (
+                {showSugestoes && clienteQuery.trim().length > 0 && (
                   <div
                     ref={sugestoesRef}
                     className="absolute z-20 top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg overflow-hidden"
@@ -481,6 +516,34 @@ export default function FaturacaoPage() {
                         <span className="ml-auto text-[10px] text-verde font-medium">CRM</span>
                       </button>
                     ))}
+                    {/* Opção criar novo cliente */}
+                    {!sugestoesFiltradas.some(c => c.nome.toLowerCase() === clienteQuery.trim().toLowerCase()) && (
+                      <button
+                        type="button"
+                        onClick={iniciarClienteNovo}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-dourado/5 transition-colors border-t border-black/5"
+                      >
+                        <div className="w-7 h-7 rounded-full bg-dourado/10 text-dourado text-xs font-bold flex items-center justify-center flex-shrink-0">
+                          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>person_add</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-ink">Criar cliente <span className="text-dourado">"{clienteQuery.trim()}"</span></p>
+                          <p className="text-xs text-ink-secondary">Adicionar à lista de clientes</p>
+                        </div>
+                      </button>
+                    )}
+                  </div>
+                )}
+                {/* Campo telemóvel para novo cliente */}
+                {clienteNovo && !clienteId && (
+                  <div className="mt-2">
+                    <input
+                      type="tel"
+                      value={clienteTelemovel}
+                      onChange={e => setClienteTelemovel(e.target.value)}
+                      className="input-field"
+                      placeholder="Telemóvel (opcional)"
+                    />
                   </div>
                 )}
               </div>
