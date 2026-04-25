@@ -53,6 +53,10 @@ export async function POST(req: NextRequest) {
 
   if (!barb) return NextResponse.json({ error: 'Barbearia não encontrada' }, { status: 404 })
 
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    return NextResponse.json({ error: `Credenciais Gmail em falta no servidor (GMAIL_USER: ${process.env.GMAIL_USER ? 'ok' : 'vazio'})` }, { status: 500 })
+  }
+
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
