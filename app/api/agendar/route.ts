@@ -109,15 +109,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ erro: 'Erro ao criar marcação. Tenta novamente.' }, { status: 500 })
     }
 
-    // SMS de confirmação de receção (fire-and-forget, não bloqueia resposta)
-    if (cliente_telemovel?.trim()) {
-      fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/sms/online`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ marcacao_id: marcacao.id, tipo: 'recebida' }),
-      }).catch(() => {})
-    }
-
     return NextResponse.json({ sucesso: true, marcacao_id: marcacao.id })
   } catch {
     return NextResponse.json({ erro: 'Erro interno do servidor.' }, { status: 500 })

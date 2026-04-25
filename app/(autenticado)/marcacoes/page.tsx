@@ -447,14 +447,6 @@ export default function MarcacoesPage() {
   const handleConfirmar = async (m: Marcacao) => {
     if (!barbearia) return
     await supabase.from('marcacoes').update({ estado: 'confirmado' }).eq('id', m.id)
-    // SMS de confirmação (fire-and-forget)
-    if (m.cliente_telemovel) {
-      fetch('/api/sms/online', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ marcacao_id: m.id, tipo: 'confirmada' }),
-      }).catch(() => {})
-    }
     fetchMarcacoes(barbearia.id, weekStart)
   }
 
@@ -484,14 +476,6 @@ export default function MarcacoesPage() {
   const handleDesistencia = async (m: Marcacao) => {
     if (!barbearia) return
     await supabase.from('marcacoes').update({ estado: 'desistencia' }).eq('id', m.id)
-    // SMS de cancelamento (fire-and-forget)
-    if (m.cliente_telemovel) {
-      fetch('/api/sms/online', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ marcacao_id: m.id, tipo: 'cancelada' }),
-      }).catch(() => {})
-    }
     fetchMarcacoes(barbearia.id, weekStart)
   }
 
