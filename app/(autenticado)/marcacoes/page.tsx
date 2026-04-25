@@ -481,7 +481,7 @@ export default function MarcacoesPage() {
 
   // ── Enviar email individual ao cliente ────────────────────────
   const handleEnviarEmailCliente = async (m: Marcacao) => {
-    if (!m.cliente_email || enviandoEmailCliente.has(m.id)) return
+    if ((!m.cliente_email && !m.cliente_id) || enviandoEmailCliente.has(m.id)) return
     setEnviandoEmailCliente(prev => { const next = new Set(prev); next.add(m.id); return next })
     try {
       const res = await fetch('/api/email/lembrete-manual', {

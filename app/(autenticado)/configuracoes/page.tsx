@@ -116,6 +116,8 @@ export default function ConfiguracoesPage() {
 
   // Email lembrete state
   const [emailLembreteMsg, setEmailLembreteMsg] = useState(EMAIL_LEMBRETE_PADRAO)
+  const [emailLembreteBarbeiroAtivo, setEmailLembreteBarbeiroAtivo] = useState(true)
+  const [enviandoTesteOwner, setEnviandoTesteOwner] = useState(false)
 
   // SMS marcações online templates
   const [smsOnlineRecebida, setSmsOnlineRecebida] = useState(SMS_ONLINE_PADRAO.recebida)
@@ -170,6 +172,7 @@ export default function ConfiguracoesPage() {
       setComissaoAtiva(barb.comissao_ativa ?? false)
       setComissaoPercentagem(String(barb.comissao_percentagem ?? ''))
       setEmailLembreteMsg(barb.mensagem_lembrete_email || EMAIL_LEMBRETE_PADRAO)
+      setEmailLembreteBarbeiroAtivo((barb as any).email_lembrete_barbeiro_ativo !== false)
     }
     if (servs) setServicos(servs as Servico[])
     if (custs) setCustos(custs as CustoFixo[])
@@ -329,6 +332,32 @@ export default function ConfiguracoesPage() {
     }).eq('id', barbearia.id)
     setSaving(null)
     showToast('Mensagem de email guardada ✓')
+  }
+
+  const handleEmailBarbeiroToggle = async (val: boolean) => {
+    if (!barbearia) return
+    setEmailLembreteBarbeiroAtivo(val)
+    await supabase.from('barbearias').update({ email_lembrete_barbeiro_ativo: val } as any).eq('id', barbearia.id)
+    showToast('Guardado ✓')
+  }
+
+  const handleEnviarTesteOwner = async () => {
+    setEnviandoTesteOwner(true)
+    try {
+      const res = await fetch('/api/email/lembrete-manual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo: 'owner' }),
+      })
+      const data = await res.json()
+      if (data.ok && data.enviado) showToast(`Email de teste enviado (${data.marcacoes} marcação${data.marcacoes !== 1 ? 'ões' : ''}) ✓`)
+      else if (data.ok && !data.enviado) showToast('Sem marcações nas próximas 24h para enviar')
+      else showToast(data.error || data.motivo || 'Erro ao enviar email de teste')
+    } catch {
+      showToast('Erro ao enviar email de teste')
+    } finally {
+      setEnviandoTesteOwner(false)
+    }
   }
 
   const handleSmsOnlineGuardar = async () => {
@@ -870,6 +899,31 @@ export default function ConfiguracoesPage() {
               .replace(/\[nome_servico\]/g, 'Corte de Cabelo')
               .replace(/\[nome_negocio\]/g, barbearia?.nome || 'O teu negócio')}
           </p>
+        </div>
+      </Section>
+
+      {/* ─── Email de resumo ao barbeiro ───────────────────────── */}
+      <Section title={`Email de resumo ao ${nicho.nomeProfissional}`} description="Recebe um email automático com as marcações das próximas 24h">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-gray-800">Envio automático diário</p>
+            <p className="text-xs text-gray-400 mt-0.5">Recebe um resumo por email com todas as marcações das próximas 24h</p>
+          </div>
+          <Toggle value={emailLembreteBarbeiroAtivo} onChange={handleEmailBarbeiroToggle} />
+        </div>
+
+        <div className="flex items-center justify-between pt-1">
+          <div>
+            <p className="text-sm font-medium text-gray-800">Enviar email de teste</p>
+            <p className="text-xs text-gray-400 mt-0.5">Recebe agora um exemplo com as marcações reais das próximas 24h</p>
+          </div>
+          <button
+            onClick={handleEnviarTesteOwner}
+            disabled={enviandoTesteOwner}
+            className="text-xs bg-verde text-white px-3 py-1.5 rounded-lg font-medium hover:bg-verde-escuro disabled:opacity-50 transition-colors whitespace-nowrap"
+          >
+            {enviandoTesteOwner ? 'A enviar...' : 'Enviar teste'}
+          </button>
         </div>
       </Section>
 

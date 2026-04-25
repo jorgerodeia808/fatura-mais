@@ -32,6 +32,7 @@ function aplicarVariaveis(
 }
 
 export async function POST(req: NextRequest) {
+  try {
   const supabaseServer = await createServerClient()
   const { data: { user } } = await supabaseServer.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
@@ -107,11 +108,12 @@ export async function POST(req: NextRequest) {
     const pendentes = marcacoes.filter(m => m.estado === 'pendente').length
     const confirmadas = marcacoes.filter(m => m.estado === 'confirmado').length
 
-    await transporter.sendMail({
-      from: `"${appLabel}" <${process.env.GMAIL_USER}>`,
-      to: ownerEmail,
-      subject: `[TESTE] ${appLabel} · ${marcacoes.length} marcação${marcacoes.length !== 1 ? 'ões' : ''} nas próximas 24h — ${barb.nome}`,
-      html: `
+    try {
+      await transporter.sendMail({
+        from: `"${appLabel}" <${process.env.GMAIL_USER}>`,
+        to: ownerEmail,
+        subject: `[TESTE] ${appLabel} · ${marcacoes.length} marcação${marcacoes.length !== 1 ? 'ões' : ''} nas próximas 24h — ${barb.nome}`,
+        html: `
 <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:${cor.bg};">
   <div style="background:${cor.primary};padding:24px 32px;border-radius:12px 12px 0 0;text-align:center;">
     <p style="margin:0;font-size:22px;font-weight:700;color:#fff;">${appLabel.replace('+', '')}<span style="color:${cor.accent};">+</span></p>
@@ -138,7 +140,11 @@ export async function POST(req: NextRequest) {
   </div>
   <p style="text-align:center;margin-top:16px;font-size:11px;color:#9ca3af;">Enviado por ${appLabel} · Teste manual</p>
 </div>`,
-    })
+      })
+    } catch (mailErr: any) {
+      console.error('[lembrete-manual] Erro ao enviar email ao owner:', mailErr)
+      return NextResponse.json({ error: mailErr?.message ?? 'Erro ao enviar email' }, { status: 500 })
+    }
 
     return NextResponse.json({ ok: true, enviado: true, marcacoes: marcacoes.length })
   }
@@ -180,6 +186,7 @@ export async function POST(req: NextRequest) {
       nome_negocio:  barb.nome,
     })
 
+    try {
     await transporter.sendMail({
       from: `"${barb.nome} via ${appLabel}" <${process.env.GMAIL_USER}>`,
       to: emailDestino,
@@ -217,9 +224,17 @@ export async function POST(req: NextRequest) {
   <p style="text-align:center;margin-top:16px;font-size:11px;color:#9ca3af;">Lembrete enviado por ${appLabel}</p>
 </div>`,
     })
+    } catch (mailErr: any) {
+      console.error('[lembrete-manual] Erro ao enviar email ao cliente:', mailErr)
+      return NextResponse.json({ error: mailErr?.message ?? 'Erro ao enviar email' }, { status: 500 })
+    }
 
     return NextResponse.json({ ok: true })
   }
 
   return NextResponse.json({ error: 'tipo inválido' }, { status: 400 })
+  } catch (err: any) {
+    console.error('[lembrete-manual] Erro inesperado:', err)
+    return NextResponse.json({ error: err?.message ?? 'Erro interno' }, { status: 500 })
+  }
 }

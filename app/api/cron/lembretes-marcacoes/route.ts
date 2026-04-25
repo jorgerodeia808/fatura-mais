@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
       cliente_id,
       data_hora,
       estado,
-      barbearias ( id, nome, user_id, mensagem_lembrete_email ),
+      barbearias ( id, nome, user_id, mensagem_lembrete_email, email_lembrete_barbeiro_ativo ),
       servicos ( nome, tempo_minutos )
     `)
     .in('estado', ['pendente', 'confirmado'])
@@ -111,12 +111,6 @@ export async function GET(req: NextRequest) {
     const barb = Array.isArray(lista[0].barbearias) ? lista[0].barbearias[0] : lista[0].barbearias
     if (!barb?.user_id) continue
 
-    // Obter email do dono via auth
-    const { data: userData, error: userErr } = await supabase.auth.admin.getUserById(barb.user_id)
-    if (userErr || !userData?.user?.email) continue
-
-    const ownerEmail = userData.user.email
-
     const linhasMarcacoes = lista.map((m: MItem) => {
       const hora = new Date(m.data_hora).toLocaleTimeString('pt-PT', {
         hour: '2-digit',
@@ -151,7 +145,12 @@ export async function GET(req: NextRequest) {
     const pendentes = lista.filter((m: MItem) => m.estado === 'pendente').length
     const confirmadas = lista.filter((m: MItem) => m.estado === 'confirmado').length
 
-    await transporter.sendMail({
+    // Enviar resumo ao barbeiro só se o toggle estiver ativo
+    if ((barb as any).email_lembrete_barbeiro_ativo !== false) {
+      const { data: userData, error: userErr } = await supabase.auth.admin.getUserById(barb.user_id)
+      if (!userErr && userData?.user?.email) {
+        const ownerEmail = userData.user.email
+        await transporter.sendMail({
       from: `"${appLabel}" <${process.env.GMAIL_USER}>`,
       to: ownerEmail,
       subject: `${appLabel} · ${lista.length} marcação${lista.length !== 1 ? 'ões' : ''} amanhã — ${barb.nome}`,
@@ -197,7 +196,9 @@ export async function GET(req: NextRequest) {
     Enviado automaticamente por ${appLabel} · Para não receber estes emails, desativa na página de Configurações.
   </p>
 </div>`,
-    })
+        })
+      }
+    }
 
     // Enviar lembrete individual a cada cliente com email
     for (const m of lista) {
