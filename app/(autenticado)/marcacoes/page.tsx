@@ -298,6 +298,7 @@ export default function MarcacoesPage() {
   const marcacoesHoje = marcacoes.filter(m => m.data_hora.startsWith(todayStr))
   const confirmadas = marcacoesHoje.filter(m => m.estado === 'confirmado').length
   const pendentes = marcacoesHoje.filter(m => m.estado === 'pendente').length
+  const concluidas = marcacoesHoje.filter(m => m.estado === 'concluido').length
 
   // ── Agenda do dia ─────────────────────────────────────────────
   const agendaDia = marcacoes
@@ -596,6 +597,11 @@ export default function MarcacoesPage() {
           <span className="material-symbols-outlined text-verde" style={{fontSize:'15px'}}>check_circle</span>
           <span className="text-ink font-medium">{confirmadas}</span>
           <span className="text-ink-secondary">confirmadas</span>
+        </div>
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-black/5 text-sm">
+          <span className="material-symbols-outlined text-blue-500" style={{fontSize:'15px'}}>task_alt</span>
+          <span className="text-ink font-medium">{concluidas}</span>
+          <span className="text-ink-secondary">concluídas</span>
         </div>
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-black/5 text-sm">
           <span className="material-symbols-outlined text-dourado" style={{fontSize:'15px'}}>sms</span>

@@ -60,7 +60,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
     const d = new Date()
     d.setDate(d.getDate() + i + 1)
     return d
-  }).filter(d => d.getDay() !== 0) // excluir domingos
+  })
 
   const slots = gerarSlots(horaAbertura, horaFecho)
 

@@ -260,7 +260,7 @@ export default function DashboardPage() {
   }, [fetchData])
 
   // ── Calculations ────────────────────────────────────────────────
-  const faturacaoTotal = faturacaoMes.reduce((s, f) => s + f.valor + (f.gorjeta ?? 0), 0)
+  const faturacaoTotal = faturacaoMes.reduce((s, f) => s + f.valor, 0)
   const despesasTotal = despesasMes.reduce((s, d) => s + d.valor, 0)
   const resultadoLiquido = faturacaoTotal - despesasTotal
   const ticketMedio =
