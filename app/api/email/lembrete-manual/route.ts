@@ -149,13 +149,22 @@ export async function POST(req: NextRequest) {
 
     const { data: m } = await supabase
       .from('marcacoes')
-      .select('id, cliente_nome, cliente_email, data_hora, servicos(nome, tempo_minutos)')
+      .select('id, cliente_nome, cliente_email, cliente_id, data_hora, servicos(nome, tempo_minutos)')
       .eq('id', marcacao_id)
       .eq('barbearia_id', barb.id)
       .single()
 
     if (!m) return NextResponse.json({ error: 'Marcação não encontrada' }, { status: 404 })
-    if (!m.cliente_email) return NextResponse.json({ error: 'Este cliente não tem email registado' }, { status: 400 })
+
+    // Fallback: se não há email na marcação, busca no CRM
+    let emailDestino = m.cliente_email
+    if (!emailDestino && m.cliente_id) {
+      const { data: crm } = await supabase
+        .from('clientes').select('email').eq('id', m.cliente_id).single()
+      emailDestino = crm?.email ?? null
+    }
+
+    if (!emailDestino) return NextResponse.json({ error: 'Este cliente não tem email registado. Adiciona o email na ficha do cliente (CRM).' }, { status: 400 })
 
     const hora = new Date(m.data_hora).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })
     const dataFmt = new Date(m.data_hora).toLocaleDateString('pt-PT', {
@@ -173,7 +182,7 @@ export async function POST(req: NextRequest) {
 
     await transporter.sendMail({
       from: `"${barb.nome} via ${appLabel}" <${process.env.GMAIL_USER}>`,
-      to: m.cliente_email,
+      to: emailDestino,
       subject: `[TESTE] Lembrete: marcação em ${barb.nome} — ${hora}`,
       html: `
 <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:${cor.bg};">

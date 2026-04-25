@@ -44,6 +44,7 @@ export async function GET(req: NextRequest) {
       cliente_nome,
       cliente_telemovel,
       cliente_email,
+      cliente_id,
       data_hora,
       estado,
       barbearias ( id, nome, user_id, mensagem_lembrete_email ),
@@ -62,6 +63,20 @@ export async function GET(req: NextRequest) {
 
   if (!marcacoes || marcacoes.length === 0) {
     return NextResponse.json({ ok: true, enviado: 0, motivo: 'Sem marcações amanhã' })
+  }
+
+  // Fallback: para marcações sem cliente_email, buscar email no CRM
+  const semEmail = marcacoes.filter(m => !m.cliente_email && m.cliente_id)
+  if (semEmail.length > 0) {
+    const ids = semEmail.map(m => m.cliente_id as string)
+    const { data: crmEmails } = await supabase
+      .from('clientes').select('id, email').in('id', ids)
+    const emailMap = new Map((crmEmails ?? []).map(c => [c.id, c.email]))
+    for (const m of marcacoes) {
+      if (!m.cliente_email && m.cliente_id && emailMap.get(m.cliente_id)) {
+        m.cliente_email = emailMap.get(m.cliente_id) ?? null
+      }
+    }
   }
 
   type MItem = (typeof marcacoes)[number]

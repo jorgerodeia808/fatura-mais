@@ -485,7 +485,7 @@ export default function MarcacoesPage() {
         body: JSON.stringify({ tipo: 'cliente', marcacao_id: m.id }),
       })
       const data = await res.json()
-      setSuccessMsg(data.ok ? `Email enviado para ${m.cliente_email} ✓` : `Erro: ${data.error}`)
+      setSuccessMsg(data.ok ? `Email de lembrete enviado ✓` : `${data.error}`)
     } catch {
       setSuccessMsg('Erro ao enviar email')
     } finally {
@@ -909,7 +909,7 @@ export default function MarcacoesPage() {
                               <span className="material-symbols-outlined" style={{fontSize:'18px'}}>sms</span>
                             </button>
                           )}
-                          {m.cliente_email && m.estado !== 'desistencia' && (
+                          {(m.cliente_email || m.cliente_id) && m.estado !== 'desistencia' && (
                             <button
                               onClick={() => handleEnviarEmailCliente(m)}
                               disabled={enviandoEmailCliente.has(m.id)}
