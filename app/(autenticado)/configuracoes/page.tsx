@@ -7,6 +7,11 @@ import { getNichoConfig } from '@/lib/nicho'
 const SMS_TEMPLATE_PADRAO =
   'Olá [nome_cliente]! Lembrete da tua marcação em [nome_negocio] amanhã, [data] às [hora] para [nome_servico]. Até amanhã!'
 
+const EMAIL_LEMBRETE_PADRAO =
+  'Não podes comparecer? Avisa-nos o mais brevemente possível. Obrigado pela preferência!'
+
+const EMAIL_LEMBRETE_VARIAVEIS = ['[nome_cliente]', '[data]', '[hora]', '[nome_servico]', '[nome_negocio]']
+
 const SMS_ONLINE_PADRAO = {
   recebida:   'Olá [nome_cliente]! A tua marcação em [nome_negocio] para [nome_servico] no dia [data] às [hora] foi recebida. Aguarda confirmação.',
   confirmada: 'Olá [nome_cliente]! A tua marcação em [nome_negocio] para [nome_servico] no dia [data] às [hora] está confirmada. Até já!',
@@ -38,6 +43,7 @@ interface Barbearia {
   slug: string | null
   comissao_ativa: boolean | null
   comissao_percentagem: number | null
+  mensagem_lembrete_email: string | null
 }
 
 interface Servico {
@@ -108,6 +114,9 @@ export default function ConfiguracoesPage() {
   const [comissaoAtiva, setComissaoAtiva] = useState(false)
   const [comissaoPercentagem, setComissaoPercentagem] = useState('')
 
+  // Email lembrete state
+  const [emailLembreteMsg, setEmailLembreteMsg] = useState(EMAIL_LEMBRETE_PADRAO)
+
   // SMS marcações online templates
   const [smsOnlineRecebida, setSmsOnlineRecebida] = useState(SMS_ONLINE_PADRAO.recebida)
   const [smsOnlineConfirmada, setSmsOnlineConfirmada] = useState(SMS_ONLINE_PADRAO.confirmada)
@@ -137,7 +146,7 @@ export default function ConfiguracoesPage() {
     const { data: barbId } = await supabase.from('barbearias').select('id').eq('user_id', user.id).single()
     const bid = barbId?.id ?? ''
     const [{ data: barb }, { data: servs }, { data: custs }, { data: prods }] = await Promise.all([
-      supabase.from('barbearias').select('id, nome, num_barbeiros, hora_abertura, hora_fecho, dias_trabalho_mes, sms_ativo, sms_mensagem_personalizada, marcacoes_online, slug, sms_reserva_recebida, sms_reserva_confirmada, sms_reserva_cancelada, comissao_ativa, comissao_percentagem').eq('user_id', user.id).single(),
+      supabase.from('barbearias').select('id, nome, num_barbeiros, hora_abertura, hora_fecho, dias_trabalho_mes, sms_ativo, sms_mensagem_personalizada, marcacoes_online, slug, sms_reserva_recebida, sms_reserva_confirmada, sms_reserva_cancelada, comissao_ativa, comissao_percentagem, mensagem_lembrete_email').eq('user_id', user.id).single(),
       supabase.from('servicos').select('id, nome, preco, tempo_minutos, custo_material, ativo').eq('barbearia_id', bid).order('criado_em'),
       supabase.from('custos_fixos').select('id, descricao, valor, tipo, categoria').eq('barbearia_id', bid).order('criado_em'),
       supabase.from('produtos').select('id, nome, preco, ativo').eq('barbearia_id', bid).order('criado_em'),
@@ -160,6 +169,7 @@ export default function ConfiguracoesPage() {
       setSmsOnlineCancelada(barb.sms_reserva_cancelada || SMS_ONLINE_PADRAO.cancelada)
       setComissaoAtiva(barb.comissao_ativa ?? false)
       setComissaoPercentagem(String(barb.comissao_percentagem ?? ''))
+      setEmailLembreteMsg(barb.mensagem_lembrete_email || EMAIL_LEMBRETE_PADRAO)
     }
     if (servs) setServicos(servs as Servico[])
     if (custs) setCustos(custs as CustoFixo[])
@@ -309,6 +319,16 @@ export default function ConfiguracoesPage() {
     await supabase.from('barbearias').update({ sms_mensagem_personalizada: smsMensagem.trim() || null }).eq('id', barbearia.id)
     setSaving(null)
     showToast('Mensagem guardada ✓')
+  }
+
+  const guardarEmailLembrete = async () => {
+    if (!barbearia) return
+    setSaving('email_lembrete')
+    await supabase.from('barbearias').update({
+      mensagem_lembrete_email: emailLembreteMsg.trim() || null,
+    }).eq('id', barbearia.id)
+    setSaving(null)
+    showToast('Mensagem de email guardada ✓')
   }
 
   const handleSmsOnlineGuardar = async () => {
@@ -791,6 +811,66 @@ export default function ConfiguracoesPage() {
             </div>
           </>
         )}
+      </Section>
+
+      {/* ─── Email de lembrete ─────────────────────────────────── */}
+      <Section title="Email de lembrete ao cliente" description="Mensagem incluída no email enviado 24h antes da marcação">
+        <p className="text-xs text-gray-500 leading-relaxed">
+          Aparece no email enviado ao cliente após os detalhes da marcação (data, hora, serviço).
+          Usa para incluir o teu contacto, morada, ou instruções de cancelamento.
+        </p>
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium text-gray-800">Mensagem personalizada</p>
+            <button
+              onClick={() => setEmailLembreteMsg(EMAIL_LEMBRETE_PADRAO)}
+              className="text-xs text-gray-400 hover:text-dourado transition-colors"
+            >
+              Repor padrão
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {EMAIL_LEMBRETE_VARIAVEIS.map(v => (
+              <button
+                key={v}
+                onClick={() => setEmailLembreteMsg(prev => prev + ' ' + v)}
+                className="text-[10px] bg-gray-100 hover:bg-verde/10 text-gray-600 hover:text-verde px-2 py-0.5 rounded font-mono transition-colors"
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={emailLembreteMsg}
+            onChange={e => setEmailLembreteMsg(e.target.value)}
+            rows={3}
+            maxLength={500}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-verde resize-none transition-colors"
+            placeholder="Ex: Não podes comparecer? Liga para 912 345 678 ou envia WhatsApp. Obrigado!"
+          />
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-xs text-gray-400">{emailLembreteMsg.length}/500 caracteres</p>
+            <button
+              onClick={guardarEmailLembrete}
+              disabled={saving === 'email_lembrete'}
+              className="text-xs bg-verde text-white px-3 py-1.5 rounded-lg font-medium hover:bg-verde-escuro disabled:opacity-50 transition-colors"
+            >
+              {saving === 'email_lembrete' ? 'A guardar...' : 'Guardar mensagem'}
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-gray-50 rounded-xl p-4">
+          <p className="text-xs text-gray-500 font-medium mb-2">PREVIEW (como aparece no email)</p>
+          <p className="text-xs text-gray-700 leading-relaxed bg-white border border-gray-200 rounded-xl p-3 whitespace-pre-wrap">
+            {emailLembreteMsg
+              .replace(/\[nome_cliente\]/g, 'João Silva')
+              .replace(/\[data\]/g, 'terça-feira, 28 de abril de 2026')
+              .replace(/\[hora\]/g, '10:00')
+              .replace(/\[nome_servico\]/g, 'Corte de Cabelo')
+              .replace(/\[nome_negocio\]/g, barbearia?.nome || 'O teu negócio')}
+          </p>
+        </div>
       </Section>
 
       {/* ─── SMS Marcações Online ───────────────────────────────── */}

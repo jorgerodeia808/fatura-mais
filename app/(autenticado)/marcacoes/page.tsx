@@ -8,6 +8,7 @@ interface Marcacao {
   id: string
   cliente_nome: string
   cliente_telemovel: string | null
+  cliente_email: string | null
   cliente_id: string | null
   servico_id: string | null
   data_hora: string
@@ -179,6 +180,8 @@ export default function MarcacoesPage() {
   const [loadingInit, setLoadingInit] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [processando, setProcessando] = useState<Set<string>>(new Set())
+  const [enviandoEmailDigest, setEnviandoEmailDigest] = useState(false)
+  const [enviandoEmailCliente, setEnviandoEmailCliente] = useState<Set<string>>(new Set())
   const [successMsg, setSuccessMsg] = useState('')
   const [formError, setFormError] = useState('')
 
@@ -197,6 +200,7 @@ export default function MarcacoesPage() {
   // Form
   const [clienteNome, setClienteNome] = useState('')
   const [clienteTel, setClienteTel] = useState('')
+  const [clienteEmail, setClienteEmail] = useState('')
   const [selectedServico, setSelectedServico] = useState<Servico | null>(null)
   const [dataForm, setDataForm] = useState(toDateStr(today))
   const [horaForm, setHoraForm] = useState('09:00')
@@ -214,7 +218,7 @@ export default function MarcacoesPage() {
     const [{ data: marcData }, { data: bloqData }] = await Promise.all([
       supabase
         .from('marcacoes')
-        .select('id, cliente_nome, cliente_telemovel, cliente_id, servico_id, data_hora, estado, sms_enviado, servicos(nome, preco, tempo_minutos)')
+        .select('id, cliente_nome, cliente_telemovel, cliente_email, cliente_id, servico_id, data_hora, estado, sms_enviado, servicos(nome, preco, tempo_minutos)')
         .eq('barbearia_id', bid)
         .gte('data_hora', `${start}T00:00:00`)
         .lt('data_hora',  `${end}T00:00:00`)
@@ -327,14 +331,19 @@ export default function MarcacoesPage() {
       const { data: clienteExistente } = await supabase
         .from('clientes').select('id')
         .eq('barbearia_id', barbearia.id).eq('telemovel', tel).single()
+      const emailAdmin = clienteEmail.trim() || null
       if (clienteExistente) {
         clienteId = clienteExistente.id
-        await supabase.from('clientes').update({ nome: clienteNome.trim() }).eq('id', clienteId)
+        await supabase.from('clientes').update({
+          nome: clienteNome.trim(),
+          ...(emailAdmin ? { email: emailAdmin } : {}),
+        }).eq('id', clienteId)
       } else {
         const { data: novoCliente } = await supabase.from('clientes').insert({
           barbearia_id: barbearia.id,
           nome: clienteNome.trim(),
           telemovel: tel,
+          ...(emailAdmin ? { email: emailAdmin } : {}),
         }).select('id').single()
         if (novoCliente) clienteId = novoCliente.id
       }
@@ -367,14 +376,15 @@ export default function MarcacoesPage() {
     }
 
     const { data: novaMarcacao, error } = await supabase.from('marcacoes').insert({
-      barbearia_id: barbearia.id,
-      cliente_nome: clienteNome.trim(),
+      barbearia_id:  barbearia.id,
+      cliente_nome:  clienteNome.trim(),
       cliente_telemovel: tel || null,
-      cliente_id: clienteId,
-      servico_id: selectedServico.id,
-      data_hora: dataHora,
-      estado: 'pendente',
-      sms_enviado: false,
+      cliente_email: clienteEmail.trim() || null,
+      cliente_id:    clienteId,
+      servico_id:    selectedServico.id,
+      data_hora:     dataHora,
+      estado:        'pendente',
+      sms_enviado:   false,
     }).select('id').single()
 
     if (error) { setFormError('Erro ao agendar. Tenta novamente.'); setSubmitting(false); return }
@@ -408,6 +418,7 @@ export default function MarcacoesPage() {
 
     setClienteNome('')
     setClienteTel('')
+    setClienteEmail('')
     setSelectedServico(null)
     setDataForm(toDateStr(today))
     setHoraForm('09:00')
@@ -440,6 +451,46 @@ export default function MarcacoesPage() {
     } catch {
       setSuccessMsg('Erro ao reenviar SMS')
       setTimeout(() => setSuccessMsg(''), 4000)
+    }
+  }
+
+  // ── Testar email owner (próximas 24h) ─────────────────────────
+  const handleTestarEmailOwner = async () => {
+    setEnviandoEmailDigest(true)
+    try {
+      const res = await fetch('/api/email/lembrete-manual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo: 'owner' }),
+      })
+      const data = await res.json()
+      if (data.ok && data.enviado) setSuccessMsg(`Email de teste enviado (${data.marcacoes} marcações) ✓`)
+      else setSuccessMsg(data.motivo || data.error || 'Sem marcações nas próximas 24h')
+    } catch {
+      setSuccessMsg('Erro ao enviar email de teste')
+    } finally {
+      setEnviandoEmailDigest(false)
+      setTimeout(() => setSuccessMsg(''), 5000)
+    }
+  }
+
+  // ── Enviar email individual ao cliente ────────────────────────
+  const handleEnviarEmailCliente = async (m: Marcacao) => {
+    if (!m.cliente_email || enviandoEmailCliente.has(m.id)) return
+    setEnviandoEmailCliente(prev => { const next = new Set(prev); next.add(m.id); return next })
+    try {
+      const res = await fetch('/api/email/lembrete-manual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo: 'cliente', marcacao_id: m.id }),
+      })
+      const data = await res.json()
+      setSuccessMsg(data.ok ? `Email enviado para ${m.cliente_email} ✓` : `Erro: ${data.error}`)
+    } catch {
+      setSuccessMsg('Erro ao enviar email')
+    } finally {
+      setEnviandoEmailCliente(prev => { const next = new Set(prev); next.delete(m.id); return next })
+      setTimeout(() => setSuccessMsg(''), 5000)
     }
   }
 
@@ -563,6 +614,19 @@ export default function MarcacoesPage() {
           <h1 className="page-title">Marcações</h1>
           <p className="text-sm text-ink-secondary mt-0.5">Agenda e gestão de clientes</p>
         </div>
+        <button
+          onClick={handleTestarEmailOwner}
+          disabled={enviandoEmailDigest}
+          className="btn-secondary flex items-center gap-2 disabled:opacity-50"
+          title="Envia o email de resumo das marcações das próximas 24h para o teu email"
+        >
+          <span className="material-symbols-outlined" style={{fontSize:'18px'}}>
+            {enviandoEmailDigest ? 'hourglass_empty' : 'mail'}
+          </span>
+          <span className="hidden sm:inline">
+            {enviandoEmailDigest ? 'A enviar...' : 'Testar email'}
+          </span>
+        </button>
       </div>
 
       {/* Stats bar */}
@@ -845,6 +909,18 @@ export default function MarcacoesPage() {
                               <span className="material-symbols-outlined" style={{fontSize:'18px'}}>sms</span>
                             </button>
                           )}
+                          {m.cliente_email && m.estado !== 'desistencia' && (
+                            <button
+                              onClick={() => handleEnviarEmailCliente(m)}
+                              disabled={enviandoEmailCliente.has(m.id)}
+                              className="btn-ghost !p-2 text-ink-secondary disabled:opacity-40"
+                              title={`Enviar email de lembrete para ${m.cliente_email}`}
+                            >
+                              <span className="material-symbols-outlined" style={{fontSize:'18px'}}>
+                                {enviandoEmailCliente.has(m.id) ? 'hourglass_empty' : 'mail'}
+                              </span>
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1030,6 +1106,18 @@ export default function MarcacoesPage() {
                   onChange={e => setClienteTel(e.target.value)}
                   className="input-field w-full"
                   placeholder="+351 9XX XXX XXX"
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-xs font-medium text-ink-secondary mb-1.5">Email <span className="text-ink-secondary font-normal">(opcional)</span></label>
+                <input
+                  type="email"
+                  value={clienteEmail}
+                  onChange={e => setClienteEmail(e.target.value)}
+                  className="input-field w-full"
+                  placeholder="cliente@email.com"
                 />
               </div>
 

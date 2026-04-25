@@ -8,6 +8,7 @@ interface Cliente {
   id: string
   nome: string
   telemovel: string | null
+  email: string | null
   observacoes: string | null
   criado_em: string
   _visitas?: number
@@ -67,6 +68,7 @@ export default function ClientesPage() {
   // Detalhe do cliente selecionado
   const [editNome, setEditNome] = useState('')
   const [editTelemovel, setEditTelemovel] = useState('')
+  const [editEmail, setEditEmail] = useState('')
   const [editObs, setEditObs] = useState('')
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState('')
@@ -75,6 +77,7 @@ export default function ClientesPage() {
   const [showNovoForm, setShowNovoForm] = useState(false)
   const [novoNome, setNovoNome] = useState('')
   const [novoTelemovel, setNovoTelemovel] = useState('')
+  const [novoEmail, setNovoEmail] = useState('')
   const [novoObs, setNovoObs] = useState('')
   const [criando, setCriando] = useState(false)
 
@@ -89,7 +92,7 @@ export default function ClientesPage() {
   const fetchClientes = useCallback(async (bid: string) => {
     const { data } = await supabase
       .from('clientes')
-      .select('id, nome, telemovel, observacoes, criado_em')
+      .select('id, nome, telemovel, email, observacoes, criado_em')
       .eq('barbearia_id', bid)
       .order('nome')
 
@@ -149,6 +152,7 @@ export default function ClientesPage() {
     setSelectedId(c.id)
     setEditNome(c.nome)
     setEditTelemovel(c.telemovel ?? '')
+    setEditEmail(c.email ?? '')
     setEditObs(c.observacoes ?? '')
     setConfirmDelete(false)
     fetchVisitas(c.id)
@@ -165,12 +169,13 @@ export default function ClientesPage() {
     const { error } = await supabase.from('clientes').update({
       nome: editNome.trim(),
       telemovel: tel || null,
+      email: editEmail.trim() || null,
       observacoes: editObs.trim() || null,
     }).eq('id', selectedId)
     setSaving(false)
     if (error) { showToast('Erro ao guardar.'); return }
     setClientes(prev => prev.map(c => c.id === selectedId
-      ? { ...c, nome: editNome.trim(), telemovel: editTelemovel.trim() || null, observacoes: editObs.trim() || null }
+      ? { ...c, nome: editNome.trim(), telemovel: editTelemovel.trim() || null, email: editEmail.trim() || null, observacoes: editObs.trim() || null }
       : c
     ))
     showToast('Cliente guardado ✓')
@@ -199,6 +204,7 @@ export default function ClientesPage() {
       barbearia_id: barbeariaId,
       nome: novoNome.trim(),
       telemovel: tel || null,
+      email: novoEmail.trim() || null,
       observacoes: novoObs.trim() || null,
     }).select().single()
     setCriando(false)
@@ -208,7 +214,7 @@ export default function ClientesPage() {
     }
     const novo: Cliente = { ...data, _visitas: 0, _total_gasto: 0, _ultima_visita: null }
     setClientes(prev => [...prev, novo].sort((a, b) => a.nome.localeCompare(b.nome)))
-    setNovoNome(''); setNovoTelemovel(''); setNovoObs('')
+    setNovoNome(''); setNovoTelemovel(''); setNovoEmail(''); setNovoObs('')
     setShowNovoForm(false)
     showToast('Cliente criado ✓')
     selecionarCliente(novo)
@@ -334,6 +340,10 @@ export default function ClientesPage() {
                   <input type="tel" value={novoTelemovel} onChange={e => setNovoTelemovel(e.target.value)} className="input-field" placeholder="+351 912 345 678" />
                 </div>
                 <div>
+                  <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">Email</label>
+                  <input type="email" value={novoEmail} onChange={e => setNovoEmail(e.target.value)} className="input-field" placeholder="cliente@email.com" />
+                </div>
+                <div>
                   <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">Observações</label>
                   <textarea value={novoObs} onChange={e => setNovoObs(e.target.value)} rows={2} className="input-field resize-none" placeholder="Ex: Alergia a produto X, prefere corte Y..." />
                 </div>
@@ -359,6 +369,9 @@ export default function ClientesPage() {
                   <div className="flex-1">
                     <h2 className="font-serif font-semibold text-xl text-ink">{selectedCliente.nome}</h2>
                     <p className="text-sm text-ink-secondary mt-0.5">{selectedCliente.telemovel ?? 'Sem telemóvel'}</p>
+                    {selectedCliente.email && (
+                      <p className="text-xs text-ink-secondary mt-0.5">{selectedCliente.email}</p>
+                    )}
                     <div className="flex gap-4 mt-2">
                       <span className="text-xs text-ink-secondary">
                         <span className="font-semibold text-ink">{selectedCliente._visitas ?? 0}</span> visitas
@@ -383,6 +396,10 @@ export default function ClientesPage() {
                       <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">Telemóvel</label>
                       <input type="tel" value={editTelemovel} onChange={e => setEditTelemovel(e.target.value)} className="input-field" placeholder="Sem telemóvel" />
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">Email</label>
+                    <input type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} className="input-field" placeholder="cliente@email.com" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-ink-secondary mb-1.5 uppercase tracking-wide">Observações</label>

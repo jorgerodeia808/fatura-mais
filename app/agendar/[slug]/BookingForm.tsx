@@ -51,6 +51,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
   const [loadingSlots, setLoadingSlots] = useState(false)
   const [nome, setNome] = useState('')
   const [telemovel, setTelemovel] = useState('')
+  const [email, setEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState(false)
@@ -135,6 +136,7 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
         data_hora: dataHora,
         cliente_nome: nome,
         cliente_telemovel: telemovel,
+        cliente_email: email.trim() || null,
       }),
     })
 
@@ -377,6 +379,18 @@ export default function BookingForm({ slug, barbeariaId, horaAbertura, horaFecho
                 value={telemovel}
                 onChange={e => setTelemovel(e.target.value)}
                 placeholder="+351 912 345 678"
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Email <span className="text-gray-400">(opcional · para receber lembrete)</span>
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="exemplo@email.com"
                 className="input-field"
               />
             </div>

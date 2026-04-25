@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { slug, servico_id, data_hora, cliente_nome, cliente_telemovel } = body
+    const { slug, servico_id, data_hora, cliente_nome, cliente_telemovel, cliente_email } = body
 
     if (!slug || !servico_id || !data_hora || !cliente_nome?.trim()) {
       return NextResponse.json({ erro: 'Campos obrigatórios em falta.' }, { status: 400 })
@@ -81,24 +81,31 @@ export async function POST(req: NextRequest) {
         .eq('telemovel', telLimpo)
         .single()
 
+      const emailLimpo = typeof cliente_email === 'string' ? cliente_email.trim() || null : null
       if (clienteExistente) {
         clienteId = clienteExistente.id
-        await supabase.from('clientes').update({ nome: cliente_nome.trim() }).eq('id', clienteId)
+        await supabase.from('clientes').update({
+          nome: cliente_nome.trim(),
+          ...(emailLimpo ? { email: emailLimpo } : {}),
+        }).eq('id', clienteId)
       } else {
         const { data: novoCliente } = await supabase.from('clientes').insert({
           barbearia_id: barbearia.id,
           nome: cliente_nome.trim(),
           telemovel: telLimpo,
+          ...(emailLimpo ? { email: emailLimpo } : {}),
         }).select('id').single()
         if (novoCliente) clienteId = novoCliente.id
       }
     }
 
     // Criar marcação
+    const emailFinal = typeof cliente_email === 'string' ? cliente_email.trim() || null : null
     const { data: marcacao, error: marcErr } = await supabase.from('marcacoes').insert({
       barbearia_id:      barbearia.id,
       cliente_nome:      cliente_nome.trim(),
       cliente_telemovel: cliente_telemovel?.trim() || null,
+      cliente_email:     emailFinal,
       cliente_id:        clienteId,
       servico_id:        servico.id,
       data_hora:         dataHoraInicio.toISOString(),
