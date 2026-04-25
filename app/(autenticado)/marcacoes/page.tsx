@@ -184,6 +184,12 @@ export default function MarcacoesPage() {
   const [enviandoEmailCliente, setEnviandoEmailCliente] = useState<Set<string>>(new Set())
   const [successMsg, setSuccessMsg] = useState('')
   const [formError, setFormError] = useState('')
+  const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'erro' } | null>(null)
+
+  const showToast = (msg: string, tipo: 'ok' | 'erro' = 'ok') => {
+    setToast({ msg, tipo })
+    setTimeout(() => setToast(null), 5000)
+  }
 
   // Bloqueios form
   const [showBloqueioForm, setShowBloqueioForm] = useState(false)
@@ -464,13 +470,12 @@ export default function MarcacoesPage() {
         body: JSON.stringify({ tipo: 'owner' }),
       })
       const data = await res.json()
-      if (data.ok && data.enviado) setSuccessMsg(`Email de teste enviado (${data.marcacoes} marcações) ✓`)
-      else setSuccessMsg(data.motivo || data.error || 'Sem marcações nas próximas 24h')
+      if (data.ok && data.enviado) showToast(`Email enviado para o teu email (${data.marcacoes} marcações) ✓`)
+      else showToast(data.motivo || data.error || 'Sem marcações nas próximas 24h', 'erro')
     } catch {
-      setSuccessMsg('Erro ao enviar email de teste')
+      showToast('Erro ao enviar email de teste', 'erro')
     } finally {
       setEnviandoEmailDigest(false)
-      setTimeout(() => setSuccessMsg(''), 5000)
     }
   }
 
@@ -485,12 +490,12 @@ export default function MarcacoesPage() {
         body: JSON.stringify({ tipo: 'cliente', marcacao_id: m.id }),
       })
       const data = await res.json()
-      setSuccessMsg(data.ok ? `Email de lembrete enviado ✓` : `${data.error}`)
+      if (data.ok) showToast(`Email de lembrete enviado ✓`)
+      else showToast(data.error, 'erro')
     } catch {
-      setSuccessMsg('Erro ao enviar email')
+      showToast('Erro ao enviar email', 'erro')
     } finally {
       setEnviandoEmailCliente(prev => { const next = new Set(prev); next.delete(m.id); return next })
-      setTimeout(() => setSuccessMsg(''), 5000)
     }
   }
 
@@ -607,6 +612,17 @@ export default function MarcacoesPage() {
 
   return (
     <div className="space-y-6">
+
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 ${
+          toast.tipo === 'ok' ? 'bg-verde text-white' : 'bg-red-600 text-white'
+        }`}>
+          <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+            {toast.tipo === 'ok' ? 'check_circle' : 'error'}
+          </span>
+          {toast.msg}
+        </div>
+      )}
 
       {/* Page header */}
       <div className="page-header">
