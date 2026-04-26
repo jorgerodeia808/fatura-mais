@@ -308,7 +308,7 @@ export default function RelatoriosPage() {
   const trendFat = totalFaturacaoPrev > 0 ? ((totalFaturacao - totalFaturacaoPrev) / totalFaturacaoPrev) * 100 : 0
   const trendDesp = totalDespesasPrev > 0 ? ((totalDespesas - totalDespesasPrev) / totalDespesasPrev) * 100 : 0
   const trendRes = resultadoPrev !== 0 ? ((resultado - resultadoPrev) / Math.abs(resultadoPrev)) * 100 : 0
-  const trendMarg = margem - margemPrev
+  const trendMarg = margemPrev !== 0 ? margem - margemPrev : 0
 
   // ── Monthly chart data ─────────────────────────────────────────────
 
