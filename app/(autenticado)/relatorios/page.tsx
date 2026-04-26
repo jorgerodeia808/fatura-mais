@@ -305,10 +305,11 @@ export default function RelatoriosPage() {
   const comissaoDevida = comissaoAtiva ? totalFaturacao * (comissaoPct / 100) : 0
   const resultadoRealComissao = resultado - comissaoDevida
 
-  const trendFat = totalFaturacaoPrev > 0 ? ((totalFaturacao - totalFaturacaoPrev) / totalFaturacaoPrev) * 100 : 0
-  const trendDesp = totalDespesasPrev > 0 ? ((totalDespesas - totalDespesasPrev) / totalDespesasPrev) * 100 : 0
-  const trendRes = resultadoPrev !== 0 ? ((resultado - resultadoPrev) / Math.abs(resultadoPrev)) * 100 : 0
-  const trendMarg = margemPrev !== 0 ? margem - margemPrev : 0
+  const hasPrev = totalFaturacaoPrev > 0 || totalDespesasPrev > 0
+  const trendFat = totalFaturacaoPrev > 0 ? ((totalFaturacao - totalFaturacaoPrev) / totalFaturacaoPrev) * 100 : null
+  const trendDesp = totalDespesasPrev > 0 ? ((totalDespesas - totalDespesasPrev) / totalDespesasPrev) * 100 : null
+  const trendRes = hasPrev ? (resultadoPrev !== 0 ? ((resultado - resultadoPrev) / Math.abs(resultadoPrev)) * 100 : 0) : null
+  const trendMarg = hasPrev ? (margem - margemPrev) : null
 
   // ── Monthly chart data ─────────────────────────────────────────────
 
@@ -564,8 +565,8 @@ export default function RelatoriosPage() {
               <p className="metric-value">{fmt(totalFaturacao)}</p>
             )}
             {!loading && (
-              <span className={`badge ${trendFat > 0 ? 'badge-green' : trendFat < 0 ? 'badge-red' : 'badge-gray'}`}>
-                {fmtPct(trendFat)} vs anterior
+              <span className={`badge ${trendFat === null ? 'badge-gray' : trendFat > 0 ? 'badge-green' : trendFat < 0 ? 'badge-red' : 'badge-gray'}`}>
+                {trendFat === null ? 'N/D vs anterior' : `${fmtPct(trendFat)} vs anterior`}
               </span>
             )}
           </div>
@@ -580,8 +581,8 @@ export default function RelatoriosPage() {
               <p className="metric-value">{fmt(totalDespesas)}</p>
             )}
             {!loading && (
-              <span className={`badge ${trendDesp < 0 ? 'badge-green' : trendDesp > 0 ? 'badge-red' : 'badge-gray'}`}>
-                {fmtPct(trendDesp)} vs anterior
+              <span className={`badge ${trendDesp === null ? 'badge-gray' : trendDesp < 0 ? 'badge-green' : trendDesp > 0 ? 'badge-red' : 'badge-gray'}`}>
+                {trendDesp === null ? 'N/D vs anterior' : `${fmtPct(trendDesp)} vs anterior`}
               </span>
             )}
           </div>
@@ -603,8 +604,8 @@ export default function RelatoriosPage() {
               </>
             )}
             {!loading && (
-              <span className={`badge ${trendRes > 0 ? 'badge-green' : trendRes < 0 ? 'badge-red' : 'badge-gray'}`}>
-                {fmtPct(trendRes)} vs anterior
+              <span className={`badge ${trendRes === null ? 'badge-gray' : trendRes > 0 ? 'badge-green' : trendRes < 0 ? 'badge-red' : 'badge-gray'}`}>
+                {trendRes === null ? 'N/D vs anterior' : `${fmtPct(trendRes)} vs anterior`}
               </span>
             )}
           </div>
@@ -619,8 +620,8 @@ export default function RelatoriosPage() {
               <p className="metric-value">{margem.toFixed(1)}%</p>
             )}
             {!loading && (
-              <span className={`badge ${trendMarg > 0 ? 'badge-green' : trendMarg < 0 ? 'badge-red' : 'badge-gray'}`}>
-                {fmtPct(trendMarg)} vs anterior
+              <span className={`badge ${trendMarg === null ? 'badge-gray' : trendMarg > 0 ? 'badge-green' : trendMarg < 0 ? 'badge-red' : 'badge-gray'}`}>
+                {trendMarg === null ? 'N/D vs anterior' : `${fmtPct(trendMarg)} vs anterior`}
               </span>
             )}
           </div>
