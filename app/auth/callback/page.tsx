@@ -40,11 +40,19 @@ export default function AuthCallbackPage() {
         }
 
         if (accessToken && refreshToken) {
+          const type = params.get('type')
           const { error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           })
-          if (!sessionError) { router.replace(next); return }
+          if (!sessionError) {
+            if (type === 'invite') {
+              router.replace('/recuperar-password/nova?tipo=convite')
+            } else {
+              router.replace(next)
+            }
+            return
+          }
         }
       }
 

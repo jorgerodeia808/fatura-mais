@@ -53,9 +53,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Não foi possível criar o utilizador' }, { status: 500 })
   }
 
-  // 2. Gerar magic link (sem rate limit de email)
+  // 2. Gerar invite link — o utilizador será redirecionado para definir password
   const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-    type: 'magiclink',
+    type: 'invite',
     email,
     options: { redirectTo },
   })

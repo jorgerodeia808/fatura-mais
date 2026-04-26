@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
@@ -12,6 +12,8 @@ export default function NovaPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isConvite = searchParams.get('tipo') === 'convite'
   const supabase = createClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,7 +39,7 @@ export default function NovaPasswordPage() {
       return
     }
 
-    router.push('/dashboard')
+    router.push(isConvite ? '/onboarding' : '/dashboard')
     router.refresh()
   }
 
@@ -76,8 +78,8 @@ export default function NovaPasswordPage() {
               </h1>
             </div>
 
-            <h2 className="font-serif font-bold text-2xl text-ink mb-1">Nova password</h2>
-            <p className="text-sm text-ink-secondary mb-8">Escolhe uma password com pelo menos 6 caracteres.</p>
+            <h2 className="font-serif font-bold text-2xl text-ink mb-1">{isConvite ? 'Cria a tua password' : 'Nova password'}</h2>
+            <p className="text-sm text-ink-secondary mb-8">{isConvite ? 'Define a tua password para acederes à plataforma.' : 'Escolhe uma password com pelo menos 6 caracteres.'}</p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
