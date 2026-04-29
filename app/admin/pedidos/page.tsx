@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import ConvidarButton from './ConvidarButton'
 import ConvidarDiretoForm from './ConvidarDiretoForm'
 import ReenviarButton from './ReenviarButton'
+import ApagarButton from './ApagarButton'
 
 interface Pedido {
   id: string
@@ -129,7 +130,10 @@ export default async function PedidosPage() {
                     <td className="px-6 py-4"><NichoBadge nicho={p.nicho} /></td>
                     <td className="px-6 py-4 text-gray-500 text-xs">{formatDate(p.criado_em)}</td>
                     <td className="px-6 py-4 text-right">
-                      <ConvidarButton pedidoId={p.id} email={p.email} nicho={p.nicho} />
+                      <span className="inline-flex items-center gap-2">
+                        <ApagarButton pedidoId={p.id} />
+                        <ConvidarButton pedidoId={p.id} email={p.email} nicho={p.nicho} />
+                      </span>
                     </td>
                   </tr>
                 ))
@@ -171,7 +175,10 @@ export default async function PedidosPage() {
                       {p.convidado_em ? formatDate(p.convidado_em) : '—'}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <ReenviarButton email={p.email} nomeBarbearia={p.nome ?? p.nome_barbearia ?? ''} />
+                      <span className="inline-flex items-center gap-2">
+                        <ApagarButton pedidoId={p.id} />
+                        <ReenviarButton email={p.email} nomeBarbearia={p.nome ?? p.nome_barbearia ?? ''} />
+                      </span>
                     </td>
                   </tr>
                 ))
