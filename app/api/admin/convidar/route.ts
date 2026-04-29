@@ -7,6 +7,7 @@ const nichoUrl: Record<string, string> = {
   nails:    'https://nails.fatura-mais.pt',
   lash:     'https://lash.fatura-mais.pt',
   tatuador: 'https://tatuador.fatura-mais.pt',
+  fp:       'https://fp.fatura-mais.pt',
 }
 
 const nichoLabel: Record<string, string> = {
@@ -14,6 +15,93 @@ const nichoLabel: Record<string, string> = {
   nails:    'Nails+',
   lash:     'Lash+',
   tatuador: 'Tattoo+',
+  fp:       'FP+',
+}
+
+const nichoFeatures: Record<string, string[]> = {
+  barbeiro: ['Faturação em tempo real', 'Marcações online', 'CRM de clientes', 'Relatórios automáticos'],
+  nails:    ['Faturação e despesas', 'Marcações online', 'CRM de clientes', 'Relatórios automáticos'],
+  lash:     ['Faturação e despesas', 'Marcações online', 'CRM de clientes', 'Relatórios automáticos'],
+  tatuador: ['Faturação e despesas', 'Marcações online', 'CRM de clientes', 'Relatórios automáticos'],
+  fp:       ['Controlo de receitas e despesas', 'Orçamentos por categoria', 'Metas de poupança', 'Pagamentos recorrentes'],
+}
+
+interface NichoTheme {
+  primary: string
+  accent: string
+  bg: string
+  cardBg: string
+  subtitle: string
+  letterLabel: string
+}
+
+const nichoTheme: Record<string, NichoTheme> = {
+  default: { primary: '#0e4324', accent: '#c9a84c', bg: '#f5f0e8', cardBg: '#f9f7f2', subtitle: 'PLATAFORMA DE GESTÃO', letterLabel: 'F' },
+  fp:      { primary: '#1e3a5f', accent: '#c9a84c', bg: '#e8eef5', cardBg: '#f0f4f8', subtitle: 'FINANÇAS PESSOAIS', letterLabel: 'FP' },
+}
+
+function buildEmailHtml(plataforma: string, nicho: string | null, inviteUrl: string): string {
+  const theme = nicho === 'fp' ? nichoTheme.fp : nichoTheme.default
+  const features: string[] = (nicho ? nichoFeatures[nicho] : null) ?? nichoFeatures.barbeiro
+  const featureRows = features
+    .map(f => `<tr><td style="padding:6px 0;font-size:14px;color:#374151;"><span style="display:inline-block;width:20px;height:20px;background:${theme.accent}30;border-radius:50%;text-align:center;line-height:20px;font-size:11px;font-weight:700;color:${theme.primary};margin-right:10px;vertical-align:middle;">&#10003;</span>${f}</td></tr>`)
+    .join('')
+
+  return `<!DOCTYPE html>
+<html lang="pt">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Bem-vindo ao ${plataforma}</title></head>
+<body style="margin:0;padding:0;background:${theme.bg};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:${theme.bg};padding:48px 16px;">
+<tr><td align="center">
+<table width="100%" style="max-width:520px;">
+
+<tr><td style="text-align:center;padding-bottom:24px;">
+  <span style="font-size:22px;font-weight:700;color:${theme.primary};font-style:italic;">Fatura<span style="color:${theme.accent};">+</span></span>
+</td></tr>
+
+<tr><td style="background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+  <table width="100%" cellpadding="0" cellspacing="0">
+  <tr><td style="background:${theme.primary};padding:40px;text-align:center;">
+    <table cellpadding="0" cellspacing="0" style="margin:0 auto 16px;">
+    <tr><td style="background:rgba(255,255,255,0.12);border-radius:16px;padding:10px 18px;font-size:22px;font-weight:700;color:#ffffff;font-style:italic;">
+      ${theme.letterLabel}<span style="color:${theme.accent};">+</span>
+    </td></tr></table>
+    <p style="margin:0;font-size:11px;font-weight:600;letter-spacing:1.5px;color:rgba(255,255,255,0.5);text-transform:uppercase;">${theme.subtitle}</p>
+  </td></tr>
+  </table>
+
+  <table width="100%" cellpadding="0" cellspacing="0">
+  <tr><td style="padding:40px 40px 32px;">
+    <h1 style="margin:0 0 12px;font-size:24px;font-weight:700;color:#111827;line-height:1.3;">Bem-vindo ao ${plataforma}!</h1>
+    <p style="margin:0 0 28px;font-size:15px;color:#6b7280;line-height:1.7;">O teu acesso foi aprovado. Clica no bot&atilde;o abaixo para definires a tua password e come&ccedil;ares a usar a plataforma.</p>
+
+    <table cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
+    <tr><td style="background:${theme.primary};border-radius:12px;">
+      <a href="${inviteUrl}" style="display:inline-block;padding:16px 36px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;">Ativar a minha conta &rarr;</a>
+    </td></tr></table>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:${theme.cardBg};border-radius:14px;padding:20px 24px;margin-bottom:28px;">
+    <tr><td>
+      <p style="margin:0 0 14px;font-size:11px;font-weight:700;color:${theme.primary};letter-spacing:1px;text-transform:uppercase;">O que tens inclu&iacute;do</p>
+      <table width="100%" cellpadding="0" cellspacing="0">${featureRows}</table>
+    </td></tr></table>
+
+    <p style="margin:0;font-size:13px;color:#9ca3af;line-height:1.6;">Este link expira em <strong style="color:#6b7280;">24 horas</strong>. Se n&atilde;o pediste este acesso, podes ignorar este email.</p>
+  </td></tr>
+  </table>
+
+  <table width="100%" cellpadding="0" cellspacing="0">
+  <tr><td style="background:${theme.cardBg};padding:18px 40px;border-top:1px solid rgba(0,0,0,0.05);">
+    <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">Fatura+ &middot; faturamais30@gmail.com</p>
+  </td></tr></table>
+
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`
 }
 
 export async function POST(req: NextRequest) {
@@ -29,13 +117,11 @@ export async function POST(req: NextRequest) {
   const redirectTo = `${baseUrl}/auth/callback`
   const plataforma = (nicho && nichoLabel[nicho]) ?? 'Fatura+'
 
-  // 1. Criar utilizador confirmado (sem enviar qualquer email pelo Supabase)
   const { data: createData, error: createError } = await supabase.auth.admin.createUser({
     email,
     email_confirm: true,
   })
 
-  // Se já existe, buscar o user existente
   let userId: string | undefined
   if (createError) {
     if (createError.message.toLowerCase().includes('already')) {
@@ -53,7 +139,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Não foi possível criar o utilizador' }, { status: 500 })
   }
 
-  // 2. Gerar invite link — o utilizador será redirecionado para definir password
   const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
     type: 'invite',
     email,
@@ -70,29 +155,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Não foi possível gerar o link' }, { status: 500 })
   }
 
-  // 3. Enviar via Resend (bypassa completamente o email do Supabase)
   if (process.env.RESEND_API_KEY) {
     const resend = new Resend(process.env.RESEND_API_KEY)
     const { error: emailError } = await resend.emails.send({
       from: 'Fatura+ <noreply@fatura-mais.pt>',
       to: email,
       subject: `O teu acesso ao ${plataforma} está pronto`,
-      html: `
-        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background: #fcf9f3;">
-          <h2 style="color: #0e4324; font-size: 22px; margin-bottom: 8px;">Bem-vindo ao ${plataforma}!</h2>
-          <p style="color: #717971; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
-            O teu acesso foi aprovado. Clica no botão abaixo para configurar a tua conta.
-          </p>
-          <a href="${inviteUrl}"
-             style="display: inline-block; padding: 14px 28px; background: #0e4324; color: white; border-radius: 10px; text-decoration: none; font-size: 15px; font-weight: 600;">
-            Configurar conta →
-          </a>
-          <p style="color: #b0a898; font-size: 12px; margin-top: 24px; line-height: 1.5;">
-            Se não pediste acesso ao ${plataforma}, ignora este email.<br>
-            O link expira em 24 horas.
-          </p>
-        </div>
-      `,
+      html: buildEmailHtml(plataforma, nicho ?? null, inviteUrl),
     })
 
     if (emailError) {
