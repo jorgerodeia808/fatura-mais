@@ -50,53 +50,68 @@ function buildEmailHtml(plataforma: string, nicho: string | null, inviteUrl: str
   return `<!DOCTYPE html>
 <html lang="pt">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Bem-vindo ao ${plataforma}</title></head>
-<body style="margin:0;padding:0;background:${theme.bg};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:${theme.bg};padding:48px 16px;">
-<tr><td align="center">
-<table width="100%" style="max-width:520px;">
+<body style="margin:0;padding:0;background-color:${theme.bg};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${theme.bg};">
+<tr><td align="center" style="padding:48px 16px;">
+<table role="presentation" width="520" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%;">
 
-<tr><td style="text-align:center;padding-bottom:24px;">
-  <span style="font-size:22px;font-weight:700;color:${theme.primary};font-style:italic;">Fatura<span style="color:${theme.accent};">+</span></span>
-</td></tr>
-
-<tr><td style="background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-
-  <table width="100%" cellpadding="0" cellspacing="0">
-  <tr><td style="background:${theme.primary};padding:40px;text-align:center;">
-    <table cellpadding="0" cellspacing="0" style="margin:0 auto 16px;">
-    <tr><td style="background:rgba(255,255,255,0.12);border-radius:16px;padding:10px 18px;font-size:22px;font-weight:700;color:#ffffff;font-style:italic;">
-      ${theme.letterLabel}<span style="color:${theme.accent};">+</span>
-    </td></tr></table>
-    <p style="margin:0;font-size:11px;font-weight:600;letter-spacing:1.5px;color:rgba(255,255,255,0.5);text-transform:uppercase;">${theme.subtitle}</p>
+  <!-- Logo -->
+  <tr><td align="center" style="padding-bottom:24px;">
+    <span style="font-size:22px;font-weight:700;color:${theme.primary};font-style:italic;font-family:Georgia,serif;">Fatura<span style="color:${theme.accent};">+</span></span>
   </td></tr>
-  </table>
 
-  <table width="100%" cellpadding="0" cellspacing="0">
-  <tr><td style="padding:40px 40px 32px;">
-    <h1 style="margin:0 0 12px;font-size:24px;font-weight:700;color:#111827;line-height:1.3;">Bem-vindo ao ${plataforma}!</h1>
-    <p style="margin:0 0 28px;font-size:15px;color:#6b7280;line-height:1.7;">O teu acesso foi aprovado. Clica no bot&atilde;o abaixo para definires a tua password e come&ccedil;ares a usar a plataforma.</p>
+  <!-- Card -->
+  <tr><td style="background-color:#ffffff;border-radius:20px;overflow:hidden;">
 
-    <table cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
-    <tr><td style="background:${theme.primary};border-radius:12px;">
-      <a href="${inviteUrl}" style="display:inline-block;padding:16px 36px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;">Ativar a minha conta &rarr;</a>
-    </td></tr></table>
+    <!-- Header -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td align="center" style="background-color:${theme.primary};padding:36px 40px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 14px auto;">
+      <tr><td align="center" style="background-color:rgba(255,255,255,0.15);border-radius:14px;padding:10px 20px;font-size:20px;font-weight:700;color:#ffffff;font-style:italic;font-family:Georgia,serif;">
+        ${theme.letterLabel}<span style="color:${theme.accent};">+</span>
+      </td></tr>
+      </table>
+      <p style="margin:0;font-size:11px;font-weight:600;letter-spacing:1.5px;color:rgba(255,255,255,0.5);text-transform:uppercase;">${theme.subtitle}</p>
+    </td></tr>
+    </table>
 
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:${theme.cardBg};border-radius:14px;padding:20px 24px;margin-bottom:28px;">
-    <tr><td>
-      <p style="margin:0 0 14px;font-size:11px;font-weight:700;color:${theme.primary};letter-spacing:1px;text-transform:uppercase;">O que tens inclu&iacute;do</p>
-      <table width="100%" cellpadding="0" cellspacing="0">${featureRows}</table>
-    </td></tr></table>
+    <!-- Body -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td align="center" style="padding:40px 40px 32px;">
+      <h1 style="margin:0 0 12px;font-size:24px;font-weight:700;color:#111827;line-height:1.3;text-align:center;">Bem-vindo ao ${plataforma}!</h1>
+      <p style="margin:0 0 28px;font-size:15px;color:#6b7280;line-height:1.7;text-align:center;">O teu acesso foi aprovado.<br>Clica no bot&atilde;o abaixo para definires a tua password.</p>
 
-    <p style="margin:0;font-size:13px;color:#9ca3af;line-height:1.6;">Este link expira em <strong style="color:#6b7280;">24 horas</strong>. Se n&atilde;o pediste este acesso, podes ignorar este email.</p>
+      <!-- CTA -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 32px auto;">
+      <tr><td align="center" style="background-color:${theme.primary};border-radius:12px;">
+        <a href="${inviteUrl}" style="display:inline-block;padding:16px 40px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.3px;">Ativar a minha conta &rarr;</a>
+      </td></tr>
+      </table>
+
+      <!-- Features -->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${theme.cardBg};border-radius:14px;margin-bottom:28px;">
+      <tr><td style="padding:20px 24px;">
+        <p style="margin:0 0 12px;font-size:11px;font-weight:700;color:${theme.primary};letter-spacing:1px;text-transform:uppercase;text-align:left;">O que tens inclu&iacute;do</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+          ${featureRows}
+        </table>
+      </td></tr>
+      </table>
+
+      <p style="margin:0;font-size:13px;color:#9ca3af;line-height:1.6;text-align:center;">Este link expira em <strong style="color:#6b7280;">24 horas</strong>.<br>Se n&atilde;o pediste este acesso, podes ignorar este email.</p>
+    </td></tr>
+    </table>
+
+    <!-- Footer -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td align="center" style="background-color:${theme.cardBg};padding:18px 40px;border-top:1px solid rgba(0,0,0,0.05);">
+      <p style="margin:0;font-size:12px;color:#9ca3af;">Fatura+ &middot; faturamais30@gmail.com</p>
+    </td></tr>
+    </table>
+
   </td></tr>
-  </table>
+  <!-- /Card -->
 
-  <table width="100%" cellpadding="0" cellspacing="0">
-  <tr><td style="background:${theme.cardBg};padding:18px 40px;border-top:1px solid rgba(0,0,0,0.05);">
-    <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">Fatura+ &middot; faturamais30@gmail.com</p>
-  </td></tr></table>
-
-</td></tr>
 </table>
 </td></tr>
 </table>
