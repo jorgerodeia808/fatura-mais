@@ -78,6 +78,28 @@ export async function middleware(request: NextRequest) {
       .maybeSingle()
 
     if (!perfil) {
+      // Verificar se o utilizador foi convidado para o FP+ (ou é admin)
+      const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'jorgerodeia808@gmail.com')
+        .split(',').map(e => e.trim().toLowerCase())
+      const isAdmin = user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())
+
+      if (!isAdmin) {
+        const { data: convite } = await supabase
+          .from('pedidos_acesso')
+          .select('id')
+          .eq('email', user.email ?? '')
+          .eq('nicho', 'fp')
+          .eq('estado', 'convidado')
+          .maybeSingle()
+
+        if (!convite) {
+          const url = request.nextUrl.clone()
+          url.pathname = '/login'
+          url.searchParams.set('erro', 'sem_acesso')
+          return NextResponse.redirect(url)
+        }
+      }
+
       if (pathname === '/onboarding') return supabaseResponse
       const url = request.nextUrl.clone()
       url.pathname = '/onboarding'
