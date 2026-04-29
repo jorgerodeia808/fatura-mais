@@ -117,33 +117,22 @@ export async function POST(req: NextRequest) {
   const redirectTo = `${baseUrl}/auth/callback`
   const plataforma = (nicho && nichoLabel[nicho]) ?? 'Fatura+'
 
-  const { data: createData, error: createError } = await supabase.auth.admin.createUser({
-    email,
-    email_confirm: true,
-  })
-
-  let userId: string | undefined
-  if (createError) {
-    if (createError.message.toLowerCase().includes('already')) {
-      const { data: existing } = await supabase.auth.admin.listUsers()
-      userId = existing?.users.find((u) => u.email === email)?.id
-    } else {
-      console.error('Create user error:', createError)
-      return NextResponse.json({ error: createError.message }, { status: 500 })
-    }
-  } else {
-    userId = createData.user.id
-  }
-
-  if (!userId) {
-    return NextResponse.json({ error: 'Não foi possível criar o utilizador' }, { status: 500 })
-  }
-
-  const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+  // generateLink com type='invite' cria o utilizador se não existir, ou reenvia se já existir
+  let linkData, linkError
+  ;({ data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
     type: 'invite',
     email,
     options: { redirectTo },
-  })
+  }))
+
+  // Se o utilizador já existe, generateLink falha — tenta magic link em alternativa
+  if (linkError) {
+    ;({ data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email,
+      options: { redirectTo },
+    }))
+  }
 
   if (linkError) {
     console.error('Generate link error:', linkError)
