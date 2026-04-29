@@ -83,8 +83,8 @@ function buildEmailHtml(plataforma: string, nicho: string | null, inviteUrl: str
 
       <!-- CTA -->
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 32px auto;">
-      <tr><td align="center" style="background-color:${theme.primary};border-radius:12px;">
-        <a href="${inviteUrl}" style="display:inline-block;padding:16px 40px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.3px;">Ativar a minha conta &rarr;</a>
+      <tr><td align="center">
+        <a href="${inviteUrl}" style="display:block;padding:16px 40px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.3px;background-color:${theme.primary};border-radius:12px;">Ativar a minha conta &rarr;</a>
       </td></tr>
       </table>
 
