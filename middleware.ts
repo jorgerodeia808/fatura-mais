@@ -133,6 +133,28 @@ export async function middleware(request: NextRequest) {
       .maybeSingle()
 
     if (!barbearia) {
+      const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'jorgerodeia808@gmail.com')
+        .split(',').map(e => e.trim().toLowerCase())
+      const isAdmin = user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())
+
+      if (!isAdmin) {
+        const nicho = process.env.NEXT_PUBLIC_APP_TYPE ?? 'barbeiro'
+        const { data: convite } = await supabase
+          .from('pedidos_acesso')
+          .select('id')
+          .eq('email', user.email ?? '')
+          .eq('nicho', nicho)
+          .eq('estado', 'convidado')
+          .maybeSingle()
+
+        if (!convite) {
+          const url = request.nextUrl.clone()
+          url.pathname = '/login'
+          url.searchParams.set('erro', 'sem_acesso')
+          return NextResponse.redirect(url)
+        }
+      }
+
       if (pathname === '/onboarding' || pathname === '/bem-vindo') return supabaseResponse
       const url = request.nextUrl.clone()
       url.pathname = '/onboarding'

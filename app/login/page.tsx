@@ -29,7 +29,7 @@ export default function LoginPage() {
     if (erro === 'link_expirado') setNotice('O link de acesso expirou. Pede ao administrador que reenvie o convite.')
     else if (erro === 'link_invalido') setNotice('O link de acesso é inválido. Pede ao administrador que reenvie o convite.')
     else if (erro === 'plataforma_errada') setNotice('A tua conta não pertence a esta plataforma. Acede pela plataforma correta.')
-    else if (erro === 'sem_acesso') setNotice('Não tens acesso ao FP+. Solicita um convite ao administrador.')
+    else if (erro === 'sem_acesso') setNotice('Não tens acesso a esta plataforma. Solicita um convite ao administrador.')
   }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
