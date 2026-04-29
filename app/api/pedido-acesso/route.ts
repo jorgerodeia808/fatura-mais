@@ -14,6 +14,17 @@ export async function POST(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
+  // Bloquear pedidos duplicados do mesmo email
+  const { data: existente } = await supabase
+    .from('pedidos_acesso')
+    .select('id')
+    .eq('email', email.trim().toLowerCase())
+    .maybeSingle()
+
+  if (existente) {
+    return NextResponse.json({ error: 'Já existe um pedido com este email' }, { status: 409 })
+  }
+
   const { error: dbError } = await supabase
     .from('pedidos_acesso')
     .insert({
