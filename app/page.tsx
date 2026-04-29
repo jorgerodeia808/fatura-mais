@@ -102,8 +102,9 @@ export default function LandingPage() {
 
       {/* ── NICHO CARDS ────────────────────────────────────────────────── */}
       <section className="max-w-5xl mx-auto px-6 pb-28">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {nichos.map((n) => {
+        {/* 4 nichos em grelha 2x2 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+          {nichos.filter(n => n.id !== 'fp').map((n) => {
             const card = (
               <div
                 key={n.id}
@@ -118,38 +119,27 @@ export default function LandingPage() {
                     Em breve
                   </span>
                 )}
-
-                {/* Logo */}
                 <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5"
                   style={{ backgroundColor: n.cor }}
                 >
-                  <span
-                    className="font-serif font-bold italic text-2xl"
-                    style={{ color: 'white' }}
-                  >
+                  <span className="font-serif font-bold italic text-2xl" style={{ color: 'white' }}>
                     {n.letra}
                     <span style={{ color: n.corDestaque === '#ffffff' ? 'rgba(255,255,255,0.7)' : n.corDestaque }}>+</span>
                   </span>
                 </div>
-
                 <h3 className="font-serif font-bold text-2xl text-verde mb-2">
                   {n.nome}<span className="text-dourado">+</span>
                 </h3>
                 <p className="text-ink-secondary text-sm leading-relaxed mb-6">{n.descricao}</p>
-
                 {n.ativo && (
-                  <span
-                    className="inline-flex items-center gap-1.5 text-sm font-medium"
-                    style={{ color: n.cor }}
-                  >
+                  <span className="inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: n.cor }}>
                     Aceder à plataforma
                     <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
                   </span>
                 )}
               </div>
             )
-
             return n.ativo && n.url ? (
               <a key={n.id} href={n.url}>{card}</a>
             ) : (
@@ -157,6 +147,36 @@ export default function LandingPage() {
             )
           })}
         </div>
+
+        {/* FP+ centrado sozinho por baixo */}
+        {(() => {
+          const fp = nichos.find(n => n.id === 'fp')!
+          return (
+            <div className="flex justify-center">
+              <a href={fp.url!} className="w-full sm:w-[calc(50%-12px)]">
+                <div className="relative rounded-2xl p-8 border border-black/8 bg-white hover:shadow-xl hover:-translate-y-1 cursor-pointer transition-all duration-300">
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5"
+                    style={{ backgroundColor: fp.cor }}
+                  >
+                    <span className="font-serif font-bold italic text-2xl" style={{ color: 'white' }}>
+                      {fp.letra}
+                      <span style={{ color: fp.corDestaque }}>+</span>
+                    </span>
+                  </div>
+                  <h3 className="font-serif font-bold text-2xl text-verde mb-2">
+                    {fp.nome}<span className="text-dourado">+</span>
+                  </h3>
+                  <p className="text-ink-secondary text-sm leading-relaxed mb-6">{fp.descricao}</p>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: fp.cor }}>
+                    Aceder à plataforma
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
+                  </span>
+                </div>
+              </a>
+            </div>
+          )
+        })()}
       </section>
 
       {/* ── FOOTER ─────────────────────────────────────────────────────── */}

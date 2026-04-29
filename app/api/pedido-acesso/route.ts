@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
       nails: 'Estúdio de Unhas',
       lash: 'Estúdio de Pestanas',
       tatuador: 'Estúdio de Tatuagem',
+      fp: 'Finanças Pessoais',
     }
     await resend.emails.send({
       from: 'Fatura+ <noreply@fatura-mais.pt>',
