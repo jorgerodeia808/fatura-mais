@@ -34,11 +34,21 @@ export async function POST(req: NextRequest) {
     const cronSecret = process.env.CRON_SECRET
     const isCronRequest = cronSecret && authHeader === `Bearer ${cronSecret}`
 
+    let barbearia_id_autorizado: string | null = null
     if (!isCronRequest) {
       const { data: { user }, error } = await supabase.auth.getUser()
       if (error || !user) {
         return NextResponse.json({ erro: 'Não autenticado' }, { status: 401 })
       }
+      const { data: barbearia } = await supabase
+        .from('barbearias')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      if (!barbearia) {
+        return NextResponse.json({ erro: 'Barbearia não encontrada' }, { status: 403 })
+      }
+      barbearia_id_autorizado = barbearia.id
     }
 
     const { marcacao_id } = await req.json()
@@ -47,7 +57,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Buscar marcação com todos os detalhes
-    const { data: marcacao, error: mErr } = await supabase
+    let query = supabase
       .from('marcacoes')
       .select(`
         id,
@@ -60,7 +70,12 @@ export async function POST(req: NextRequest) {
         barbearias ( id, nome, sms_ativo, sms_mensagem_personalizada )
       `)
       .eq('id', marcacao_id)
-      .single()
+
+    if (barbearia_id_autorizado) {
+      query = query.eq('barbearia_id', barbearia_id_autorizado)
+    }
+
+    const { data: marcacao, error: mErr } = await query.single()
 
     if (mErr || !marcacao) {
       return NextResponse.json({ erro: 'Marcação não encontrada' }, { status: 404 })
