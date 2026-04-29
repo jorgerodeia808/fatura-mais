@@ -5,6 +5,99 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getNichoConfig } from '@/lib/nicho'
 
+// ── FP+ Onboarding ─────────────────────────────────────────────────
+const FP_BG = '#1e3a5f'
+const FP_ACCENT = '#c9a84c'
+
+function OnboardingFP() {
+  const router = useRouter()
+  const supabase = createClient()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleStart = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Não autenticado')
+
+      const { error: err } = await supabase
+        .from('fp_perfis')
+        .upsert({ user_id: user.id, plano: 'trial' }, { onConflict: 'user_id', ignoreDuplicates: true })
+
+      if (err) throw err
+      router.push('/dashboard')
+      router.refresh()
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Erro ao configurar perfil.')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: FP_BG }}>
+      <div className="w-full max-w-md">
+        <div className="flex flex-col items-center text-center mb-10">
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-2xl mb-4"
+            style={{ background: FP_ACCENT, color: FP_BG }}
+          >
+            FP
+          </div>
+          <h1 className="font-bold text-3xl text-white">
+            Finanças Pessoais<span style={{ color: FP_ACCENT }}>+</span>
+          </h1>
+          <p className="text-white/60 text-sm mt-2">Toma o controlo da tua vida financeira</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-8">
+          <h2 className="font-bold text-xl text-gray-900 mb-2">Bem-vindo ao FP+</h2>
+          <p className="text-sm text-gray-500 mb-6">
+            A plataforma para organizares as tuas finanças pessoais. Tudo num só sítio.
+          </p>
+
+          <div className="space-y-3 mb-8">
+            {[
+              { icon: 'swap_vert',    text: 'Regista rendimentos e despesas' },
+              { icon: 'autorenew',   text: 'Gere pagamentos recorrentes' },
+              { icon: 'pie_chart',   text: 'Define orçamentos por categoria' },
+              { icon: 'flag',        text: 'Acompanha os teus objetivos de poupança' },
+            ].map(item => (
+              <div key={item.icon} className="flex items-center gap-3">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: `${FP_BG}12` }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px', color: FP_BG }}>{item.icon}</span>
+                </div>
+                <p className="text-sm text-gray-600">{item.text}</p>
+              </div>
+            ))}
+          </div>
+
+          {error && (
+            <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm border border-red-100">{error}</div>
+          )}
+
+          <button
+            onClick={handleStart}
+            disabled={loading}
+            className="w-full py-3 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{ background: FP_BG, color: 'white' }}
+          >
+            {loading ? 'A configurar...' : 'Começar agora →'}
+          </button>
+        </div>
+
+        <p className="text-center text-xs text-white/40 mt-6">
+          Período de trial gratuito · Sem cartão de crédito
+        </p>
+      </div>
+    </div>
+  )
+}
+
 // ── Types ────────────────────────────────────────────────────────
 interface Servico {
   nome: string
@@ -343,8 +436,8 @@ function Step4({
   )
 }
 
-// ── Main Onboarding Page ──────────────────────────────────────────
-export default function OnboardingPage() {
+// ── Nicho Onboarding Page ─────────────────────────────────────────
+function NichoOnboarding() {
   const router = useRouter()
   const supabase = createClient()
   const nicho = getNichoConfig()
@@ -618,4 +711,9 @@ export default function OnboardingPage() {
       </div>
     </div>
   )
+}
+
+export default function OnboardingPage() {
+  if (process.env.NEXT_PUBLIC_APP_TYPE === 'fp') return <OnboardingFP />
+  return <NichoOnboarding />
 }

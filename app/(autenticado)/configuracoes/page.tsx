@@ -3,6 +3,131 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getNichoConfig } from '@/lib/nicho'
+import Link from 'next/link'
+
+const FP_PRIMARY = '#1e3a5f'
+const FP_ACCENT = '#c9a84c'
+
+// ── FP+ Configurações ──────────────────────────────────────────────
+function ConfiguracoesFP() {
+  const supabase = createClient()
+  const [perfil, setPerfil] = useState<{ plano: string; subscricao_renovacao: string | null } | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [email, setEmail] = useState('')
+
+  useEffect(() => {
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user?.email) setEmail(user.email)
+      if (user) {
+        const { data } = await supabase.from('fp_perfis').select('plano, subscricao_renovacao').eq('user_id', user.id).maybeSingle()
+        if (data) setPerfil(data)
+      }
+      setLoading(false)
+    }
+    init()
+  }, [supabase])
+
+  const plano = perfil?.plano
+  const renovacao = perfil?.subscricao_renovacao
+  const diasRenovacao = renovacao ? Math.ceil((new Date(renovacao).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null
+  const renovacaoFmt = renovacao ? new Date(renovacao).toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' }) : null
+  const planoLabel = plano === 'vitalicio' ? 'Vitalício' : plano === 'trial' ? 'Trial' : plano === 'mensal' ? 'Mensal' : 'Suspenso'
+  const planoColor = plano === 'vitalicio' ? FP_ACCENT : plano === 'trial' ? '#8b5cf6' : plano === 'mensal' ? '#16a34a' : '#dc2626'
+
+  if (loading) {
+    return (
+      <div className="space-y-4 max-w-2xl">
+        {[1,2].map(i => <div key={i} className="bg-white rounded-2xl p-6 animate-pulse"><div className="h-4 bg-slate-100 rounded w-1/3 mb-4" /><div className="h-10 bg-slate-100 rounded" /></div>)}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-5 max-w-2xl">
+      <div>
+        <h1 className="text-2xl font-bold" style={{ color: FP_PRIMARY }}>Configurações</h1>
+        <p className="text-sm text-slate-500 mt-0.5">Preferências da tua conta FP+</p>
+      </div>
+
+      {/* Subscription */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-50 flex items-center gap-2.5">
+          <span className="material-symbols-outlined" style={{ fontSize: '18px', color: FP_PRIMARY }}>workspace_premium</span>
+          <h2 className="text-sm font-semibold" style={{ color: FP_PRIMARY }}>Plano FP+</h2>
+        </div>
+        <div className="p-6">
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="space-y-1">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold"
+                style={{ background: `${planoColor}18`, color: planoColor }}>
+                {planoLabel}
+              </span>
+              {plano === 'mensal' && renovacaoFmt && (
+                <p className="text-sm text-slate-600 mt-1">
+                  Renova em <strong>{renovacaoFmt}</strong>
+                  {diasRenovacao !== null && ` (${diasRenovacao} dias)`}
+                </p>
+              )}
+              {plano === 'trial' && (
+                <p className="text-sm text-slate-500 mt-1">O trial inclui todas as funcionalidades FP+.</p>
+              )}
+              {plano === 'vitalicio' && (
+                <p className="text-sm text-slate-500 mt-1">Acesso permanente a todas as funcionalidades.</p>
+              )}
+            </div>
+            {(plano === 'trial' || (plano === 'mensal' && diasRenovacao !== null && diasRenovacao <= 10)) && (
+              <a
+                href={`mailto:faturamais30@gmail.com?subject=Upgrade%20FP%2B&body=Olá!%0A%0AGostaria%20de%20fazer%20upgrade%20do%20plano%20FP%2B.%0A%0AEmail%3A%20${encodeURIComponent(email)}`}
+                className="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-opacity hover:opacity-80"
+                style={{ background: FP_ACCENT, color: FP_PRIMARY }}
+              >
+                Fazer upgrade →
+              </a>
+            )}
+          </div>
+
+          {plano === 'mensal' && diasRenovacao !== null && diasRenovacao <= 7 && (
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-100">
+              <p className="text-xs text-amber-700 font-medium">
+                ⚠️ A tua subscrição expira {diasRenovacao <= 1 ? 'amanhã' : `em ${diasRenovacao} dias`}. Contacta-nos para renovar.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Quick links */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-50 flex items-center gap-2.5">
+          <span className="material-symbols-outlined" style={{ fontSize: '18px', color: FP_PRIMARY }}>manage_accounts</span>
+          <h2 className="text-sm font-semibold" style={{ color: FP_PRIMARY }}>Conta</h2>
+        </div>
+        <div className="divide-y divide-slate-50">
+          <Link href="/perfil" className="flex items-center gap-3 px-6 py-4 hover:bg-slate-50 transition-colors group">
+            <span className="material-symbols-outlined text-slate-400" style={{ fontSize: '18px' }}>person</span>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-slate-700">Perfil</p>
+              <p className="text-xs text-slate-400">Altera email, password e dados da conta</p>
+            </div>
+            <span className="material-symbols-outlined text-slate-300 group-hover:text-slate-400" style={{ fontSize: '16px' }}>chevron_right</span>
+          </Link>
+          <a
+            href="mailto:faturamais30@gmail.com?subject=Suporte%20FP%2B"
+            className="flex items-center gap-3 px-6 py-4 hover:bg-slate-50 transition-colors group"
+          >
+            <span className="material-symbols-outlined text-slate-400" style={{ fontSize: '18px' }}>support_agent</span>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-slate-700">Suporte</p>
+              <p className="text-xs text-slate-400">Entra em contacto com a equipa FP+</p>
+            </div>
+            <span className="material-symbols-outlined text-slate-300 group-hover:text-slate-400" style={{ fontSize: '16px' }}>chevron_right</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const SMS_TEMPLATE_PADRAO =
   'Olá [nome_cliente]! Lembrete da tua marcação em [nome_negocio] amanhã, [data] às [hora] para [nome_servico]. Até amanhã!'
@@ -87,7 +212,7 @@ function Section({ title, description, children }: { title: string; description?
   )
 }
 
-export default function ConfiguracoesPage() {
+function ConfiguracoesNicho() {
   const supabase = createClient()
   const nicho = getNichoConfig()
   const [barbearia, setBarbearia] = useState<Barbearia | null>(null)
@@ -1051,3 +1176,8 @@ export default function ConfiguracoesPage() {
   )
 }
 
+
+export default function ConfiguracoesPage() {
+  if (process.env.NEXT_PUBLIC_APP_TYPE === 'fp') return <ConfiguracoesFP />
+  return <ConfiguracoesNicho />
+}

@@ -3,10 +3,18 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+const nichos = [
+  { id: 'barbeiro', label: 'Barbearia' },
+  { id: 'nails',    label: 'Unhas' },
+  { id: 'lash',     label: 'Pestanas' },
+  { id: 'tatuador', label: 'Tatuagem' },
+  { id: 'fp',       label: 'Finanças Pessoais' },
+]
+
 export default function ConvidarDiretoForm() {
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState('')
-  const [nomeBarbearia, setNomeBarbearia] = useState('')
+  const [nicho, setNicho] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -19,12 +27,16 @@ export default function ConvidarDiretoForm() {
       setError('Email inválido. Verifica o formato (ex: nome@gmail.com)')
       return
     }
+    if (!nicho) {
+      setError('Seleciona a área do cliente')
+      return
+    }
     setLoading(true)
 
     const res = await fetch('/api/admin/convidar-direto', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, nome_barbearia: nomeBarbearia }),
+      body: JSON.stringify({ email: email.trim(), nicho }),
     })
 
     const data = await res.json()
@@ -37,7 +49,7 @@ export default function ConvidarDiretoForm() {
 
     setSuccess(true)
     setEmail('')
-    setNomeBarbearia('')
+    setNicho('')
     setTimeout(() => {
       setSuccess(false)
       setOpen(false)
@@ -75,15 +87,23 @@ export default function ConvidarDiretoForm() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Nome da barbearia</label>
-                <input
-                  type="text"
-                  value={nomeBarbearia}
-                  onChange={e => setNomeBarbearia(e.target.value)}
-                  required
-                  placeholder="Ex: Barbearia do João"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e4324] transition-colors"
-                />
+                <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Área</label>
+                <div className="flex flex-wrap gap-2">
+                  {nichos.map(n => (
+                    <button
+                      key={n.id}
+                      type="button"
+                      onClick={() => setNicho(n.id)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                        nicho === n.id
+                          ? 'bg-[#0e4324] text-white border-[#0e4324]'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                      }`}
+                    >
+                      {n.label}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Email</label>

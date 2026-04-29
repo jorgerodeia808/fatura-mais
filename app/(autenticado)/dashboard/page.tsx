@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { getNichoConfig } from '@/lib/nicho'
+import DashboardFP from '@/components/fp/DashboardFP'
 import {
   BarChart,
   Bar,
@@ -151,7 +152,7 @@ function EmptyState() {
 }
 
 // ── Main Dashboard ──────────────────────────────────────────────────
-export default function DashboardPage() {
+function DashboardNicho() {
   const supabase = createClient()
   const nicho = getNichoConfig()
   const [loading, setLoading] = useState(true)
@@ -895,4 +896,9 @@ export default function DashboardPage() {
       )}
     </div>
   )
+}
+
+export default function DashboardPage() {
+  if (process.env.NEXT_PUBLIC_APP_TYPE === 'fp') return <DashboardFP />
+  return <DashboardNicho />
 }

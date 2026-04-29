@@ -1,6 +1,9 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Sidebar from '@/components/Sidebar'
+import SidebarFP from '@/components/SidebarFP'
+
+const isFP = process.env.NEXT_PUBLIC_APP_TYPE === 'fp'
 
 export default async function AuthenticadoLayout({
   children,
@@ -8,28 +11,38 @@ export default async function AuthenticadoLayout({
   children: React.ReactNode
 }) {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const userName = user.user_metadata?.nome_completo ?? user.email ?? 'Utilizador'
+
+  // ── Layout FP+ ────────────────────────────────────────────────────────────
+  if (isFP) {
+    return (
+      <div className="flex min-h-screen" style={{ background: '#f0f4f8' }}>
+        <SidebarFP userName={userName} />
+        <main className="flex-1 min-w-0 lg:ml-56">
+          <div className="p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8 max-w-[1400px] mx-auto">
+            {children}
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // ── Layout Nicho ──────────────────────────────────────────────────────────
   const { data: barbearia } = await supabase
     .from('barbearias')
     .select('nome, nicho, plano, subscricao_renovacao')
     .eq('user_id', user.id)
     .single()
 
-  // Bloquear acesso se o nicho da barbearia não coincide com esta plataforma
   const plataformaNicho = process.env.NEXT_PUBLIC_NICHO
   if (plataformaNicho && barbearia?.nicho && barbearia.nicho !== plataformaNicho) {
     redirect('/plataforma-errada')
   }
 
-  const userName =
-    user.user_metadata?.nome_completo ?? user.email ?? 'Utilizador'
   const barbeariaName = barbearia?.nome ?? 'A minha barbearia'
-
   const renovacao = barbearia?.subscricao_renovacao as string | null
   const diasParaRenovacao = renovacao
     ? Math.ceil((new Date(renovacao).getTime() - Date.now()) / (1000 * 60 * 60 * 24))

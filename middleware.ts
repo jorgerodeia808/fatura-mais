@@ -29,18 +29,12 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const protectedRoutes = [
-    '/dashboard',
-    '/bem-vindo',
-    '/onboarding',
-    '/faturacao',
-    '/despesas',
-    '/marcacoes',
-    '/relatorios',
-    '/conselheiro-ia',
-    '/configuracoes',
-    '/perfil',
-  ]
+  const isFP = process.env.NEXT_PUBLIC_APP_TYPE === 'fp'
+
+  const protectedRoutes = isFP
+    ? ['/dashboard', '/transacoes', '/recorrentes', '/orcamentos', '/objetivos', '/configuracoes', '/perfil']
+    : ['/dashboard', '/bem-vindo', '/onboarding', '/faturacao', '/despesas', '/marcacoes', '/relatorios', '/conselheiro-ia', '/configuracoes', '/perfil']
+
   const adminRoutes = ['/admin']
   const authRoutes = ['/login']
   const pathname = request.nextUrl.pathname
@@ -75,8 +69,41 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
-  // ── Plan guard for protected app routes ──────────────────────────────────
-  if (user && isProtected) {
+  // ── Plan guard — FP+ ─────────────────────────────────────────────────────
+  if (user && isProtected && isFP) {
+    const { data: perfil } = await supabase
+      .from('fp_perfis')
+      .select('plano, subscricao_renovacao')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (!perfil) {
+      if (pathname === '/onboarding') return supabaseResponse
+      const url = request.nextUrl.clone()
+      url.pathname = '/onboarding'
+      return NextResponse.redirect(url)
+    }
+
+    if (perfil.plano === 'vitalicio' || perfil.plano === 'trial') return supabaseResponse
+
+    if (perfil.plano === 'mensal') {
+      const renovacao = perfil.subscricao_renovacao as string | null
+      if (!renovacao || new Date(renovacao) >= new Date()) return supabaseResponse
+      const url = request.nextUrl.clone()
+      url.pathname = '/acesso-suspenso'
+      url.searchParams.set('motivo', 'expirado')
+      url.searchParams.set('renovacao', renovacao)
+      return NextResponse.redirect(url)
+    }
+
+    const url = request.nextUrl.clone()
+    url.pathname = '/acesso-suspenso'
+    url.searchParams.set('motivo', 'suspenso')
+    return NextResponse.redirect(url)
+  }
+
+  // ── Plan guard — Nicho ───────────────────────────────────────────────────
+  if (user && isProtected && !isFP) {
     const { data: barbearia } = await supabase
       .from('barbearias')
       .select('plano, subscricao_renovacao')
@@ -90,18 +117,11 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    if (barbearia.plano === 'vitalicio') {
-      return supabaseResponse
-    }
+    if (barbearia.plano === 'vitalicio') return supabaseResponse
 
     if (barbearia.plano === 'mensal') {
       const renovacao = barbearia.subscricao_renovacao as string | null
-      // null = sem prazo definido (admin ainda não registou renovação) → acesso válido
-      // data no futuro → acesso válido
-      // data no passado → expirado
-      if (!renovacao || new Date(renovacao) >= new Date()) {
-        return supabaseResponse
-      }
+      if (!renovacao || new Date(renovacao) >= new Date()) return supabaseResponse
       const url = request.nextUrl.clone()
       url.pathname = '/acesso-suspenso'
       url.searchParams.set('motivo', 'expirado')

@@ -1,107 +1,176 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
+
+const nichoUrl: Record<string, string> = {
+  barbeiro: 'https://barbeiro.fatura-mais.pt',
+  nails:    'https://nails.fatura-mais.pt',
+  lash:     'https://lash.fatura-mais.pt',
+  tatuador: 'https://tatuador.fatura-mais.pt',
+  fp:       'https://fp.fatura-mais.pt',
+}
+
+const nichoLabel: Record<string, string> = {
+  barbeiro: 'Barber+',
+  nails:    'Nails+',
+  lash:     'Lash+',
+  tatuador: 'Tattoo+',
+  fp:       'FP+',
+}
+
+const nichoFeatures: Record<string, string[]> = {
+  barbeiro: ['Faturação em tempo real', 'Marcações online', 'CRM de clientes', 'Relatórios automáticos'],
+  nails:    ['Faturação e despesas', 'Marcações online', 'CRM de clientes', 'Relatórios automáticos'],
+  lash:     ['Faturação e despesas', 'Marcações online', 'CRM de clientes', 'Relatórios automáticos'],
+  tatuador: ['Faturação e despesas', 'Marcações online', 'CRM de clientes', 'Relatórios automáticos'],
+  fp:       ['Controlo de receitas e despesas', 'Orçamentos por categoria', 'Metas de poupança', 'Pagamentos recorrentes'],
+}
+
+interface NichoTheme {
+  primary: string
+  accent: string
+  bg: string
+  cardBg: string
+  subtitle: string
+  letterLabel: string
+}
+
+const nichoTheme: Record<string, NichoTheme> = {
+  default: { primary: '#0e4324', accent: '#c9a84c', bg: '#f5f0e8', cardBg: '#f9f7f2', subtitle: 'PLATAFORMA DE GESTÃO', letterLabel: 'F' },
+  fp:      { primary: '#1e3a5f', accent: '#c9a84c', bg: '#e8eef5', cardBg: '#f0f4f8', subtitle: 'FINANÇAS PESSOAIS', letterLabel: 'FP' },
+}
+
+function buildEmailHtml(plataforma: string, nicho: string | null, inviteUrl: string): string {
+  const theme = nicho === 'fp' ? nichoTheme.fp : nichoTheme.default
+  const features: string[] = (nicho ? nichoFeatures[nicho] : null) ?? nichoFeatures.barbeiro
+  const featureRows = features
+    .map(f => `<tr><td style="padding:6px 0;font-size:14px;color:#374151;"><span style="display:inline-block;width:20px;height:20px;background:${theme.accent}30;border-radius:50%;text-align:center;line-height:20px;font-size:11px;font-weight:700;color:${theme.primary};margin-right:10px;vertical-align:middle;">&#10003;</span>${f}</td></tr>`)
+    .join('')
+
+  return `<!DOCTYPE html>
+<html lang="pt">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Bem-vindo ao ${plataforma}</title></head>
+<body style="margin:0;padding:0;background-color:${theme.bg};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${theme.bg};">
+<tr><td align="center" style="padding:48px 16px;">
+<table role="presentation" width="520" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%;">
+
+  <!-- Logo -->
+  <tr><td align="center" style="padding-bottom:24px;">
+    <span style="font-size:22px;font-weight:700;color:${theme.primary};font-style:italic;font-family:Georgia,serif;">Fatura<span style="color:${theme.accent};">+</span></span>
+  </td></tr>
+
+  <!-- Card -->
+  <tr><td style="background-color:#ffffff;border-radius:20px;overflow:hidden;">
+
+    <!-- Header -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td align="center" style="background-color:${theme.primary};padding:36px 40px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 14px auto;">
+      <tr><td align="center" style="background-color:rgba(255,255,255,0.15);border-radius:14px;padding:10px 20px;font-size:20px;font-weight:700;color:#ffffff;font-style:italic;font-family:Georgia,serif;">
+        ${theme.letterLabel}<span style="color:${theme.accent};">+</span>
+      </td></tr>
+      </table>
+      <p style="margin:0;font-size:11px;font-weight:600;letter-spacing:1.5px;color:rgba(255,255,255,0.5);text-transform:uppercase;">${theme.subtitle}</p>
+    </td></tr>
+    </table>
+
+    <!-- Body -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td align="center" style="padding:40px 40px 32px;">
+      <h1 style="margin:0 0 12px;font-size:24px;font-weight:700;color:#111827;line-height:1.3;text-align:center;">Bem-vindo ao ${plataforma}!</h1>
+      <p style="margin:0 0 28px;font-size:15px;color:#6b7280;line-height:1.7;text-align:center;">O teu acesso foi aprovado.<br>Clica no bot&atilde;o abaixo para definires a tua password.</p>
+
+      <!-- CTA -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 32px auto;">
+      <tr><td align="center" style="background-color:${theme.primary};border-radius:12px;">
+        <a href="${inviteUrl}" style="display:inline-block;padding:16px 40px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.3px;">Ativar a minha conta &rarr;</a>
+      </td></tr>
+      </table>
+
+      <!-- Features -->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${theme.cardBg};border-radius:14px;margin-bottom:28px;">
+      <tr><td style="padding:20px 24px;">
+        <p style="margin:0 0 12px;font-size:11px;font-weight:700;color:${theme.primary};letter-spacing:1px;text-transform:uppercase;text-align:left;">O que tens inclu&iacute;do</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+          ${featureRows}
+        </table>
+      </td></tr>
+      </table>
+
+      <p style="margin:0;font-size:13px;color:#9ca3af;line-height:1.6;text-align:center;">Este link expira em <strong style="color:#6b7280;">24 horas</strong>.<br>Se n&atilde;o pediste este acesso, podes ignorar este email.</p>
+    </td></tr>
+    </table>
+
+    <!-- Footer -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td align="center" style="background-color:${theme.cardBg};padding:18px 40px;border-top:1px solid rgba(0,0,0,0.05);">
+      <p style="margin:0;font-size:12px;color:#9ca3af;">Fatura+ &middot; faturamais30@gmail.com</p>
+    </td></tr>
+    </table>
+
+  </td></tr>
+  <!-- /Card -->
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>`
+}
 
 export async function POST(req: NextRequest) {
-  const { email, nome_barbearia } = await req.json()
+  const { email, nicho } = await req.json()
 
-  if (!email || !nome_barbearia) {
-    return NextResponse.json({ error: 'Email e nome da barbearia são obrigatórios' }, { status: 400 })
+  if (!email || !nicho) {
+    return NextResponse.json({ error: 'Email e área são obrigatórios' }, { status: 400 })
   }
 
   const supabase = createAdminClient()
 
-  const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/onboarding`
+  const baseUrl = nichoUrl[nicho] ?? 'https://fatura-mais.pt'
+  const redirectTo = `${baseUrl}/auth/callback`
+  const plataforma = nichoLabel[nicho] ?? 'Fatura+'
 
-  let linkResult = await supabase.auth.admin.generateLink({
+  let linkData, linkError
+  ;({ data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
     type: 'invite',
     email,
     options: { redirectTo },
-  })
+  }))
 
-  // Se o utilizador já existe no auth, gera um magic link em vez de convite
-  if (linkResult.error) {
-    linkResult = await supabase.auth.admin.generateLink({
+  if (linkError) {
+    ;({ data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
       email,
       options: { redirectTo },
+    }))
+  }
+
+  if (linkError) {
+    console.error('Generate link error:', linkError)
+    return NextResponse.json({ error: linkError.message }, { status: 500 })
+  }
+
+  const inviteUrl = linkData.properties?.action_link
+  if (!inviteUrl) {
+    return NextResponse.json({ error: 'Não foi possível gerar o link' }, { status: 500 })
+  }
+
+  if (process.env.RESEND_API_KEY) {
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    const { error: emailError } = await resend.emails.send({
+      from: 'Fatura+ <noreply@fatura-mais.pt>',
+      to: email,
+      subject: `O teu acesso ao ${plataforma} está pronto`,
+      html: buildEmailHtml(plataforma, nicho, inviteUrl),
     })
+
+    if (emailError) {
+      console.error('Resend error:', emailError)
+      return NextResponse.json({ error: `Resend: ${JSON.stringify(emailError)}` }, { status: 500 })
+    }
   }
-
-  if (linkResult.error) {
-    console.error('Generate link error:', linkResult.error)
-    return NextResponse.json({ error: linkResult.error.message }, { status: 500 })
-  }
-
-  const inviteUrl = linkResult.data.properties?.action_link
-
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
-    },
-  })
-
-  await transporter.sendMail({
-    from: `"Fatura+" <${process.env.GMAIL_USER}>`,
-    to: email,
-    subject: 'O teu acesso ao Fatura+ está pronto',
-    html: `<!DOCTYPE html>
-<html lang="pt">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f5f0e8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f0e8;padding:40px 16px;">
-    <tr><td align="center">
-      <table width="100%" style="max-width:480px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
-        <tr>
-          <td style="background:#0e4324;padding:32px 40px;text-align:center;">
-            <p style="margin:0;font-size:26px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">Fatura<span style="color:#c9a84c;">+</span></p>
-            <p style="margin:8px 0 0;font-size:13px;color:rgba(255,255,255,0.65);letter-spacing:0.5px;">GESTÃO PARA BARBEARIAS</p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:40px 40px 32px;">
-            <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1a1a1a;line-height:1.3;">Bem-vindo ao Fatura+!</h1>
-            <p style="margin:0 0 24px;font-size:15px;color:#6b7280;line-height:1.6;">
-              O acesso para a barbearia <strong style="color:#1a1a1a;">${nome_barbearia}</strong> foi criado.
-              Clica no botão abaixo para ativares a tua conta e começares a usar o Fatura+.
-            </p>
-            <table cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
-              <tr>
-                <td style="background:#0e4324;border-radius:10px;">
-                  <a href="${inviteUrl}" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:0.2px;">
-                    Ativar a minha conta →
-                  </a>
-                </td>
-              </tr>
-            </table>
-            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f7f2;border-radius:12px;padding:20px 24px;margin-bottom:24px;">
-              <tr><td>
-                <p style="margin:0 0 14px;font-size:12px;font-weight:600;color:#0e4324;letter-spacing:0.8px;text-transform:uppercase;">O que inclui o teu plano</p>
-                <p style="margin:0 0 8px;font-size:14px;color:#374151;">Calendário de marcações</p>
-                <p style="margin:0 0 8px;font-size:14px;color:#374151;">Faturação e despesas</p>
-                <p style="margin:0 0 8px;font-size:14px;color:#374151;">CRM de clientes</p>
-                <p style="margin:0 0 8px;font-size:14px;color:#374151;">Marcações online</p>
-                <p style="margin:0 0 8px;font-size:14px;color:#374151;">Relatórios e análise</p>
-              </td></tr>
-            </table>
-            <p style="margin:0;font-size:13px;color:#9ca3af;line-height:1.6;">
-              Este link expira em 24 horas. Se não pediste este acesso, podes ignorar este email.
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td style="background:#f9f7f2;padding:20px 40px;border-top:1px solid #ede8df;">
-            <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">Fatura+ · faturamais30@gmail.com</p>
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`,
-  })
 
   const { data: existing } = await supabase
     .from('pedidos_acesso')
@@ -116,8 +185,7 @@ export async function POST(req: NextRequest) {
   } else {
     await supabase.from('pedidos_acesso').insert({
       email,
-      nome_barbearia,
-      instagram: null,
+      nicho,
       estado: 'convidado',
       convidado_em: new Date().toISOString(),
     })
