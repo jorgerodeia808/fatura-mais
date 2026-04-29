@@ -5,8 +5,9 @@ import Image from 'next/image'
 
 // ── Landing geral do Fatura+ ───────────────────────────────────────────────────
 export default function LandingPage() {
-  // Nos subdomínios de nicho não há landing page — vai direto para login
+  // Subdomínios vão direto para login
   if (process.env.NEXT_PUBLIC_NICHO) redirect('/login')
+  if (process.env.NEXT_PUBLIC_APP_TYPE === 'fp') redirect('/login')
 
   const nichos = [
     {
@@ -27,6 +28,16 @@ export default function LandingPage() {
       corDestaque: '#ffffff',
       descricao: 'Gestão do teu estúdio de unhas. Clientes, serviços e faturação sem complicações.',
       url: 'https://nails.fatura-mais.pt',
+      ativo: true,
+    },
+    {
+      id: 'fp',
+      nome: 'FP',
+      letra: 'FP',
+      cor: '#1e3a5f',
+      corDestaque: '#c9a84c',
+      descricao: 'Controla as tuas finanças pessoais. Receitas, despesas, orçamentos e metas num só lugar.',
+      url: 'https://fp.fatura-mais.pt',
       ativo: true,
     },
     {

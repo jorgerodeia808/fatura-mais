@@ -7,6 +7,10 @@ import { createClient } from '@/lib/supabase/client'
 import { getNichoConfig } from '@/lib/nicho'
 import NichoLogo from '@/components/NichoLogo'
 
+const FP_PRIMARY = '#1e3a5f'
+const FP_ACCENT = '#c9a84c'
+const FP_BG = '#f0f4f8'
+
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -17,6 +21,7 @@ export default function LoginPage() {
   const supabase = createClient()
   const nicho = getNichoConfig()
   const isSubdominio = !!process.env.NEXT_PUBLIC_NICHO
+  const isFP = process.env.NEXT_PUBLIC_APP_TYPE === 'fp'
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -49,6 +54,149 @@ export default function LoginPage() {
     router.refresh()
   }
 
+  // FP+ login page
+  if (isFP) {
+    return (
+      <div className="flex min-h-screen">
+        {/* Left panel */}
+        <div className="hidden lg:flex lg:w-1/2">
+          <div
+            className="flex flex-col justify-between text-white p-12 min-h-screen w-full"
+            style={{ backgroundColor: FP_PRIMARY }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="font-serif italic font-bold text-2xl text-white">
+                Fatura<span style={{ color: FP_ACCENT }}>+</span>
+                <span className="font-sans not-italic font-light text-white/30 mx-2">|</span>
+                <span style={{ color: FP_ACCENT }}>FP</span>
+              </span>
+            </div>
+
+            <div>
+              <p className="font-serif font-bold text-4xl text-white leading-snug mb-4">
+                As tuas finanças pessoais, finalmente organizadas.
+              </p>
+              <p className="text-white/60 text-sm leading-relaxed">
+                Controla receitas, despesas e metas num único lugar.
+              </p>
+              <ul className="mt-8 space-y-3">
+                {['Controlo de receitas e despesas', 'Orçamentos por categoria', 'Metas de poupança', 'Pagamentos recorrentes'].map(f => (
+                  <li key={f} className="flex items-center gap-2.5 text-sm text-white/80">
+                    <span className="material-symbols-outlined icon-filled text-[16px]" style={{ color: FP_ACCENT }}>
+                      check_circle
+                    </span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="relative h-24">
+              <div className="absolute bottom-0 right-0 w-32 h-32 bg-white/5 rounded-full" />
+              <div className="absolute bottom-4 right-8 w-16 h-16 rounded-full" style={{ backgroundColor: `${FP_ACCENT}20` }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Right panel */}
+        <div className="w-full lg:w-1/2">
+          <div className="flex items-center justify-center px-6 py-8 lg:py-12 min-h-screen" style={{ backgroundColor: FP_BG }}>
+            <div className="w-full max-w-sm">
+              {/* Mobile logo */}
+              <div className="lg:hidden text-center mb-6">
+                <span className="font-serif italic font-bold text-2xl" style={{ color: FP_PRIMARY }}>
+                  Fatura<span style={{ color: FP_ACCENT }}>+</span>
+                  <span className="font-sans not-italic font-light mx-2" style={{ color: `${FP_PRIMARY}60` }}>|</span>
+                  <span style={{ color: FP_ACCENT }}>FP</span>
+                </span>
+              </div>
+
+              <h2 className="font-serif font-bold text-2xl text-[#1c1c18] mb-1 text-center lg:text-left">Bem-vindo de volta</h2>
+              <p className="text-sm text-[#717971] mb-6 text-center lg:text-left">Entra na tua conta para continuar</p>
+
+              {notice && (
+                <div className="bg-amber-50 text-amber-800 text-sm px-4 py-3 rounded-lg border border-amber-200 mb-4">
+                  {notice}
+                </div>
+              )}
+
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-[#1c1c18] mb-1.5">Email</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="input-field"
+                    placeholder="o.teu@email.com"
+                    required
+                    autoComplete="email"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between mb-1.5">
+                    <label className="text-sm font-medium text-[#1c1c18]">Password</label>
+                    <Link href="/recuperar-password" className="text-xs hover:opacity-80 transition-opacity" style={{ color: FP_ACCENT }}>
+                      Esqueceste?
+                    </Link>
+                  </div>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="input-field"
+                    placeholder="••••••••"
+                    required
+                    autoComplete="current-password"
+                  />
+                </div>
+
+                {error && (
+                  <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg border border-red-100">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 mt-2 rounded-lg font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: FP_PRIMARY, color: 'white' }}
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      A entrar...
+                    </span>
+                  ) : 'Entrar'}
+                </button>
+              </form>
+
+              <p className="text-center text-sm text-[#717971] mt-6">
+                Ainda não tens conta?{' '}
+                <Link href="/pedir-acesso" className="font-semibold hover:opacity-80 transition-opacity" style={{ color: FP_ACCENT }}>
+                  Pedir acesso
+                </Link>
+              </p>
+
+              <p className="text-center text-2xs text-[#717971]/60 mt-8">
+                © 2026 Fatura+ FP ·{' '}
+                <Link href="/privacidade" className="hover:text-[#717971] transition-colors">Privacidade</Link>
+                {' '}·{' '}
+                <Link href="/termos" className="hover:text-[#717971] transition-colors">Termos</Link>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Nicho login page
   const taglines: Record<string, { titulo: string; sub: string }> = {
     barbeiro: {
       titulo: 'A gestão financeira da tua barbearia, simplificada.',

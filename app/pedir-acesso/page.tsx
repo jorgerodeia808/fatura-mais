@@ -4,18 +4,23 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 
-const nichos = [
+const todosNichos = [
   { id: 'barbeiro', label: 'Barbearia', emoji: '✂️' },
   { id: 'nails', label: 'Estúdio de Unhas', emoji: '💅' },
   { id: 'lash', label: 'Estúdio de Pestanas', emoji: '👁️' },
   { id: 'tatuador', label: 'Estúdio de Tatuagem', emoji: '🎨' },
+  { id: 'fp', label: 'Finanças Pessoais', emoji: '💰' },
 ]
+
+const isFP = process.env.NEXT_PUBLIC_APP_TYPE === 'fp'
+const FP_PRIMARY = '#1e3a5f'
+const FP_ACCENT = '#c9a84c'
 
 export default function PedirAcessoPage() {
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [telefone, setTelefone] = useState('')
-  const [nicho, setNicho] = useState('')
+  const [nicho, setNicho] = useState(isFP ? 'fp' : '')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
@@ -48,15 +53,24 @@ export default function PedirAcessoPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-fundo flex items-center justify-center px-4 py-16">
+      <div className="min-h-screen flex items-center justify-center px-4 py-16" style={{ backgroundColor: isFP ? '#f0f4f8' : undefined }}>
         <div className="w-full max-w-md text-center">
           <Image src="/images/Logo_F_.png" alt="Fatura+" width={56} height={56} className="mx-auto mb-3" />
-          <p className="font-serif italic font-bold text-xl text-verde mb-8">
-            Fatura<span className="text-dourado">+</span>
+          <p className={`font-serif italic font-bold text-xl mb-8${isFP ? '' : ' text-verde'}`} style={isFP ? { color: FP_PRIMARY } : {}}>
+            Fatura<span style={isFP ? { color: FP_ACCENT } : {}} className={isFP ? '' : 'text-dourado'}>+</span>
+            {isFP && <span className="font-sans not-italic font-light mx-2" style={{ color: `${FP_PRIMARY}50` }}>| FP</span>}
           </p>
           <div className="card p-8">
-            <div className="w-14 h-14 rounded-2xl bg-verde/10 flex items-center justify-center mx-auto mb-5">
-              <span className="material-symbols-outlined text-verde" style={{ fontSize: '28px' }}>check_circle</span>
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5"
+              style={{ backgroundColor: isFP ? `${FP_PRIMARY}15` : undefined }}
+            >
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: '28px', color: isFP ? FP_PRIMARY : undefined }}
+              >
+                check_circle
+              </span>
             </div>
             <h1 className="font-serif font-bold text-2xl text-ink mb-2">Pedido enviado!</h1>
             <p className="text-sm text-ink-secondary leading-relaxed">
@@ -73,12 +87,13 @@ export default function PedirAcessoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-fundo flex items-center justify-center px-4 py-16">
+    <div className="min-h-screen flex items-center justify-center px-4 py-16" style={{ backgroundColor: isFP ? '#f0f4f8' : undefined }}>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Image src="/images/Logo_F_.png" alt="Fatura+" width={56} height={56} className="mx-auto mb-3" />
-          <p className="font-serif italic font-bold text-xl text-verde">
-            Fatura<span className="text-dourado">+</span>
+          <p className={`font-serif italic font-bold text-xl${isFP ? '' : ' text-verde'}`} style={isFP ? { color: FP_PRIMARY } : {}}>
+            Fatura<span style={isFP ? { color: FP_ACCENT } : {}} className={isFP ? '' : 'text-dourado'}>+</span>
+            {isFP && <span className="font-sans not-italic font-light mx-2" style={{ color: `${FP_PRIMARY}50` }}>| FP</span>}
           </p>
         </div>
 
@@ -127,18 +142,23 @@ export default function PedirAcessoPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-ink mb-1.5">Área de negócio</label>
+              <label className="block text-sm font-medium text-ink mb-1.5">Área de interesse</label>
               <div className="grid grid-cols-2 gap-2">
-                {nichos.map((n) => (
+                {todosNichos.map((n) => (
                   <button
                     key={n.id}
                     type="button"
                     onClick={() => setNicho(n.id)}
                     className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm transition-all text-left ${
                       nicho === n.id
-                        ? 'border-verde bg-verde/5 text-verde font-medium'
+                        ? 'font-medium'
                         : 'border-black/10 text-ink-secondary hover:border-black/20'
                     }`}
+                    style={nicho === n.id ? {
+                      borderColor: isFP ? FP_PRIMARY : '#0e4324',
+                      backgroundColor: isFP ? `${FP_PRIMARY}08` : '#0e432408',
+                      color: isFP ? FP_PRIMARY : '#0e4324',
+                    } : {}}
                   >
                     <span>{n.emoji}</span>
                     {n.label}
@@ -156,7 +176,8 @@ export default function PedirAcessoPage() {
             <button
               type="submit"
               disabled={loading || !nicho}
-              className="btn-primary w-full py-3 mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full py-3 mt-2 rounded-lg font-medium text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed text-white"
+              style={{ backgroundColor: isFP ? FP_PRIMARY : '#0e4324' }}
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
