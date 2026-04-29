@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 import { Resend } from 'resend'
 
 const nichoUrl: Record<string, string> = {
@@ -120,6 +121,16 @@ function buildEmailHtml(plataforma: string, nicho: string | null, inviteUrl: str
 }
 
 export async function POST(req: NextRequest) {
+  const supabaseUser = await createClient()
+  const { data: { user } } = await supabaseUser.auth.getUser()
+
+  const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'jorgerodeia808@gmail.com')
+    .split(',').map(e => e.trim().toLowerCase())
+
+  if (!user?.email || !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
+  }
+
   const { email, nicho } = await req.json()
 
   if (!email || !nicho) {
