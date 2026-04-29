@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 
-export default function NovaPasswordPage() {
+function NovaPasswordContent() {
   const [password, setPassword] = useState('')
   const [confirmar, setConfirmar] = useState('')
   const [loading, setLoading] = useState(false)
@@ -151,5 +151,13 @@ export default function NovaPasswordPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function NovaPasswordPage() {
+  return (
+    <Suspense>
+      <NovaPasswordContent />
+    </Suspense>
   )
 }
