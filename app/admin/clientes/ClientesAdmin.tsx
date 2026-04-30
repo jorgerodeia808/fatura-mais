@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import type { ClienteUnificado } from './page'
+import type { ClienteUnificado } from './types'
 
 const nichoLabel: Record<string, string> = {
   barbeiro: 'Barbearia',
