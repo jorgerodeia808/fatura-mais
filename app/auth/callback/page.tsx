@@ -17,9 +17,17 @@ export default function AuthCallbackPage() {
 
       // PKCE flow: code em query param
       const code = query.get('code')
+      const typeParam = query.get('type')
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (!error) { router.replace(next); return }
+        if (!error) {
+          if (typeParam === 'invite') {
+            router.replace('/recuperar-password/nova?tipo=convite')
+          } else {
+            router.replace(next)
+          }
+          return
+        }
       }
 
       // Implicit flow: tokens no hash
