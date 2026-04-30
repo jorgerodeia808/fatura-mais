@@ -27,7 +27,7 @@ const planoPillColors: Record<string, string> = {
   suspenso: 'bg-red-50 text-red-700 border border-red-200',
 }
 
-const PLANOS_FP = ['mensal', 'vitalicio', 'suspenso']
+const PLANOS = ['mensal', 'vitalicio', 'suspenso']
 
 function NichoBadge({ nicho }: { nicho: string }) {
   return (
@@ -51,48 +51,75 @@ function formatDate(iso: string | null) {
   return new Date(iso).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
+function diasRestantes(iso: string) {
+  return Math.ceil((new Date(iso).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+}
+
 const todosOsNichos = ['barbeiro', 'nails', 'lash', 'tatuador', 'fp']
 
 export default function ClientesAdmin({ clientes }: { clientes: ClienteUnificado[] }) {
   const [search, setSearch] = useState('')
   const [nichoFiltro, setNichoFiltro] = useState<string | null>(null)
-  const [expandedFpId, setExpandedFpId] = useState<string | null>(null)
-  const [fpPlano, setFpPlano] = useState<string>('suspenso')
-  const [fpLoading, setFpLoading] = useState(false)
+
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [expandedPlano, setExpandedPlano] = useState('suspenso')
+  const [expandedMetodo, setExpandedMetodo] = useState('transferencia')
+  const [savingAction, setSavingAction] = useState<'plano' | 'renovar' | null>(null)
+
   const [toast, setToast] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
-    setToast(msg)
-    setToastType(type)
+    setToast(msg); setToastType(type)
     setTimeout(() => setToast(''), 3500)
   }
 
-  const handleExpandFp = (c: ClienteUnificado) => {
-    if (expandedFpId === c.id) {
-      setExpandedFpId(null)
-      return
-    }
-    const planoAtual = c.plano && PLANOS_FP.includes(c.plano) ? c.plano : 'suspenso'
-    setFpPlano(planoAtual)
-    setExpandedFpId(c.id)
+  const handleExpand = (c: ClienteUnificado) => {
+    if (expandedId === c.id) { setExpandedId(null); return }
+    const plano = c.plano && PLANOS.includes(c.plano) ? c.plano : 'suspenso'
+    setExpandedPlano(plano)
+    setExpandedMetodo('transferencia')
+    setExpandedId(c.id)
   }
 
-  const handleAlterarPlanoFp = async (fp_perfil_id: string) => {
-    setFpLoading(true)
+  const handleSavePlano = async (c: ClienteUnificado) => {
+    setSavingAction('plano')
+    const body = c.nicho === 'fp'
+      ? { fp_perfil_id: c.id, plano: expandedPlano }
+      : { barbearia_id: c.id, plano: expandedPlano }
     const res = await fetch('/api/admin/alterar-plano', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fp_perfil_id, plano: fpPlano }),
+      body: JSON.stringify(body),
     })
-    setFpLoading(false)
+    setSavingAction(null)
     if (res.ok) {
       showToast('Plano guardado ✓')
-      setExpandedFpId(null)
+      setExpandedId(null)
       window.location.reload()
     } else {
       const data = await res.json()
       showToast(data.error ?? 'Erro ao guardar', 'error')
+    }
+  }
+
+  const handleRenovar = async (c: ClienteUnificado) => {
+    setSavingAction('renovar')
+    const res = await fetch('/api/admin/renovar-subscricao', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ barbearia_id: c.id, metodo: expandedMetodo }),
+    })
+    setSavingAction(null)
+    if (res.ok) {
+      const data = await res.json()
+      const nova = new Date(data.nova_renovacao).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      showToast(`Subscrição renovada até ${nova} ✓`)
+      setExpandedId(null)
+      window.location.reload()
+    } else {
+      const data = await res.json()
+      showToast(data.error ?? 'Erro ao renovar', 'error')
     }
   }
 
@@ -167,8 +194,8 @@ export default function ClientesAdmin({ clientes }: { clientes: ClienteUnificado
                 <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">Email</th>
                 <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">Nicho</th>
                 <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">Plano</th>
+                <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">Renovação</th>
                 <th className="text-right px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">Total pago</th>
-                <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">Registado em</th>
                 <th className="px-6 py-3" />
               </tr>
             </thead>
@@ -180,89 +207,148 @@ export default function ClientesAdmin({ clientes }: { clientes: ClienteUnificado
                   </td>
                 </tr>
               ) : (
-                filtrados.map(c => (
-                  <Fragment key={c.id}>
-                    <tr className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-3.5">
-                        <p className="font-medium text-ink">{c.nome}</p>
-                        {c.notas && <p className="text-xs text-ink-secondary mt-0.5 truncate max-w-[160px]">{c.notas}</p>}
-                      </td>
-                      <td className="px-6 py-3.5 text-ink-secondary text-xs">{c.email}</td>
-                      <td className="px-6 py-3.5"><NichoBadge nicho={c.nicho} /></td>
-                      <td className="px-6 py-3.5"><PlanoBadge plano={c.plano} /></td>
-                      <td className="px-6 py-3.5 text-right">
-                        {c.valor_pago_total != null ? (
-                          <span className="font-semibold text-verde">
-                            {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(c.valor_pago_total)}
-                          </span>
-                        ) : (
-                          <span className="text-ink-secondary/30">—</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-3.5 text-ink-secondary">{formatDate(c.criado_em)}</td>
-                      <td className="px-6 py-3.5">
-                        {c.nicho === 'fp' ? (
-                          <button
-                            onClick={() => handleExpandFp(c)}
-                            className={`inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
-                              expandedFpId === c.id
-                                ? 'bg-[#1e3a5f] text-white'
-                                : 'text-[#1e3a5f] hover:text-[#1e3a5f]/80 bg-[#1e3a5f]/5 hover:bg-[#1e3a5f]/10'
-                            }`}
-                          >
-                            Gerir plano
-                            <span className="material-symbols-outlined text-[13px] leading-none" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}>
-                              {expandedFpId === c.id ? 'expand_less' : 'expand_more'}
+                filtrados.map(c => {
+                  const isExpanded = expandedId === c.id
+                  const dias = c.subscricao_renovacao ? diasRestantes(c.subscricao_renovacao) : null
+
+                  return (
+                    <Fragment key={c.id}>
+                      <tr className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-6 py-3.5">
+                          <p className="font-medium text-ink">{c.nome}</p>
+                          {c.notas && <p className="text-xs text-ink-secondary mt-0.5 truncate max-w-[160px]">{c.notas}</p>}
+                        </td>
+                        <td className="px-6 py-3.5 text-ink-secondary text-xs">{c.email}</td>
+                        <td className="px-6 py-3.5"><NichoBadge nicho={c.nicho} /></td>
+                        <td className="px-6 py-3.5"><PlanoBadge plano={c.plano} /></td>
+                        <td className="px-6 py-3.5">
+                          {c.subscricao_renovacao ? (
+                            <div>
+                              <p className={`text-xs font-medium ${dias !== null && dias <= 5 ? 'text-amber-700' : 'text-ink'}`}>
+                                {formatDate(c.subscricao_renovacao)}
+                              </p>
+                              {dias !== null && (
+                                <p className={`text-[11px] ${dias <= 0 ? 'text-red-600' : dias <= 5 ? 'text-amber-600' : 'text-ink-secondary'}`}>
+                                  {dias <= 0 ? `Expirou há ${Math.abs(dias)}d` : `${dias} dias`}
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-ink-secondary/30 text-xs">—</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-3.5 text-right">
+                          {c.valor_pago_total != null ? (
+                            <span className="font-semibold text-verde">
+                              {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(c.valor_pago_total)}
                             </span>
-                          </button>
-                        ) : (
-                          <Link
-                            href={`/admin/clientes/${c.id}`}
-                            className="inline-flex items-center gap-1 text-xs font-medium text-verde hover:text-verde/80 bg-verde/5 hover:bg-verde/10 px-3 py-1.5 rounded-lg transition-colors"
-                          >
-                            Ver detalhes
-                            <span className="material-symbols-outlined text-[13px] leading-none" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}>chevron_right</span>
-                          </Link>
-                        )}
-                      </td>
-                    </tr>
-                    {c.nicho === 'fp' && expandedFpId === c.id && (
-                      <tr className="bg-[#f0f4f8]">
-                        <td colSpan={7} className="px-6 py-4">
-                          <div className="flex flex-wrap items-center gap-3">
-                            <span className="text-xs font-semibold text-[#1e3a5f]">Alterar plano:</span>
-                            {PLANOS_FP.map(p => (
-                              <button
-                                key={p}
-                                onClick={() => setFpPlano(p)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                                  fpPlano === p
-                                    ? 'bg-[#1e3a5f] text-white border-[#1e3a5f]'
-                                    : 'bg-white text-ink border-[#e8e4dc] hover:border-[#1e3a5f]/30'
-                                }`}
+                          ) : (
+                            <span className="text-ink-secondary/30">—</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-3.5">
+                          <div className="flex flex-col items-end gap-1">
+                            <button
+                              onClick={() => handleExpand(c)}
+                              className={`inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                                isExpanded
+                                  ? 'bg-[#0e4324] text-white'
+                                  : 'text-verde hover:text-verde/80 bg-verde/5 hover:bg-verde/10'
+                              }`}
+                            >
+                              Gerir plano
+                              <span className="material-symbols-outlined text-[13px] leading-none" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}>
+                                {isExpanded ? 'expand_less' : 'expand_more'}
+                              </span>
+                            </button>
+                            {c.nicho !== 'fp' && (
+                              <Link
+                                href={`/admin/clientes/${c.id}`}
+                                className="text-[11px] text-ink-secondary/60 hover:text-ink-secondary transition-colors"
                               >
-                                {p.charAt(0).toUpperCase() + p.slice(1)}
-                              </button>
-                            ))}
-                            <button
-                              onClick={() => handleAlterarPlanoFp(c.id)}
-                              disabled={fpLoading}
-                              className="ml-auto text-xs font-semibold px-4 py-1.5 rounded-lg bg-[#1e3a5f] text-white hover:bg-[#1e3a5f]/90 disabled:opacity-50 transition-colors"
-                            >
-                              {fpLoading ? 'A guardar...' : 'Guardar'}
-                            </button>
-                            <button
-                              onClick={() => setExpandedFpId(null)}
-                              className="text-ink-secondary hover:text-ink transition-colors"
-                            >
-                              <span className="material-symbols-outlined text-[18px]">close</span>
-                            </button>
+                                Ver detalhes →
+                              </Link>
+                            )}
                           </div>
                         </td>
                       </tr>
-                    )}
-                  </Fragment>
-                ))
+
+                      {isExpanded && (
+                        <tr className="bg-[#f7f4ee]">
+                          <td colSpan={7} className="px-6 py-4 border-t border-[#e8e4dc]">
+                            <div className="space-y-3">
+
+                              {/* Plan selector */}
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-xs font-semibold text-ink-secondary min-w-[56px]">Plano:</span>
+                                {PLANOS.map(p => (
+                                  <button
+                                    key={p}
+                                    onClick={() => setExpandedPlano(p)}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                                      expandedPlano === p
+                                        ? 'bg-[#0e4324] text-white border-[#0e4324]'
+                                        : 'bg-white text-ink border-[#e8e4dc] hover:border-[#0e4324]/30'
+                                    }`}
+                                  >
+                                    {p.charAt(0).toUpperCase() + p.slice(1)}
+                                  </button>
+                                ))}
+                                <button
+                                  onClick={() => handleSavePlano(c)}
+                                  disabled={savingAction === 'plano'}
+                                  className="ml-auto text-xs font-semibold px-4 py-1.5 rounded-lg bg-[#0e4324] text-white hover:bg-[#0e4324]/90 disabled:opacity-50 transition-colors"
+                                >
+                                  {savingAction === 'plano' ? 'A guardar...' : 'Guardar plano'}
+                                </button>
+                                <button
+                                  onClick={() => setExpandedId(null)}
+                                  className="text-ink-secondary hover:text-ink transition-colors"
+                                >
+                                  <span className="material-symbols-outlined text-[18px]">close</span>
+                                </button>
+                              </div>
+
+                              {/* Quick renewal — nicho clients only */}
+                              {c.nicho !== 'fp' && (
+                                <div className="flex flex-wrap items-center gap-2 border-t border-[#e8e4dc] pt-3">
+                                  <span className="text-xs font-semibold text-ink-secondary min-w-[56px]">Renovar:</span>
+                                  {c.subscricao_renovacao && (
+                                    <span className="text-xs text-ink-secondary">
+                                      Atual: <strong>{formatDate(c.subscricao_renovacao)}</strong>
+                                      {dias !== null && (dias <= 0
+                                        ? <span className="text-red-600"> (expirou há {Math.abs(dias)}d)</span>
+                                        : <span className={dias <= 5 ? 'text-amber-600' : ''}> ({dias}d)</span>
+                                      )}
+                                    </span>
+                                  )}
+                                  <select
+                                    value={expandedMetodo}
+                                    onChange={e => setExpandedMetodo(e.target.value)}
+                                    className="border border-[#e8e4dc] rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-[#0e4324] bg-white transition-colors"
+                                  >
+                                    <option value="transferencia">Transferência</option>
+                                    <option value="multibanco">Multibanco</option>
+                                    <option value="mbway">MBWay</option>
+                                    <option value="numerario">Numerário</option>
+                                  </select>
+                                  <button
+                                    onClick={() => handleRenovar(c)}
+                                    disabled={savingAction === 'renovar'}
+                                    className="text-xs font-semibold px-4 py-1.5 rounded-lg bg-[#977c30] text-white hover:bg-[#7a6228] disabled:opacity-50 transition-colors"
+                                  >
+                                    {savingAction === 'renovar' ? 'A renovar...' : 'Renovar +30 dias (€12,99)'}
+                                  </button>
+                                </div>
+                              )}
+
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  )
+                })
               )}
             </tbody>
           </table>

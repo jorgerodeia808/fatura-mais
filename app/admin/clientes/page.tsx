@@ -14,7 +14,7 @@ export default async function ClientesPage() {
   // Barbearias (todos os nichos exceto fp)
   const { data: barbearias } = await supabase
     .from('barbearias')
-    .select('id, nome, plano, criado_em, valor_pago_total, metodo_pagamento, indicado_por, notas, nicho, user_id')
+    .select('id, nome, plano, criado_em, valor_pago_total, metodo_pagamento, indicado_por, notas, nicho, user_id, subscricao_renovacao')
     .order('criado_em', { ascending: false })
 
   // Clientes FP+
@@ -26,11 +26,13 @@ export default async function ClientesPage() {
   const clientes: ClienteUnificado[] = [
     ...(barbearias ?? []).map(b => ({
       id: b.id,
+      user_id: b.user_id,
       nome: b.nome,
       email: emailMap.get(b.user_id) ?? '—',
       plano: b.plano,
       nicho: b.nicho ?? 'barbeiro',
       criado_em: b.criado_em,
+      subscricao_renovacao: b.subscricao_renovacao ?? null,
       valor_pago_total: b.valor_pago_total,
       metodo_pagamento: b.metodo_pagamento,
       indicado_por: b.indicado_por,
@@ -38,11 +40,13 @@ export default async function ClientesPage() {
     })),
     ...(fpPerfis ?? []).map(f => ({
       id: f.id,
+      user_id: f.user_id,
       nome: emailMap.get(f.user_id) ?? '—',
       email: emailMap.get(f.user_id) ?? '—',
       plano: f.plano,
       nicho: 'fp',
       criado_em: f.criado_em,
+      subscricao_renovacao: null,
       valor_pago_total: null,
       metodo_pagamento: null,
       indicado_por: null,
