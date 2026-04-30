@@ -184,6 +184,14 @@ export default function ClientesPage() {
   const eliminarCliente = async () => {
     if (!selectedId || !barbeariaId) return
     setSaving(true)
+    // Cancelar marcações futuras do cliente antes de o eliminar
+    await supabase
+      .from('marcacoes')
+      .update({ estado: 'cancelada' })
+      .eq('cliente_id', selectedId)
+      .eq('barbearia_id', barbeariaId)
+      .in('estado', ['pendente', 'confirmado'])
+      .gte('data_hora', new Date().toISOString())
     await supabase.from('clientes').delete().eq('id', selectedId)
     setSaving(false)
     setClientes(prev => prev.filter(c => c.id !== selectedId))
