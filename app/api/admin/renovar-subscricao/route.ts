@@ -13,10 +13,34 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
   }
 
-  const { barbearia_id, valor = 12.99, metodo = 'transferencia', notas } = await req.json()
-  if (!barbearia_id) return NextResponse.json({ error: 'barbearia_id em falta' }, { status: 400 })
+  const { barbearia_id, fp_perfil_id, valor = 12.99, metodo = 'transferencia', notas } = await req.json()
+  if (!barbearia_id && !fp_perfil_id) return NextResponse.json({ error: 'id em falta' }, { status: 400 })
 
   const supabase = createAdminClient()
+  const now = new Date()
+
+  if (fp_perfil_id) {
+    const { data: perfil } = await supabase
+      .from('fp_perfis')
+      .select('subscricao_renovacao')
+      .eq('id', fp_perfil_id)
+      .single()
+
+    if (!perfil) return NextResponse.json({ error: 'Perfil FP+ não encontrado' }, { status: 404 })
+
+    const base = perfil.subscricao_renovacao && new Date(perfil.subscricao_renovacao) > now
+      ? new Date(perfil.subscricao_renovacao)
+      : now
+    const novaRenovacao = new Date(base)
+    novaRenovacao.setDate(novaRenovacao.getDate() + 30)
+
+    await supabase.from('fp_perfis').update({
+      plano: 'mensal',
+      subscricao_renovacao: novaRenovacao.toISOString(),
+    }).eq('id', fp_perfil_id)
+
+    return NextResponse.json({ success: true, nova_renovacao: novaRenovacao.toISOString() })
+  }
 
   const { data: barb } = await supabase
     .from('barbearias')
@@ -26,9 +50,6 @@ export async function POST(req: NextRequest) {
 
   if (!barb) return NextResponse.json({ error: 'Barbearia não encontrada' }, { status: 404 })
 
-  const now = new Date()
-
-  // Nova renovação: +30 dias a partir da renovação atual se ainda não expirou, senão a partir de hoje
   const base = barb.subscricao_renovacao && new Date(barb.subscricao_renovacao) > now
     ? new Date(barb.subscricao_renovacao)
     : now

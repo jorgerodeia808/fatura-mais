@@ -105,10 +105,13 @@ export default function ClientesAdmin({ clientes }: { clientes: ClienteUnificado
 
   const handleRenovar = async (c: ClienteUnificado) => {
     setSavingAction('renovar')
+    const body = c.nicho === 'fp'
+      ? { fp_perfil_id: c.id, metodo: expandedMetodo }
+      : { barbearia_id: c.id, metodo: expandedMetodo }
     const res = await fetch('/api/admin/renovar-subscricao', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ barbearia_id: c.id, metodo: expandedMetodo }),
+      body: JSON.stringify(body),
     })
     setSavingAction(null)
     if (res.ok) {
@@ -309,38 +312,36 @@ export default function ClientesAdmin({ clientes }: { clientes: ClienteUnificado
                                 </button>
                               </div>
 
-                              {/* Quick renewal — nicho clients only */}
-                              {c.nicho !== 'fp' && (
-                                <div className="flex flex-wrap items-center gap-2 border-t border-[#e8e4dc] pt-3">
-                                  <span className="text-xs font-semibold text-ink-secondary min-w-[56px]">Renovar:</span>
-                                  {c.subscricao_renovacao && (
-                                    <span className="text-xs text-ink-secondary">
-                                      Atual: <strong>{formatDate(c.subscricao_renovacao)}</strong>
-                                      {dias !== null && (dias <= 0
-                                        ? <span className="text-red-600"> (expirou há {Math.abs(dias)}d)</span>
-                                        : <span className={dias <= 5 ? 'text-amber-600' : ''}> ({dias}d)</span>
-                                      )}
-                                    </span>
-                                  )}
-                                  <select
-                                    value={expandedMetodo}
-                                    onChange={e => setExpandedMetodo(e.target.value)}
-                                    className="border border-[#e8e4dc] rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-[#0e4324] bg-white transition-colors"
-                                  >
-                                    <option value="transferencia">Transferência</option>
-                                    <option value="multibanco">Multibanco</option>
-                                    <option value="mbway">MBWay</option>
-                                    <option value="numerario">Numerário</option>
-                                  </select>
-                                  <button
-                                    onClick={() => handleRenovar(c)}
-                                    disabled={savingAction === 'renovar'}
-                                    className="text-xs font-semibold px-4 py-1.5 rounded-lg bg-[#977c30] text-white hover:bg-[#7a6228] disabled:opacity-50 transition-colors"
-                                  >
-                                    {savingAction === 'renovar' ? 'A renovar...' : 'Renovar +30 dias (€12,99)'}
-                                  </button>
-                                </div>
-                              )}
+                              {/* Quick renewal */}
+                              <div className="flex flex-wrap items-center gap-2 border-t border-[#e8e4dc] pt-3">
+                                <span className="text-xs font-semibold text-ink-secondary min-w-[56px]">Renovar:</span>
+                                {c.subscricao_renovacao && (
+                                  <span className="text-xs text-ink-secondary">
+                                    Atual: <strong>{formatDate(c.subscricao_renovacao)}</strong>
+                                    {dias !== null && (dias <= 0
+                                      ? <span className="text-red-600"> (expirou há {Math.abs(dias)}d)</span>
+                                      : <span className={dias <= 5 ? 'text-amber-600' : ''}> ({dias}d)</span>
+                                    )}
+                                  </span>
+                                )}
+                                <select
+                                  value={expandedMetodo}
+                                  onChange={e => setExpandedMetodo(e.target.value)}
+                                  className="border border-[#e8e4dc] rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-[#0e4324] bg-white transition-colors"
+                                >
+                                  <option value="transferencia">Transferência</option>
+                                  <option value="multibanco">Multibanco</option>
+                                  <option value="mbway">MBWay</option>
+                                  <option value="numerario">Numerário</option>
+                                </select>
+                                <button
+                                  onClick={() => handleRenovar(c)}
+                                  disabled={savingAction === 'renovar'}
+                                  className="text-xs font-semibold px-4 py-1.5 rounded-lg bg-[#977c30] text-white hover:bg-[#7a6228] disabled:opacity-50 transition-colors"
+                                >
+                                  {savingAction === 'renovar' ? 'A renovar...' : 'Renovar +30 dias (€12,99)'}
+                                </button>
+                              </div>
 
                             </div>
                           </td>
