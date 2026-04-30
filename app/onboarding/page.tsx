@@ -22,10 +22,6 @@ function OnboardingFP() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Não autenticado')
 
-      const check = await fetch('/api/verificar-convite')
-      const { autorizado } = await check.json()
-      if (!autorizado) throw new Error('Não tens acesso a esta plataforma.')
-
       const { error: err } = await supabase
         .from('fp_perfis')
         .upsert({ user_id: user.id, plano: 'trial' }, { onConflict: 'user_id', ignoreDuplicates: true })
@@ -95,7 +91,7 @@ function OnboardingFP() {
         </div>
 
         <p className="text-center text-xs text-white/40 mt-6">
-          Período de trial gratuito · Sem cartão de crédito
+          Acesso por convite · Fatura+
         </p>
       </div>
     </div>
@@ -490,10 +486,6 @@ function NichoOnboarding() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Não autenticado')
-
-      const check = await fetch('/api/verificar-convite')
-      const { autorizado } = await check.json()
-      if (!autorizado) throw new Error('Não tens acesso a esta plataforma.')
 
       const { data: existente } = await supabase
         .from('barbearias')

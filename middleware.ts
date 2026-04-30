@@ -49,8 +49,12 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && authRoutes.some((r) => pathname.startsWith(r))) {
+    const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'jorgerodeia808@gmail.com')
+      .split(',').map(e => e.trim().toLowerCase())
     const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
+    url.pathname = user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())
+      ? '/admin/pedidos'
+      : '/dashboard'
     return NextResponse.redirect(url)
   }
 
