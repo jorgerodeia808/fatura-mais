@@ -110,7 +110,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    if (perfil.plano === 'vitalicio' || perfil.plano === 'trial') return supabaseResponse
+    if (perfil.plano === 'vitalicio') return supabaseResponse
 
     if (perfil.plano === 'mensal') {
       const renovacao = perfil.subscricao_renovacao as string | null

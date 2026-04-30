@@ -13,8 +13,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
   }
 
-  const { barbearia_id, plano, notas } = await req.json()
-  if (!barbearia_id || !plano) {
+  const { barbearia_id, fp_perfil_id, plano, notas } = await req.json()
+  if ((!barbearia_id && !fp_perfil_id) || !plano) {
     return NextResponse.json({ error: 'Dados em falta' }, { status: 400 })
   }
 
@@ -24,13 +24,17 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = createAdminClient()
-  const updates: Record<string, unknown> = { plano }
-  if (notas !== undefined) updates.notas = notas
-  // Limpar data expirada ao reativar manualmente — renovação volta a ser definida pelo pagamento
-  if (plano === 'mensal') updates.subscricao_renovacao = null
 
-  const { error } = await supabase.from('barbearias').update(updates).eq('id', barbearia_id)
+  if (fp_perfil_id) {
+    const { error } = await supabase.from('fp_perfis').update({ plano }).eq('id', fp_perfil_id)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  } else {
+    const updates: Record<string, unknown> = { plano }
+    if (notas !== undefined) updates.notas = notas
+    if (plano === 'mensal') updates.subscricao_renovacao = null
+    const { error } = await supabase.from('barbearias').update(updates).eq('id', barbearia_id)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ success: true })
 }

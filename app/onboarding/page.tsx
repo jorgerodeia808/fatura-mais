@@ -24,7 +24,7 @@ function OnboardingFP() {
 
       const { error: err } = await supabase
         .from('fp_perfis')
-        .upsert({ user_id: user.id, plano: 'trial' }, { onConflict: 'user_id', ignoreDuplicates: true })
+        .upsert({ user_id: user.id, plano: 'suspenso' }, { onConflict: 'user_id', ignoreDuplicates: true })
 
       if (err) throw err
       await fetch('/api/ativar-conta', { method: 'POST' })
