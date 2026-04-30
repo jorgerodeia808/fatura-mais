@@ -27,6 +27,7 @@ function OnboardingFP() {
         .upsert({ user_id: user.id, plano: 'trial' }, { onConflict: 'user_id', ignoreDuplicates: true })
 
       if (err) throw err
+      await fetch('/api/ativar-conta', { method: 'POST' })
       router.push('/dashboard')
       router.refresh()
     } catch (e: unknown) {
@@ -560,6 +561,7 @@ function NichoOnboarding() {
         if (custErr) throw custErr
       }
 
+      await fetch('/api/ativar-conta', { method: 'POST' })
       router.push('/bem-vindo')
       router.refresh()
     } catch (err: unknown) {
