@@ -264,14 +264,12 @@ export default function ClientesAdmin({ clientes }: { clientes: ClienteUnificado
                                 {isExpanded ? 'expand_less' : 'expand_more'}
                               </span>
                             </button>
-                            {c.nicho !== 'fp' && (
-                              <Link
-                                href={`/admin/clientes/${c.id}`}
-                                className="text-[11px] text-ink-secondary/60 hover:text-ink-secondary transition-colors"
-                              >
-                                Ver detalhes →
-                              </Link>
-                            )}
+                            <Link
+                              href={c.nicho === 'fp' ? `/admin/clientes/fp/${c.id}` : `/admin/clientes/${c.id}`}
+                              className="text-[11px] text-ink-secondary/60 hover:text-ink-secondary transition-colors"
+                            >
+                              Ver detalhes →
+                            </Link>
                           </div>
                         </td>
                       </tr>
