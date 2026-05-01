@@ -40,30 +40,36 @@ const nichoConfig: Record<string, { label: string; cor: string; letra: string }>
   nails:    { label: 'Nails+',   cor: '#e8779a', letra: 'N' },
   lash:     { label: 'Lash+',    cor: '#4a148c', letra: 'L' },
   tatuador: { label: 'Tattoo+',  cor: '#111111', letra: 'T' },
+  fp:       { label: 'FP+',      cor: '#1e3a5f', letra: 'FP' },
 }
 
 export default async function AdminPage() {
   const supabase = createAdminClient()
 
-  const [{ data: barbearias }, { data: pedidos }] = await Promise.all([
+  const [{ data: barbearias }, { data: fpPerfis }, { data: pedidos }] = await Promise.all([
     supabase.from('barbearias').select('id, nome, plano, nicho, criado_em').order('criado_em', { ascending: false }),
+    supabase.from('fp_perfis').select('id, plano, criado_em').order('criado_em', { ascending: false }),
     supabase.from('pedidos_acesso').select('id, estado').order('criado_em', { ascending: false }),
   ])
 
   const list = (barbearias as unknown as Barbearia[]) ?? []
+  const fpList = (fpPerfis ?? []) as { id: string; plano: string | null; criado_em: string }[]
   const pedList = (pedidos as unknown as Pedido[]) ?? []
 
-  const total = list.length
+  const total = list.length + fpList.length
   const assinantes = list.filter((b) => b.plano === 'mensal' || b.plano === 'vitalicio').length
+                   + fpList.filter((f) => f.plano === 'mensal' || f.plano === 'vitalicio').length
   const suspensos = list.filter((b) => b.plano === 'suspenso').length
+                  + fpList.filter((f) => f.plano === 'suspenso').length
   const pedidosPendentes = pedList.filter((p) => !p.estado || p.estado === 'pendente').length
 
-  // breakdown por nicho
+  // breakdown por nicho (barbearias + fp)
   const porNicho: Record<string, number> = {}
   for (const b of list) {
     const n = b.nicho ?? 'barbeiro'
     porNicho[n] = (porNicho[n] ?? 0) + 1
   }
+  if (fpList.length > 0) porNicho['fp'] = fpList.length
 
   const recentSignups = list.slice(0, 8)
 

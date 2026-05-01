@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function ReenviarButton({ email, nomeBarbearia }: { email: string; nomeBarbearia: string }) {
+export default function ReenviarButton({ email, nicho }: { email: string; nicho: string | null }) {
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
@@ -16,7 +16,7 @@ export default function ReenviarButton({ email, nomeBarbearia }: { email: string
     const res = await fetch('/api/admin/convidar-direto', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, nome_barbearia: nomeBarbearia }),
+      body: JSON.stringify({ email, nicho: nicho ?? 'barbeiro' }),
     })
 
     const data = await res.json()

@@ -170,19 +170,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Não foi possível gerar o link' }, { status: 500 })
   }
 
-  if (process.env.RESEND_API_KEY) {
-    const resend = new Resend(process.env.RESEND_API_KEY)
-    const { error: emailError } = await resend.emails.send({
-      from: 'Fatura+ <noreply@fatura-mais.pt>',
-      to: email,
-      subject: `O teu acesso ao ${plataforma} está pronto`,
-      html: buildEmailHtml(plataforma, nicho ?? null, inviteUrl),
-    })
+  if (!process.env.RESEND_API_KEY) {
+    return NextResponse.json({ error: 'Email não configurado no servidor (RESEND_API_KEY em falta)' }, { status: 500 })
+  }
 
-    if (emailError) {
-      console.error('Resend error:', emailError)
-      return NextResponse.json({ error: `Resend: ${JSON.stringify(emailError)}` }, { status: 500 })
-    }
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  const { error: emailError } = await resend.emails.send({
+    from: 'Fatura+ <noreply@fatura-mais.pt>',
+    to: email,
+    subject: `O teu acesso ao ${plataforma} está pronto`,
+    html: buildEmailHtml(plataforma, nicho ?? null, inviteUrl),
+  })
+
+  if (emailError) {
+    console.error('Resend error:', emailError)
+    return NextResponse.json({ error: `Erro ao enviar email: ${JSON.stringify(emailError)}` }, { status: 500 })
   }
 
   await supabase

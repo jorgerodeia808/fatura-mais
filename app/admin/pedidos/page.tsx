@@ -177,7 +177,7 @@ export default async function PedidosPage() {
                     <td className="px-6 py-4 text-right">
                       <span className="inline-flex items-center gap-2">
                         <ApagarButton pedidoId={p.id} />
-                        <ReenviarButton email={p.email} nomeBarbearia={p.nome ?? p.nome_barbearia ?? ''} />
+                        <ReenviarButton email={p.email} nicho={p.nicho} />
                       </span>
                     </td>
                   </tr>
