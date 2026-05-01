@@ -29,6 +29,29 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  const hostname = request.headers.get('host') ?? ''
+  const isAdminSubdomain = hostname.startsWith('admin.')
+
+  if (isAdminSubdomain) {
+    const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'jorgerodeia808@gmail.com')
+      .split(',').map(e => e.trim().toLowerCase())
+    const url = request.nextUrl.clone()
+    if (!user) {
+      url.pathname = '/login'
+      return NextResponse.redirect(url)
+    }
+    if (!user.email || !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+      url.pathname = '/login'
+      url.searchParams.set('erro', 'sem_acesso')
+      return NextResponse.redirect(url)
+    }
+    if (request.nextUrl.pathname === '/' || request.nextUrl.pathname === '') {
+      url.pathname = '/admin/pedidos'
+      return NextResponse.redirect(url)
+    }
+    return supabaseResponse
+  }
+
   const isFP = process.env.NEXT_PUBLIC_APP_TYPE === 'fp'
 
   const protectedRoutes = isFP
