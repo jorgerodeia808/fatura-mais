@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
   const supabase = createAdminClient()
 
   const baseUrl = (nicho && nichoUrl[nicho]) ?? 'https://fatura-mais.pt'
-  const redirectTo = `${baseUrl}/auth/callback`
+  const redirectTo = `${baseUrl}/auth/callback?type=invite`
   const plataforma = (nicho && nichoLabel[nicho]) ?? 'Fatura+'
 
   // generateLink com type='invite' cria o utilizador se não existir, ou reenvia se já existir

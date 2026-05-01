@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
   const supabase = createAdminClient()
 
   const baseUrl = nichoUrl[nicho] ?? 'https://fatura-mais.pt'
-  const redirectTo = `${baseUrl}/auth/callback`
+  const redirectTo = `${baseUrl}/auth/callback?type=invite`
   const plataforma = nichoLabel[nicho] ?? 'Fatura+'
 
   let linkData, linkError
@@ -188,7 +188,7 @@ export async function POST(req: NextRequest) {
   const { data: existing } = await supabase
     .from('pedidos_acesso')
     .select('id')
-    .eq('email', email)
+    .eq('email', email.toLowerCase())
     .maybeSingle()
 
   if (existing) {
@@ -197,7 +197,7 @@ export async function POST(req: NextRequest) {
       .eq('id', existing.id)
   } else {
     await supabase.from('pedidos_acesso').insert({
-      email,
+      email: email.toLowerCase(),
       nicho,
       estado: 'convidado',
       convidado_em: new Date().toISOString(),
