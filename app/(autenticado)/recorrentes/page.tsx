@@ -68,7 +68,8 @@ export default function RecorrentesPage() {
     ])
 
     setItems((recs as unknown as Recorrente[]) ?? [])
-    setCats((catsData as Cat[]) ?? [])
+    const rawCats = (catsData as Cat[]) ?? []
+    setCats(rawCats.filter((c, i, arr) => arr.findIndex(x => x.nome === c.nome && x.tipo === c.tipo) === i))
     setLoading(false)
   }, [supabase])
 

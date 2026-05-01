@@ -84,7 +84,8 @@ export default function TransacoesPage() {
     ])
 
     setTxs((txData as unknown as Tx[]) ?? [])
-    setCats((catsData as Cat[]) ?? [])
+    const raw = (catsData as Cat[]) ?? []
+    setCats(raw.filter((c, i, arr) => arr.findIndex(x => x.nome === c.nome && x.tipo === c.tipo) === i))
     setLoading(false)
   }, [supabase, ano, mes])
 

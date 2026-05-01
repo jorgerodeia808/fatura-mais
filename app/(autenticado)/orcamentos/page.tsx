@@ -62,7 +62,8 @@ export default function OrcamentosPage() {
         .order('ordem'),
     ])
 
-    setCats((catsData as Cat[]) ?? [])
+    const rawCats = (catsData as Cat[]) ?? []
+    setCats(rawCats.filter((c, i, arr) => arr.findIndex(x => x.nome === c.nome && x.tipo === c.tipo) === i))
 
     if (!buds || buds.length === 0) {
       setOrcamentos([])
