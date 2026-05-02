@@ -131,10 +131,10 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-4">
             <a
-              href="https://barbeiro.fatura-mais.pt/login"
+              href="/pedir-acesso"
               className="text-sm font-medium text-[#0e4324]/70 hover:text-[#0e4324] transition-colors hidden sm:block"
             >
-              Entrar
+              Já tens acesso?
             </a>
             <Link
               href="/pedir-acesso"

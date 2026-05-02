@@ -37,12 +37,16 @@ interface NichoTheme {
 }
 
 const nichoTheme: Record<string, NichoTheme> = {
-  default: { primary: '#0e4324', accent: '#c9a84c', bg: '#f5f0e8', cardBg: '#f9f7f2', subtitle: 'PLATAFORMA DE GESTÃO', letterLabel: 'F' },
-  fp:      { primary: '#1e3a5f', accent: '#c9a84c', bg: '#e8eef5', cardBg: '#f0f4f8', subtitle: 'FINANÇAS PESSOAIS', letterLabel: 'FP' },
+  barbeiro: { primary: '#2d2d2d', accent: '#977c30', bg: '#f5f0e8', cardBg: '#f9f7f2', subtitle: 'GESTÃO DE BARBEARIA', letterLabel: 'B' },
+  nails:    { primary: '#c2185b', accent: '#f48fb1', bg: '#fce4ec', cardBg: '#fdf0f4', subtitle: 'GESTÃO DE ESTÚDIO', letterLabel: 'N' },
+  lash:     { primary: '#4a148c', accent: '#c9a96e', bg: '#f3e5f5', cardBg: '#f9f0fc', subtitle: 'GESTÃO DE ESTÚDIO', letterLabel: 'L' },
+  tatuador: { primary: '#111111', accent: '#c62828', bg: '#f5f5f5', cardBg: '#fafafa', subtitle: 'GESTÃO DE ESTÚDIO', letterLabel: 'T' },
+  fp:       { primary: '#1e3a5f', accent: '#c9a84c', bg: '#e8eef5', cardBg: '#f0f4f8', subtitle: 'FINANÇAS PESSOAIS', letterLabel: 'FP' },
+  default:  { primary: '#0e4324', accent: '#c9a84c', bg: '#f5f0e8', cardBg: '#f9f7f2', subtitle: 'PLATAFORMA DE GESTÃO', letterLabel: 'F' },
 }
 
 function buildEmailHtml(plataforma: string, nicho: string | null, inviteUrl: string): string {
-  const theme = nicho === 'fp' ? nichoTheme.fp : nichoTheme.default
+  const theme = (nicho && nichoTheme[nicho]) ? nichoTheme[nicho] : nichoTheme.default
   const features: string[] = (nicho ? nichoFeatures[nicho] : null) ?? nichoFeatures.barbeiro
   const featureRows = features
     .map(f => `<tr><td style="padding:6px 0;font-size:14px;color:#374151;"><span style="display:inline-block;width:20px;height:20px;background:${theme.accent}30;border-radius:50%;text-align:center;line-height:20px;font-size:11px;font-weight:700;color:${theme.primary};margin-right:10px;vertical-align:middle;">&#10003;</span>${f}</td></tr>`)
@@ -139,8 +143,9 @@ export async function POST(req: NextRequest) {
 
   const supabase = createAdminClient()
 
-  const baseUrl = (nicho && nichoUrl[nicho]) ?? 'https://fatura-mais.pt'
-  const redirectTo = `${baseUrl}/auth/callback?type=invite`
+  // Todos os convites passam pelo barbeiro (único domínio autorizado no Supabase).
+  // O auth/callback faz relay para o nicho correto via hash.
+  const redirectTo = `https://barbeiro.fatura-mais.pt/auth/callback?type=invite&nicho=${nicho ?? ''}`
   const plataforma = (nicho && nichoLabel[nicho]) ?? 'Fatura+'
 
   // generateLink com type='invite' cria o utilizador se não existir, ou reenvia se já existir

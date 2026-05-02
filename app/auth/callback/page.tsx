@@ -5,6 +5,23 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 
+const nichoUrl: Record<string, string> = {
+  barbeiro: 'https://barbeiro.fatura-mais.pt',
+  nails:    'https://nails.fatura-mais.pt',
+  lash:     'https://lash.fatura-mais.pt',
+  tatuador: 'https://tatuador.fatura-mais.pt',
+  fp:       'https://fp.fatura-mais.pt',
+}
+
+function getCurrentNicho(): string {
+  if (typeof window === 'undefined') return 'barbeiro'
+  const host = window.location.hostname
+  for (const [key, url] of Object.entries(nichoUrl)) {
+    if (url.includes(host)) return key
+  }
+  return 'barbeiro'
+}
+
 export default function AuthCallbackPage() {
   const router = useRouter()
   const supabase = createClient()
@@ -14,13 +31,27 @@ export default function AuthCallbackPage() {
       const query = new URLSearchParams(window.location.search)
       const hash = window.location.hash
       const next = query.get('next') ?? '/onboarding'
+      const typeParam = query.get('type')
+      const nichoParam = query.get('nicho')
+      const currentNicho = getCurrentNicho()
+
+      // Determina se precisa de relay para outro nicho
+      const targetNicho = nichoParam || currentNicho
+      const needsRelay = targetNicho !== currentNicho && nichoUrl[targetNicho]
 
       // PKCE flow: code em query param
       const code = query.get('code')
-      const typeParam = query.get('type')
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
+          if (needsRelay) {
+            const { data: { session } } = await supabase.auth.getSession()
+            if (session) {
+              const tipo = typeParam === 'invite' ? 'convite' : 'login'
+              window.location.href = `${nichoUrl[targetNicho]}/auth/relay?tipo=${tipo}#at=${session.access_token}&rt=${session.refresh_token}`
+              return
+            }
+          }
           if (typeParam === 'invite') {
             router.replace('/recuperar-password/nova?tipo=convite')
           } else {
@@ -49,6 +80,13 @@ export default function AuthCallbackPage() {
 
         if (accessToken && refreshToken) {
           const type = params.get('type')
+
+          if (needsRelay) {
+            const tipo = type === 'invite' ? 'convite' : 'login'
+            window.location.href = `${nichoUrl[targetNicho]}/auth/relay?tipo=${tipo}#at=${accessToken}&rt=${refreshToken}`
+            return
+          }
+
           const { error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
