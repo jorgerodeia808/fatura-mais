@@ -136,9 +136,9 @@ export async function POST(req: NextRequest) {
 
   const supabase = createAdminClient()
 
-  // Todos os convites passam pelo barbeiro (único domínio autorizado no Supabase).
-  // O auth/callback faz relay para o nicho correto via hash.
-  const redirectTo = `https://barbeiro.fatura-mais.pt/auth/callback?type=invite&nicho=${nicho}`
+  // Usa o site URL principal como redirectTo (sempre autorizado no Supabase).
+  // O auth/callback deteta o nicho e faz relay para o subdomínio correto.
+  const redirectTo = `https://fatura-mais.pt/auth/callback?type=invite&nicho=${nicho}`
   const plataforma = nichoLabel[nicho] ?? 'Fatura+'
 
   let linkData, linkError

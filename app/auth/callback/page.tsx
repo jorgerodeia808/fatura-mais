@@ -13,13 +13,13 @@ const nichoUrl: Record<string, string> = {
   fp:       'https://fp.fatura-mais.pt',
 }
 
-function getCurrentNicho(): string {
-  if (typeof window === 'undefined') return 'barbeiro'
+function getCurrentNicho(): string | null {
+  if (typeof window === 'undefined') return null
   const host = window.location.hostname
   for (const [key, url] of Object.entries(nichoUrl)) {
     if (url.includes(host)) return key
   }
-  return 'barbeiro'
+  return null // fatura-mais.pt ou domínio desconhecido — sempre fazer relay
 }
 
 export default function AuthCallbackPage() {
@@ -36,8 +36,8 @@ export default function AuthCallbackPage() {
       const currentNicho = getCurrentNicho()
 
       // Determina se precisa de relay para outro nicho
-      const targetNicho = nichoParam || currentNicho
-      const needsRelay = targetNicho !== currentNicho && nichoUrl[targetNicho]
+      const targetNicho = nichoParam || currentNicho || 'barbeiro'
+      const needsRelay = !!nichoUrl[targetNicho] && targetNicho !== currentNicho
 
       // PKCE flow: code em query param
       const code = query.get('code')
