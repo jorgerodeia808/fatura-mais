@@ -1,6 +1,29 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+async function hasValidInvite(email: string, nicho: string): Promise<boolean> {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+  if (!serviceKey || !supabaseUrl) return false
+
+  try {
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/pedidos_acesso?email=eq.${encodeURIComponent(email.toLowerCase())}&nicho=eq.${nicho}&estado=eq.convidado&limit=1&select=id`,
+      {
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+        },
+      }
+    )
+    if (!res.ok) return false
+    const data = await res.json()
+    return Array.isArray(data) && data.length > 0
+  } catch {
+    return false
+  }
+}
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -72,9 +95,16 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && authRoutes.some((r) => pathname.startsWith(r))) {
+    // Se o utilizador autenticado não tem acesso, deixar a página de login renderizar
+    // com o erro — evita o loop infinito /login?sem_acesso ↔ /dashboard?sem_acesso
+    if (request.nextUrl.searchParams.get('erro') === 'sem_acesso') {
+      return supabaseResponse
+    }
+
     const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'jorgerodeia808@gmail.com')
       .split(',').map(e => e.trim().toLowerCase())
     const url = request.nextUrl.clone()
+    url.search = '' // limpar query params do clone para não propagar ?erro=...
     url.pathname = user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())
       ? '/admin/pedidos'
       : '/dashboard'
@@ -105,29 +135,24 @@ export async function middleware(request: NextRequest) {
       .maybeSingle()
 
     if (!perfil) {
-      // Verificar se o utilizador foi convidado para o FP+ (ou é admin)
       const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'jorgerodeia808@gmail.com')
         .split(',').map(e => e.trim().toLowerCase())
-      const isAdmin = user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())
+      const isAdminUser = user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())
 
-      if (!isAdmin) {
-        const { data: convite } = await supabase
-          .from('pedidos_acesso')
-          .select('id')
-          .eq('email', user.email ?? '')
-          .eq('nicho', 'fp')
-          .eq('estado', 'convidado')
-          .maybeSingle()
+      if (!isAdminUser) {
+        // Usar service role para bypassar RLS na verificação do convite
+        const convite = await hasValidInvite(user.email ?? '', 'fp')
 
         if (!convite) {
           const url = request.nextUrl.clone()
+          url.search = ''
           url.pathname = '/login'
           url.searchParams.set('erro', 'sem_acesso')
           return NextResponse.redirect(url)
         }
       }
 
-      if (isAdmin) return supabaseResponse
+      if (isAdminUser) return supabaseResponse
 
       if (pathname === '/onboarding') return supabaseResponse
       const url = request.nextUrl.clone()
@@ -164,31 +189,23 @@ export async function middleware(request: NextRequest) {
     if (!barbearia) {
       const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'jorgerodeia808@gmail.com')
         .split(',').map(e => e.trim().toLowerCase())
-      const isAdmin = user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())
+      const isAdminUser = user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())
 
-      if (!isAdmin) {
+      if (!isAdminUser) {
+        // Usar service role para bypassar RLS na verificação do convite
         const nicho = process.env.NEXT_PUBLIC_APP_TYPE ?? 'barbeiro'
-        const { data: convite } = await supabase
-          .from('pedidos_acesso')
-          .select('id')
-          .eq('email', user.email ?? '')
-          .eq('nicho', nicho)
-          .eq('estado', 'convidado')
-          .maybeSingle()
+        const convite = await hasValidInvite(user.email ?? '', nicho)
 
         if (!convite) {
           const url = request.nextUrl.clone()
+          url.search = ''
           url.pathname = '/login'
           url.searchParams.set('erro', 'sem_acesso')
           return NextResponse.redirect(url)
         }
       }
 
-      const ADMIN_EMAILS2 = (process.env.ADMIN_EMAILS ?? 'jorgerodeia808@gmail.com')
-        .split(',').map(e => e.trim().toLowerCase())
-      if (user.email && ADMIN_EMAILS2.includes(user.email.toLowerCase())) {
-        return supabaseResponse
-      }
+      if (isAdminUser) return supabaseResponse
 
       if (pathname === '/onboarding' || pathname === '/bem-vindo') return supabaseResponse
       const url = request.nextUrl.clone()
