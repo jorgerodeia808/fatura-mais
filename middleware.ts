@@ -127,6 +127,8 @@ export async function middleware(request: NextRequest) {
         }
       }
 
+      if (isAdmin) return supabaseResponse
+
       if (pathname === '/onboarding') return supabaseResponse
       const url = request.nextUrl.clone()
       url.pathname = '/onboarding'
@@ -180,6 +182,12 @@ export async function middleware(request: NextRequest) {
           url.searchParams.set('erro', 'sem_acesso')
           return NextResponse.redirect(url)
         }
+      }
+
+      const ADMIN_EMAILS2 = (process.env.ADMIN_EMAILS ?? 'jorgerodeia808@gmail.com')
+        .split(',').map(e => e.trim().toLowerCase())
+      if (user.email && ADMIN_EMAILS2.includes(user.email.toLowerCase())) {
+        return supabaseResponse
       }
 
       if (pathname === '/onboarding' || pathname === '/bem-vindo') return supabaseResponse
