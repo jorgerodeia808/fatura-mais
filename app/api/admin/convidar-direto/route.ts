@@ -136,9 +136,15 @@ export async function POST(req: NextRequest) {
 
   const supabase = createAdminClient()
 
-  // Usa o site URL principal como redirectTo (sempre autorizado no Supabase).
-  // O auth/callback deteta o nicho e faz relay para o subdomínio correto.
-  const redirectTo = `https://fatura-mais.pt/auth/callback?type=invite&nicho=${nicho}`
+  const nichoUrl: Record<string, string> = {
+    barbeiro: 'https://barbeiro.fatura-mais.pt',
+    nails:    'https://nails.fatura-mais.pt',
+    lash:     'https://lash.fatura-mais.pt',
+    tatuador: 'https://tatuador.fatura-mais.pt',
+    fp:       'https://fp.fatura-mais.pt',
+  }
+  const baseUrl = nichoUrl[nicho] ?? 'https://barbeiro.fatura-mais.pt'
+  const redirectTo = `${baseUrl}/auth/callback?type=invite`
   const plataforma = nichoLabel[nicho] ?? 'Fatura+'
 
   let linkData, linkError

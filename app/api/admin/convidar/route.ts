@@ -3,6 +3,14 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { Resend } from 'resend'
 
+const nichoUrl: Record<string, string> = {
+  barbeiro: 'https://barbeiro.fatura-mais.pt',
+  nails:    'https://nails.fatura-mais.pt',
+  lash:     'https://lash.fatura-mais.pt',
+  tatuador: 'https://tatuador.fatura-mais.pt',
+  fp:       'https://fp.fatura-mais.pt',
+}
+
 
 const nichoLabel: Record<string, string> = {
   barbeiro: 'Barber+',
@@ -136,9 +144,8 @@ export async function POST(req: NextRequest) {
 
   const supabase = createAdminClient()
 
-  // Usa o site URL principal como redirectTo (sempre autorizado no Supabase).
-  // O auth/callback deteta o nicho e faz relay para o subdomínio correto.
-  const redirectTo = `https://fatura-mais.pt/auth/callback?type=invite&nicho=${nicho ?? ''}`
+  const baseUrl = (nicho && nichoUrl[nicho]) ?? 'https://barbeiro.fatura-mais.pt'
+  const redirectTo = `${baseUrl}/auth/callback?type=invite`
   const plataforma = (nicho && nichoLabel[nicho]) ?? 'Fatura+'
 
   // generateLink com type='invite' cria o utilizador se não existir, ou reenvia se já existir
