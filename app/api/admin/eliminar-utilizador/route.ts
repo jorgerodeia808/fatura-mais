@@ -15,24 +15,26 @@ export async function POST(req: NextRequest) {
 
   const { user_id, barbearia_id } = await req.json()
 
-  if (!user_id || !barbearia_id) {
+  if (!user_id) {
     return NextResponse.json({ error: 'Campos obrigatórios em falta' }, { status: 400 })
   }
 
   const supabase = createAdminClient()
 
-  // Apaga dados da barbearia
-  const { error: dbError } = await supabase
-    .from('barbearias')
-    .delete()
-    .eq('id', barbearia_id)
+  // Apaga dados da barbearia (apenas para nichos — FP+ não tem barbearia_id)
+  if (barbearia_id) {
+    const { error: dbError } = await supabase
+      .from('barbearias')
+      .delete()
+      .eq('id', barbearia_id)
 
-  if (dbError) {
-    console.error('Erro ao apagar barbearia:', dbError)
-    return NextResponse.json({ error: 'Erro ao apagar dados' }, { status: 500 })
+    if (dbError) {
+      console.error('Erro ao apagar barbearia:', dbError)
+      return NextResponse.json({ error: 'Erro ao apagar dados' }, { status: 500 })
+    }
   }
 
-  // Apaga auth.identities + auth.users via função SQL segura
+  // Apaga auth.identities + auth.users via função SQL segura (cascata apaga fp_perfis, fp_transacoes, etc.)
   const { error: authError } = await supabase.rpc('eliminar_utilizador_auth', {
     p_user_id: user_id,
   })
