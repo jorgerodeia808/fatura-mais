@@ -19,6 +19,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Campos obrigatórios em falta' }, { status: 400 })
   }
 
+  // Impede o admin de apagar a própria conta
+  if (user_id === user.id) {
+    return NextResponse.json({ error: 'Não podes eliminar a tua própria conta' }, { status: 400 })
+  }
+
   const supabase = createAdminClient()
 
   // Apaga dados da barbearia (apenas para nichos — FP+ não tem barbearia_id)
