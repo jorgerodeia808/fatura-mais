@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 const navLinks = [
   { label: 'Visão Geral', href: '/admin', icon: 'dashboard' },
   { label: 'Clientes', href: '/admin/clientes', icon: 'people' },
+  { label: 'Consultoria', href: '/admin/consultoria', icon: 'psychology' },
   { label: 'Pagamentos', href: '/admin/pagamentos', icon: 'payments' },
   { label: 'Renovações', href: '/admin/renovacoes', icon: 'autorenew' },
   { label: 'Pedidos', href: '/admin/pedidos', icon: 'person_add' },
