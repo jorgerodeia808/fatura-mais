@@ -48,13 +48,15 @@ export default function AuthCallbackPage() {
         }
 
         if (accessToken && refreshToken) {
-          const type = params.get('type')
+          const hashType = params.get('type')
           const { error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           })
           if (!sessionError) {
-            if (type === 'invite') {
+            // Supabase usa 'signup' no hash para invites em implicit flow, não 'invite'
+            // Verificar também typeParam da nossa redirectTo query string (?type=invite)
+            if (hashType === 'invite' || typeParam === 'invite') {
               router.replace('/recuperar-password/nova?tipo=convite')
             } else {
               router.replace(next)
